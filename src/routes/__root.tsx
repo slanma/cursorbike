@@ -15,6 +15,7 @@ import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { Toaster } from "../components/ui/sonner";
 import { KosikProvider } from "@/lib/kosik";
+import { CookieLista } from "@/components/CookieLista";
 
 function NotFoundComponent() {
   return (
@@ -138,6 +139,7 @@ function RootComponent() {
           <Footer />
         </div>
         <Toaster />
+        <CookieLista />
       </KosikProvider>
     </QueryClientProvider>
   );

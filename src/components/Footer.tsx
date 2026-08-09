@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import logo from "@/assets/cursorbike-logo.jpg.asset.json";
 import { kontakt } from "@/lib/kontakt";
+import { otevriNastaveniCookies } from "@/components/CookieLista";
 
 
 export function Footer() {
@@ -48,8 +49,19 @@ export function Footer() {
 
       </div>
 
+      <div className="border-t border-ink-foreground/10 py-5">
+        <nav className="mx-auto flex max-w-7xl flex-wrap justify-center gap-x-6 gap-y-2 px-4 text-sm text-ink-muted md:px-6">
+          <Link to="/obchodni-podminky" className="hover:text-primary">Obchodní podmínky</Link>
+          <Link to="/ochrana-osobnich-udaju" className="hover:text-primary">Ochrana osobních údajů</Link>
+          <Link to="/odstoupeni-od-smlouvy" className="hover:text-primary">Odstoupení od smlouvy</Link>
+          <button type="button" onClick={otevriNastaveniCookies} className="hover:text-primary">
+            Nastavení cookies
+          </button>
+        </nav>
+      </div>
+
       <div className="border-t border-ink-foreground/10 py-4 text-center text-xs text-ink-muted">
-        © {new Date().getFullYear()} Cursorbike — všechna práva vyhrazena
+        © {new Date().getFullYear()} Miroslav Dékany – Cursorbike, IČO 40338797 — všechna práva vyhrazena
         {" · "}
         <Link to="/auth" className="hover:text-primary">
           Správa e-shopu
