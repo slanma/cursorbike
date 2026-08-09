@@ -62,6 +62,35 @@ const tipy = [
   },
 ];
 
+const vyhody = [
+  {
+    ikona: Store,
+    nazev: "Online e-shop & kamenná prodejna",
+    body: [
+      "Široký výběr pro každého: prodáváme klasická jízdní kola, moderní elektrokola všech typů i elektrokoloběžky a cyklo brašny.",
+      "Komfortní modely: specializujeme se mimo jiné na bezpečná elektrokola s nízkým nástupem pro snadné nasedání.",
+      "Vyzkoušení zdarma: vše si můžete prohlédnout na e-shopu a osobně otestovat přímo na naší prodejně v Kravařích.",
+    ],
+  },
+  {
+    ikona: Wrench,
+    nazev: "Odborný cykloservis v regionu",
+    body: [
+      "Kompletní péče: provádíme profesionální opravy, údržbu, seřízení a diagnostiku kol.",
+      "Repase baterií: nabízíme profesionální testování a repase baterií pro elektrokola a elektrokoloběžky. Vrátíme vaší baterii plnou kapacitu a ušetříme vám náklady za nákup nové.",
+      "Pro všechny cyklisty: náš servis je plně otevřený — opravíme i kola a elektrokola zakoupená u jiných prodejců.",
+    ],
+  },
+  {
+    ikona: ShieldCheck,
+    nazev: "Garance nejvýhodnější ceny",
+    body: [
+      "Trvale nízké ceny: držíme ceny produktů dlouhodobě pod úrovní běžné konkurence.",
+      "Dorovnání ceny: pokud na internetu nebo v okolí narazíte na výhodnější nabídku, při návštěvě prodejny vám cenu dorovnáme.",
+    ],
+  },
+];
+
 function Home() {
   const vybrana = produkty.slice(0, 3);
   const vAkci = produkty.filter((p) => p.puvodniCena).slice(0, 3);
