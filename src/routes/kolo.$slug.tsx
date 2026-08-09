@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { formatCena, najdiProdukt, produkty, type Produkt } from "@/lib/produkty";
+import { formatCena, najdiProdukt, produkty, type ParametrSkupina, type Produkt } from "@/lib/produkty";
 import { useKosik } from "@/lib/kosik";
 
 export const Route = createFileRoute("/kolo/$slug")({
