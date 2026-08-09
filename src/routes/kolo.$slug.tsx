@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { formatCena, najdiProdukt, produkty, type Produkt } from "@/lib/produkty";
+import { formatCena, najdiProdukt, produkty, type ParametrSkupina, type Produkt } from "@/lib/produkty";
 import { useKosik } from "@/lib/kosik";
 
 export const Route = createFileRoute("/kolo/$slug")({
@@ -72,16 +72,39 @@ function DetailProduktu() {
             </Button>
           </div>
 
-          <dl className="mt-8 divide-y rounded-lg border bg-card">
-            {produkt.parametry.map((p: { label: string; hodnota: string }) => (
-              <div key={p.label} className="flex justify-between gap-4 px-4 py-3 text-sm">
-                <dt className="text-muted-foreground">{p.label}</dt>
-                <dd className="font-semibold">{p.hodnota}</dd>
+          <div className="mt-8 rounded-lg border bg-accent/40 p-5">
+            <h2 className="section-title text-lg">Pro koho je kolo vhodné</h2>
+            <ul className="mt-3 space-y-2 text-sm">
+              {produkt.proKoho.map((item: string) => (
+                <li key={item} className="flex gap-2">
+                  <span aria-hidden className="mt-0.5 font-bold text-primary">✓</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            {produkt.neniProKoho && (
+              <p className="mt-3 border-t pt-3 text-sm text-muted-foreground">{produkt.neniProKoho}</p>
+            )}
+          </div>
+
+          <div className="mt-8 space-y-6">
+            {produkt.parametry.map((skupina: ParametrSkupina) => (
+              <div key={skupina.skupina}>
+                <h2 className="section-title text-base text-muted-foreground">{skupina.skupina}</h2>
+                <dl className="mt-2 divide-y rounded-lg border bg-card">
+                  {skupina.polozky.map((p: { label: string; hodnota: string }) => (
+                    <div key={p.label} className="flex justify-between gap-4 px-4 py-3 text-sm">
+                      <dt className="text-muted-foreground">{p.label}</dt>
+                      <dd className="text-right font-semibold">{p.hodnota}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
             ))}
-          </dl>
+          </div>
         </div>
       </div>
+
 
       <h2 className="section-title mt-16 text-2xl">Mohlo by se hodit</h2>
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
