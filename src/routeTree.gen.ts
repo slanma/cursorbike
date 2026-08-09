@@ -10,19 +10,27 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BazarRouteImport } from './routes/bazar'
 import { Route as ElektrokolaRouteImport } from './routes/elektrokola'
 import { Route as KolaRouteImport } from './routes/kola'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as KosikRouteImport } from './routes/kosik'
 import { Route as OMneRouteImport } from './routes/o-mne'
 import { Route as ServisRouteImport } from './routes/servis'
+import { Route as ElektrokolaIndexRouteImport } from './routes/elektrokola.index'
+import { Route as ElektrokolaZnackaRouteImport } from './routes/elektrokola.$znacka'
 import { Route as KolaIndexRouteImport } from './routes/kola.index'
-import { Route as KolaSekceRouteImport } from './routes/kola.$sekce'
+import { Route as KolaZnackaRouteImport } from './routes/kola.$znacka'
 import { Route as KoloSlugRouteImport } from './routes/kolo.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BazarRoute = BazarRouteImport.update({
+  id: '/bazar',
+  path: '/bazar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ElektrokolaRoute = ElektrokolaRouteImport.update({
@@ -55,14 +63,24 @@ const ServisRoute = ServisRouteImport.update({
   path: '/servis',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ElektrokolaIndexRoute = ElektrokolaIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ElektrokolaRoute,
+} as any)
+const ElektrokolaZnackaRoute = ElektrokolaZnackaRouteImport.update({
+  id: '/$znacka',
+  path: '/$znacka',
+  getParentRoute: () => ElektrokolaRoute,
+} as any)
 const KolaIndexRoute = KolaIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => KolaRoute,
 } as any)
-const KolaSekceRoute = KolaSekceRouteImport.update({
-  id: '/$sekce',
-  path: '/$sekce',
+const KolaZnackaRoute = KolaZnackaRouteImport.update({
+  id: '/$znacka',
+  path: '/$znacka',
   getParentRoute: () => KolaRoute,
 } as any)
 const KoloSlugRoute = KoloSlugRouteImport.update({
@@ -73,81 +91,98 @@ const KoloSlugRoute = KoloSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/elektrokola': typeof ElektrokolaRoute
+  '/bazar': typeof BazarRoute
+  '/elektrokola': typeof ElektrokolaRouteWithChildren
   '/kola': typeof KolaRouteWithChildren
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
   '/servis': typeof ServisRoute
-  '/kola/$sekce': typeof KolaSekceRoute
+  '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
+  '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
+  '/elektrokola/': typeof ElektrokolaIndexRoute
   '/kola/': typeof KolaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/elektrokola': typeof ElektrokolaRoute
+  '/bazar': typeof BazarRoute
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
   '/servis': typeof ServisRoute
-  '/kola/$sekce': typeof KolaSekceRoute
+  '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
+  '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
+  '/elektrokola': typeof ElektrokolaIndexRoute
   '/kola': typeof KolaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/elektrokola': typeof ElektrokolaRoute
+  '/bazar': typeof BazarRoute
+  '/elektrokola': typeof ElektrokolaRouteWithChildren
   '/kola': typeof KolaRouteWithChildren
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
   '/servis': typeof ServisRoute
-  '/kola/$sekce': typeof KolaSekceRoute
+  '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
+  '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
+  '/elektrokola/': typeof ElektrokolaIndexRoute
   '/kola/': typeof KolaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/bazar'
     | '/elektrokola'
     | '/kola'
     | '/kontakt'
     | '/kosik'
     | '/o-mne'
     | '/servis'
-    | '/kola/$sekce'
+    | '/elektrokola/$znacka'
+    | '/kola/$znacka'
     | '/kolo/$slug'
+    | '/elektrokola/'
     | '/kola/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/elektrokola'
+    | '/bazar'
     | '/kontakt'
     | '/kosik'
     | '/o-mne'
     | '/servis'
-    | '/kola/$sekce'
+    | '/elektrokola/$znacka'
+    | '/kola/$znacka'
     | '/kolo/$slug'
+    | '/elektrokola'
     | '/kola'
   id:
     | '__root__'
     | '/'
+    | '/bazar'
     | '/elektrokola'
     | '/kola'
     | '/kontakt'
     | '/kosik'
     | '/o-mne'
     | '/servis'
-    | '/kola/$sekce'
+    | '/elektrokola/$znacka'
+    | '/kola/$znacka'
     | '/kolo/$slug'
+    | '/elektrokola/'
     | '/kola/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ElektrokolaRoute: typeof ElektrokolaRoute
+  BazarRoute: typeof BazarRoute
+  ElektrokolaRoute: typeof ElektrokolaRouteWithChildren
   KolaRoute: typeof KolaRouteWithChildren
   KontaktRoute: typeof KontaktRoute
   KosikRoute: typeof KosikRoute
@@ -163,6 +198,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bazar': {
+      id: '/bazar'
+      path: '/bazar'
+      fullPath: '/bazar'
+      preLoaderRoute: typeof BazarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/elektrokola': {
@@ -207,6 +249,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServisRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/elektrokola/': {
+      id: '/elektrokola/'
+      path: '/'
+      fullPath: '/elektrokola/'
+      preLoaderRoute: typeof ElektrokolaIndexRouteImport
+      parentRoute: typeof ElektrokolaRoute
+    }
+    '/elektrokola/$znacka': {
+      id: '/elektrokola/$znacka'
+      path: '/$znacka'
+      fullPath: '/elektrokola/$znacka'
+      preLoaderRoute: typeof ElektrokolaZnackaRouteImport
+      parentRoute: typeof ElektrokolaRoute
+    }
     '/kola/': {
       id: '/kola/'
       path: '/'
@@ -214,11 +270,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KolaIndexRouteImport
       parentRoute: typeof KolaRoute
     }
-    '/kola/$sekce': {
-      id: '/kola/$sekce'
-      path: '/$sekce'
-      fullPath: '/kola/$sekce'
-      preLoaderRoute: typeof KolaSekceRouteImport
+    '/kola/$znacka': {
+      id: '/kola/$znacka'
+      path: '/$znacka'
+      fullPath: '/kola/$znacka'
+      preLoaderRoute: typeof KolaZnackaRouteImport
       parentRoute: typeof KolaRoute
     }
     '/kolo/$slug': {
@@ -231,13 +287,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ElektrokolaRouteChildren {
+  ElektrokolaZnackaRoute: typeof ElektrokolaZnackaRoute
+  ElektrokolaIndexRoute: typeof ElektrokolaIndexRoute
+}
+
+const ElektrokolaRouteChildren: ElektrokolaRouteChildren = {
+  ElektrokolaZnackaRoute: ElektrokolaZnackaRoute,
+  ElektrokolaIndexRoute: ElektrokolaIndexRoute,
+}
+
+const ElektrokolaRouteWithChildren = ElektrokolaRoute._addFileChildren(
+  ElektrokolaRouteChildren,
+)
+
 interface KolaRouteChildren {
-  KolaSekceRoute: typeof KolaSekceRoute
+  KolaZnackaRoute: typeof KolaZnackaRoute
   KolaIndexRoute: typeof KolaIndexRoute
 }
 
 const KolaRouteChildren: KolaRouteChildren = {
-  KolaSekceRoute: KolaSekceRoute,
+  KolaZnackaRoute: KolaZnackaRoute,
   KolaIndexRoute: KolaIndexRoute,
 }
 
@@ -245,7 +315,8 @@ const KolaRouteWithChildren = KolaRoute._addFileChildren(KolaRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ElektrokolaRoute: ElektrokolaRoute,
+  BazarRoute: BazarRoute,
+  ElektrokolaRoute: ElektrokolaRouteWithChildren,
   KolaRoute: KolaRouteWithChildren,
   KontaktRoute: KontaktRoute,
   KosikRoute: KosikRoute,

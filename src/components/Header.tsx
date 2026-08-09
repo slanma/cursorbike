@@ -7,6 +7,7 @@ import { useKosik } from "@/lib/kosik";
 const odkazy = [
   { to: "/kola", label: "Kola" },
   { to: "/elektrokola", label: "Elektrokola" },
+  { to: "/bazar", label: "Bazar" },
   { to: "/servis", label: "Servis" },
   { to: "/o-mne", label: "O mně" },
   { to: "/kontakt", label: "Kontakt" },
