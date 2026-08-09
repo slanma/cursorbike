@@ -27,8 +27,23 @@ const cenik = [
   { ikona: BatteryCharging, nazev: "Repase baterie", cena: "od 4 900 Kč", text: "Výměna článků a test kapacity." },
 ];
 
+const poptavkaSchema = z.object({
+  jmeno: z.string().trim().min(2, { message: "Vyplňte jméno" }).max(100),
+  email: z.string().trim().email({ message: "Zadejte platný e-mail" }).max(255),
+  telefon: z.string().trim().max(30).optional(),
+  termin: z.string().trim().max(30).optional(),
+  popis: z.string().trim().max(1000).optional(),
+});
+
 function ServisPage() {
   const [odeslano, setOdeslano] = useState(false);
+  const [odesila, setOdesila] = useState(false);
+  const [jmeno, setJmeno] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefon, setTelefon] = useState("");
+  const [termin, setTermin] = useState("");
+  const [popis, setPopis] = useState("");
+  const [typSluzby, setTypSluzby] = useState(cenik[0]!.nazev);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
