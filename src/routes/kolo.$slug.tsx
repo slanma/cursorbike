@@ -88,7 +88,7 @@ function DetailProduktu() {
           </div>
 
           <div className="mt-8 space-y-6">
-            {produkt.parametry.map((skupina) => (
+            {produkt.parametry.map((skupina: ParametrSkupina) => (
               <div key={skupina.skupina}>
                 <h2 className="section-title text-base text-muted-foreground">{skupina.skupina}</h2>
                 <dl className="mt-2 divide-y rounded-lg border bg-card">
