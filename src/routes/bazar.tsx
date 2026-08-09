@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Phone, RefreshCcw, ShieldCheck, Wrench } from "lucide-react";
+import { Drobky } from "@/components/Drobky";
 
 export const Route = createFileRoute("/bazar")({
   head: () => ({
