@@ -5,14 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { kontakt } from "@/lib/kontakt";
 
 export const Route = createFileRoute("/kontakt")({
   head: () => ({
     meta: [
       { title: "Kontakt — prodejna Cursorbike v Kravařích" },
-      { name: "description", content: "Adresa, otevírací doba a kontakty na prodejnu a servis kol Cursorbike." },
-      { property: "og:title", content: "Kontakt | Cursorbike" },
-      { property: "og:description", content: "Najdete nás v Kravařích. Zavolejte nebo napište, rádi poradíme." },
+      { name: "description", content: "Novodvorská 310/13, 747 21 Kravaře. Telefon +420 606 713 763, e-mail cursorbike@seznam.cz. Prodejna, e-shop a cykloservis." },
+      { property: "og:title", content: "Kontakt | Cursorbike Kravaře" },
+      { property: "og:description", content: "Novodvorská 310/13, Kravaře · +420 606 713 763 · Po–Pá 9–12 a 13–17." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: KontaktPage,
@@ -23,29 +26,61 @@ function KontaktPage() {
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
       <h1 className="section-title text-4xl">Kontakt</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">
-        Zastavte se v prodejně, zavolejte nebo napište. Na vše odpovídáme do jednoho pracovního dne.
+        Prodejna, výdejní místo i cykloservis najdete na jedné adrese v Kravařích ve Slezsku.
       </p>
 
       <div className="mt-10 grid gap-10 md:grid-cols-2">
         <div className="grid gap-4">
           <div className="rounded-lg border bg-card p-6 shadow-card">
-            <ul className="space-y-4 text-sm">
-              <li className="flex gap-3"><MapPin className="h-5 w-5 shrink-0 text-primary" /> Kravaře 123, 747 21 Kravaře</li>
-              <li className="flex gap-3"><Phone className="h-5 w-5 shrink-0 text-primary" /> <a href="tel:+420123456789" className="hover:text-primary">+420 123 456 789</a></li>
-              <li className="flex gap-3"><Mail className="h-5 w-5 shrink-0 text-primary" /> <a href="mailto:email@cursorbike.cz" className="hover:text-primary">email@cursorbike.cz</a></li>
-              <li className="flex gap-3"><Clock className="h-5 w-5 shrink-0 text-primary" /> Po–Pá 9:00–17:00 · So 9:00–12:00</li>
+            <ul className="space-y-4 text-base">
+              <li className="flex gap-3">
+                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <span>
+                  <strong>{kontakt.nazev}</strong>
+                  <br />
+                  {kontakt.ulice}
+                  <br />
+                  {kontakt.psc} {kontakt.mesto}
+                  <br />
+                  <a href={kontakt.mapaOdkaz} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                    Zobrazit na mapě
+                  </a>
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <Phone className="h-5 w-5 shrink-0 text-primary" />
+                <a href={kontakt.telefonHref} className="font-semibold hover:text-primary">{kontakt.telefon}</a>
+              </li>
+              <li className="flex gap-3">
+                <Mail className="h-5 w-5 shrink-0 text-primary" />
+                <a href={kontakt.emailHref} className="hover:text-primary">{kontakt.email}</a>
+              </li>
+              <li className="flex gap-3">
+                <Clock className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <table className="text-sm">
+                  <tbody>
+                    {kontakt.otviraciDoba.map((r) => (
+                      <tr key={r.den}>
+                        <td className="pr-4 font-medium">{r.den}</td>
+                        <td>{r.cas}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </li>
             </ul>
           </div>
 
           <div className="overflow-hidden rounded-lg border shadow-card">
             <iframe
-              title="Mapa — prodejna Cursorbike"
-              src="https://www.openstreetmap.org/export/embed.html?bbox=18.0%2C49.90%2C18.06%2C49.94&layer=mapnik"
+              title="Mapa — prodejna Cursorbike, Novodvorská 310/13 Kravaře"
+              src={kontakt.mapaEmbed}
               className="h-72 w-full border-0"
               loading="lazy"
             />
           </div>
         </div>
+
 
         <form
           className="grid gap-4 rounded-lg border bg-card p-6 shadow-card"
