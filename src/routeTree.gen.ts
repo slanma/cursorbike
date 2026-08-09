@@ -18,6 +18,7 @@ import { Route as KolaRouteImport } from './routes/kola'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as KosikRouteImport } from './routes/kosik'
 import { Route as OMneRouteImport } from './routes/o-mne'
+import { Route as ObchodniPodminkyRouteImport } from './routes/obchodni-podminky'
 import { Route as ServisRouteImport } from './routes/servis'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ElektrokolaIndexRouteImport } from './routes/elektrokola.index'
@@ -73,6 +74,11 @@ const KosikRoute = KosikRouteImport.update({
 const OMneRoute = OMneRouteImport.update({
   id: '/o-mne',
   path: '/o-mne',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObchodniPodminkyRoute = ObchodniPodminkyRouteImport.update({
+  id: '/obchodni-podminky',
+  path: '/obchodni-podminky',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServisRoute = ServisRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
+  '/obchodni-podminky': typeof ObchodniPodminkyRoute
   '/servis': typeof ServisRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
+  '/obchodni-podminky': typeof ObchodniPodminkyRoute
   '/servis': typeof ServisRoute
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
+  '/obchodni-podminky': typeof ObchodniPodminkyRoute
   '/servis': typeof ServisRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
@@ -216,6 +225,7 @@ export interface FileRouteTypes {
     | '/kontakt'
     | '/kosik'
     | '/o-mne'
+    | '/obchodni-podminky'
     | '/servis'
     | '/admin'
     | '/elektrokola/$znacka'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/kontakt'
     | '/kosik'
     | '/o-mne'
+    | '/obchodni-podminky'
     | '/servis'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/kontakt'
     | '/kosik'
     | '/o-mne'
+    | '/obchodni-podminky'
     | '/servis'
     | '/_authenticated/admin'
     | '/elektrokola/$znacka'
@@ -282,6 +294,7 @@ export interface RootRouteChildren {
   KontaktRoute: typeof KontaktRoute
   KosikRoute: typeof KosikRoute
   OMneRoute: typeof OMneRoute
+  ObchodniPodminkyRoute: typeof ObchodniPodminkyRoute
   ServisRoute: typeof ServisRoute
   KoloSlugRoute: typeof KoloSlugRoute
 }
@@ -349,6 +362,13 @@ declare module '@tanstack/react-router' {
       path: '/o-mne'
       fullPath: '/o-mne'
       preLoaderRoute: typeof OMneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/obchodni-podminky': {
+      id: '/obchodni-podminky'
+      path: '/obchodni-podminky'
+      fullPath: '/obchodni-podminky'
+      preLoaderRoute: typeof ObchodniPodminkyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/servis': {
@@ -504,19 +524,10 @@ const rootRouteChildren: RootRouteChildren = {
   KontaktRoute: KontaktRoute,
   KosikRoute: KosikRoute,
   OMneRoute: OMneRoute,
+  ObchodniPodminkyRoute: ObchodniPodminkyRoute,
   ServisRoute: ServisRoute,
   KoloSlugRoute: KoloSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
