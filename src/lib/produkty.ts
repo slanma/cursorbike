@@ -19,6 +19,7 @@ export type Produkt = {
   podkategorie: string;
   cena: number;
   puvodniCena?: number;
+  oblibene?: boolean;
   obrazek: string;
   kratky: string;
   popis: string;
