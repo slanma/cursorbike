@@ -19,6 +19,7 @@ export type Produkt = {
   podkategorie: string;
   cena: number;
   puvodniCena?: number;
+  oblibene?: boolean;
   obrazek: string;
   kratky: string;
   popis: string;
@@ -37,6 +38,7 @@ export const produkty: Produkt[] = [
     podkategorie: "mestska",
     cena: 44900,
     puvodniCena: 49900,
+    oblibene: true,
     obrazek: eletroCity,
     kratky: "Pohodlný nástup, středový motor a baterie na 90 km.",
     popis:
@@ -143,6 +145,7 @@ export const produkty: Produkt[] = [
         znacka: "author",
     podkategorie: "damska-horska-275",
     cena: 25900,
+    oblibene: true,
     obrazek: trekking,
     kratky: "Nosič, blatníky a světla – připravené na cesty.",
     popis:
@@ -292,6 +295,7 @@ export const produkty: Produkt[] = [
     znacka: "liberty",
     podkategorie: "e-city-26",
     cena: 39900,
+    oblibene: true,
     obrazek: eletroCity,
     kratky: "Menší kola, snadné parkování, ideální do města.",
     popis:

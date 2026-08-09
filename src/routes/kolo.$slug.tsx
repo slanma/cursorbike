@@ -1,8 +1,9 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { formatCena, najdiProdukt, produkty, type ParametrSkupina, type Produkt } from "@/lib/produkty";
+import { formatCena, najdiProdukt, produkty, najdiZnacku, type ParametrSkupina, type Produkt } from "@/lib/produkty";
 import { useKosik } from "@/lib/kosik";
+import { Drobky } from "@/components/Drobky";
 
 export const Route = createFileRoute("/kolo/$slug")({
   loader: ({ params }): { produkt: Produkt } => {
@@ -31,9 +32,18 @@ function DetailProduktu() {
   const { produkt } = Route.useLoaderData();
   const { pridat } = useKosik();
   const dalsi = produkty.filter((p) => p.slug !== produkt.slug).slice(0, 3);
+  const znackaObj = najdiZnacku(produkt.kategorie, produkt.znacka);
+
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
+      <Drobky
+        items={[
+          { label: produkt.kategorie === "kola" ? "Kola" : "Elektrokola", to: produkt.kategorie === "kola" ? "/kola" : "/elektrokola" },
+          ...(znackaObj ? [{ label: znackaObj.nazev, to: produkt.kategorie === "kola" ? "/kola/$znacka" : "/elektrokola/$znacka", params: { znacka: produkt.znacka } }] : []),
+          { label: produkt.nazev },
+        ]}
+      />
       <div className="grid gap-10 md:grid-cols-2">
         <div className="rounded-lg border bg-surface p-6">
           <img

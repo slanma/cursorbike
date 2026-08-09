@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
+import { Drobky } from "@/components/Drobky";
 import { produktyZnacky, type Kategorie, type Znacka } from "@/lib/produkty";
 
 export function ZnackaVypis({ kategorie, znacka }: { kategorie: Kategorie; znacka: Znacka }) {
@@ -8,23 +9,30 @@ export function ZnackaVypis({ kategorie, znacka }: { kategorie: Kategorie; znack
   const vse = produktyZnacky(kategorie, znacka.slug);
   const seznam = podkategorie ? vse.filter((p) => p.podkategorie === podkategorie) : vse;
   const nadrazena = kategorie === "kola" ? "/kola" : "/elektrokola";
+  const nadrazenyNazev = kategorie === "kola" ? "Kola" : "Elektrokola";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
-      <Link to={nadrazena} className="text-sm font-semibold text-primary hover:underline">
-        ← Zpět na {kategorie === "kola" ? "kola" : "elektrokola"}
-      </Link>
-      <h1 className="section-title mt-3 text-4xl">
-        {kategorie === "kola" ? "Jízdní kola" : "Elektrokola"} — {znacka.nazev}
+      <Drobky
+        items={[
+          { label: nadrazenyNazev, to: nadrazena },
+          { label: znacka.nazev },
+        ]}
+      />
+      <h1 className="section-title mt-1 text-4xl">
+        {nadrazenyNazev} — {znacka.nazev}
       </h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">{znacka.popis}</p>
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <p className="mt-6 text-sm text-muted-foreground">
+        Vyberte typ kola, který hledáte — nebo nechte „Vše" a prohlédněte si celou nabídku:
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => setPodkategorie(null)}
-          className={`rounded border px-3 py-2 text-sm font-semibold transition-colors ${
-            podkategorie === null ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary"
+          className={`rounded-md border-2 px-4 py-2.5 text-sm font-bold transition-colors ${
+            podkategorie === null ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary hover:bg-primary/5"
           }`}
         >
           Vše
@@ -34,8 +42,8 @@ export function ZnackaVypis({ kategorie, znacka }: { kategorie: Kategorie; znack
             key={pk.slug}
             type="button"
             onClick={() => setPodkategorie(pk.slug)}
-            className={`rounded border px-3 py-2 text-sm font-semibold transition-colors ${
-              podkategorie === pk.slug ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary"
+            className={`rounded-md border-2 px-4 py-2.5 text-sm font-bold transition-colors ${
+              podkategorie === pk.slug ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary hover:bg-primary/5"
             }`}
           >
             {pk.nazev}
