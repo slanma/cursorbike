@@ -55,9 +55,15 @@ export const pridejSpravce = createServerFn({ method: "POST" })
       throw new Error("Uživatel s tímto e-mailem zatím nemá účet. Nejprve ať se zaregistruje na stránce přihlášení.");
     }
 
-    const { error } = await supabaseAdmin
+    const { data: existuje } = await supabaseAdmin
       .from("user_roles")
-      .upsert({ user_id: user.id, role: "admin" }, { onConflict: "user_id,role" });
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (existuje) return { ok: true };
+
+    const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: user.id, role: "admin" });
     if (error) throw error;
     return { ok: true };
   });
