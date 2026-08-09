@@ -20,6 +20,7 @@ import { Route as KosikRouteImport } from './routes/kosik'
 import { Route as OMneRouteImport } from './routes/o-mne'
 import { Route as ObchodniPodminkyRouteImport } from './routes/obchodni-podminky'
 import { Route as OchranaOsobnichUdajuRouteImport } from './routes/ochrana-osobnich-udaju'
+import { Route as OdstoupeniOdSmlouvyRouteImport } from './routes/odstoupeni-od-smlouvy'
 import { Route as ServisRouteImport } from './routes/servis'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ElektrokolaIndexRouteImport } from './routes/elektrokola.index'
@@ -85,6 +86,11 @@ const ObchodniPodminkyRoute = ObchodniPodminkyRouteImport.update({
 const OchranaOsobnichUdajuRoute = OchranaOsobnichUdajuRouteImport.update({
   id: '/ochrana-osobnich-udaju',
   path: '/ochrana-osobnich-udaju',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OdstoupeniOdSmlouvyRoute = OdstoupeniOdSmlouvyRouteImport.update({
+  id: '/odstoupeni-od-smlouvy',
+  path: '/odstoupeni-od-smlouvy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServisRoute = ServisRouteImport.update({
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/o-mne': typeof OMneRoute
   '/obchodni-podminky': typeof ObchodniPodminkyRoute
   '/ochrana-osobnich-udaju': typeof OchranaOsobnichUdajuRoute
+  '/odstoupeni-od-smlouvy': typeof OdstoupeniOdSmlouvyRoute
   '/servis': typeof ServisRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/o-mne': typeof OMneRoute
   '/obchodni-podminky': typeof ObchodniPodminkyRoute
   '/ochrana-osobnich-udaju': typeof OchranaOsobnichUdajuRoute
+  '/odstoupeni-od-smlouvy': typeof OdstoupeniOdSmlouvyRoute
   '/servis': typeof ServisRoute
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/o-mne': typeof OMneRoute
   '/obchodni-podminky': typeof ObchodniPodminkyRoute
   '/ochrana-osobnich-udaju': typeof OchranaOsobnichUdajuRoute
+  '/odstoupeni-od-smlouvy': typeof OdstoupeniOdSmlouvyRoute
   '/servis': typeof ServisRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/o-mne'
     | '/obchodni-podminky'
     | '/ochrana-osobnich-udaju'
+    | '/odstoupeni-od-smlouvy'
     | '/servis'
     | '/admin'
     | '/elektrokola/$znacka'
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
     | '/o-mne'
     | '/obchodni-podminky'
     | '/ochrana-osobnich-udaju'
+    | '/odstoupeni-od-smlouvy'
     | '/servis'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/o-mne'
     | '/obchodni-podminky'
     | '/ochrana-osobnich-udaju'
+    | '/odstoupeni-od-smlouvy'
     | '/servis'
     | '/_authenticated/admin'
     | '/elektrokola/$znacka'
@@ -308,6 +320,7 @@ export interface RootRouteChildren {
   OMneRoute: typeof OMneRoute
   ObchodniPodminkyRoute: typeof ObchodniPodminkyRoute
   OchranaOsobnichUdajuRoute: typeof OchranaOsobnichUdajuRoute
+  OdstoupeniOdSmlouvyRoute: typeof OdstoupeniOdSmlouvyRoute
   ServisRoute: typeof ServisRoute
   KoloSlugRoute: typeof KoloSlugRoute
 }
@@ -389,6 +402,13 @@ declare module '@tanstack/react-router' {
       path: '/ochrana-osobnich-udaju'
       fullPath: '/ochrana-osobnich-udaju'
       preLoaderRoute: typeof OchranaOsobnichUdajuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/odstoupeni-od-smlouvy': {
+      id: '/odstoupeni-od-smlouvy'
+      path: '/odstoupeni-od-smlouvy'
+      fullPath: '/odstoupeni-od-smlouvy'
+      preLoaderRoute: typeof OdstoupeniOdSmlouvyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/servis': {
@@ -546,6 +566,7 @@ const rootRouteChildren: RootRouteChildren = {
   OMneRoute: OMneRoute,
   ObchodniPodminkyRoute: ObchodniPodminkyRoute,
   OchranaOsobnichUdajuRoute: OchranaOsobnichUdajuRoute,
+  OdstoupeniOdSmlouvyRoute: OdstoupeniOdSmlouvyRoute,
   ServisRoute: ServisRoute,
   KoloSlugRoute: KoloSlugRoute,
 }
