@@ -18,11 +18,18 @@ export function ProductCard({ produkt }: { produkt: Produkt }) {
           loading="lazy"
           className="h-56 w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
         />
-        {produkt.puvodniCena && (
-          <span className="absolute left-3 top-3 rounded bg-brand-red px-2 py-1 text-xs font-bold uppercase text-ink-foreground">
-            Akce
-          </span>
-        )}
+        <div className="absolute left-3 top-3 flex flex-col gap-1">
+          {produkt.oblibene && (
+            <span className="rounded bg-primary px-2 py-1 text-xs font-bold uppercase text-primary-foreground">
+              Oblíbené
+            </span>
+          )}
+          {produkt.puvodniCena && (
+            <span className="rounded bg-brand-red px-2 py-1 text-xs font-bold uppercase text-ink-foreground">
+              Akce
+            </span>
+          )}
+        </div>
       </Link>
 
       <div className="flex flex-1 flex-col gap-2 p-5">
