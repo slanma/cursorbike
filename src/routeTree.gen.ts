@@ -14,6 +14,7 @@ import { Route as ElektrokolaRouteImport } from './routes/elektrokola'
 import { Route as KolaRouteImport } from './routes/kola'
 import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as KosikRouteImport } from './routes/kosik'
+import { Route as OMneRouteImport } from './routes/o-mne'
 import { Route as ServisRouteImport } from './routes/servis'
 import { Route as KoloSlugRouteImport } from './routes/kolo.$slug'
 
@@ -42,6 +43,11 @@ const KosikRoute = KosikRouteImport.update({
   path: '/kosik',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OMneRoute = OMneRouteImport.update({
+  id: '/o-mne',
+  path: '/o-mne',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServisRoute = ServisRouteImport.update({
   id: '/servis',
   path: '/servis',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/kola': typeof KolaRoute
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
+  '/o-mne': typeof OMneRoute
   '/servis': typeof ServisRoute
   '/kolo/$slug': typeof KoloSlugRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/kola': typeof KolaRoute
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
+  '/o-mne': typeof OMneRoute
   '/servis': typeof ServisRoute
   '/kolo/$slug': typeof KoloSlugRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/kola': typeof KolaRoute
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
+  '/o-mne': typeof OMneRoute
   '/servis': typeof ServisRoute
   '/kolo/$slug': typeof KoloSlugRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/kola'
     | '/kontakt'
     | '/kosik'
+    | '/o-mne'
     | '/servis'
     | '/kolo/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/kola'
     | '/kontakt'
     | '/kosik'
+    | '/o-mne'
     | '/servis'
     | '/kolo/$slug'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/kola'
     | '/kontakt'
     | '/kosik'
+    | '/o-mne'
     | '/servis'
     | '/kolo/$slug'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   KolaRoute: typeof KolaRoute
   KontaktRoute: typeof KontaktRoute
   KosikRoute: typeof KosikRoute
+  OMneRoute: typeof OMneRoute
   ServisRoute: typeof ServisRoute
   KoloSlugRoute: typeof KoloSlugRoute
 }
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KosikRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/o-mne': {
+      id: '/o-mne'
+      path: '/o-mne'
+      fullPath: '/o-mne'
+      preLoaderRoute: typeof OMneRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/servis': {
       id: '/servis'
       path: '/servis'
@@ -181,9 +201,20 @@ const rootRouteChildren: RootRouteChildren = {
   KolaRoute: KolaRoute,
   KontaktRoute: KontaktRoute,
   KosikRoute: KosikRoute,
+  OMneRoute: OMneRoute,
   ServisRoute: ServisRoute,
   KoloSlugRoute: KoloSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
