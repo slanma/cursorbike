@@ -121,7 +121,7 @@ function Home() {
         </div>
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {vAkci.map((p) => (
+          {akcniNeboVybrane.map((p) => (
             <ProductCard key={p.slug} produkt={p} />
           ))}
         </div>
