@@ -38,6 +38,7 @@ const body = [
 function BazarPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
+      <Drobky items={[{ label: "Bazar" }]} />
       <h1 className="section-title text-4xl">Bazar</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">
         Ojetá kola a elektrokola prověřená naším servisem. Nabídka se mění každý týden — aktuální kusy máme
