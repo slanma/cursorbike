@@ -11,8 +11,9 @@ export function Footer() {
         <div>
           <img src={logo.url} alt="Cursorbike" className="h-9 w-auto" width={220} height={60} loading="lazy" />
           <p className="mt-4 text-sm text-ink-muted">
-            Rodinná prodejna a servis jízdních kol. Osobní přístup, poctivá práce a kola, která si sami rádi půjčíme.
+            Prodejna, e-shop a cykloservis v Kravařích ve Slezsku. Na trhu od roku {kontakt.odRoku}.
           </p>
+
         </div>
 
         <div>
