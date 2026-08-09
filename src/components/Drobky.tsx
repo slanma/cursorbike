@@ -19,7 +19,7 @@ export function Drobky({ items }: { items: Drobek[] }) {
             ) : (
               <Link
                 to={item.to}
-                params={item.params}
+                {...(item.params ? { params: item.params } : {})}
                 className="text-muted-foreground transition-colors hover:text-primary"
               >
                 {item.label}
