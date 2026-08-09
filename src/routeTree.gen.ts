@@ -19,6 +19,7 @@ import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as KosikRouteImport } from './routes/kosik'
 import { Route as OMneRouteImport } from './routes/o-mne'
 import { Route as ObchodniPodminkyRouteImport } from './routes/obchodni-podminky'
+import { Route as OchranaOsobnichUdajuRouteImport } from './routes/ochrana-osobnich-udaju'
 import { Route as ServisRouteImport } from './routes/servis'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ElektrokolaIndexRouteImport } from './routes/elektrokola.index'
@@ -79,6 +80,11 @@ const OMneRoute = OMneRouteImport.update({
 const ObchodniPodminkyRoute = ObchodniPodminkyRouteImport.update({
   id: '/obchodni-podminky',
   path: '/obchodni-podminky',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OchranaOsobnichUdajuRoute = OchranaOsobnichUdajuRouteImport.update({
+  id: '/ochrana-osobnich-udaju',
+  path: '/ochrana-osobnich-udaju',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServisRoute = ServisRouteImport.update({
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
   '/obchodni-podminky': typeof ObchodniPodminkyRoute
+  '/ochrana-osobnich-udaju': typeof OchranaOsobnichUdajuRoute
   '/servis': typeof ServisRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
   '/obchodni-podminky': typeof ObchodniPodminkyRoute
+  '/ochrana-osobnich-udaju': typeof OchranaOsobnichUdajuRoute
   '/servis': typeof ServisRoute
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
   '/obchodni-podminky': typeof ObchodniPodminkyRoute
+  '/ochrana-osobnich-udaju': typeof OchranaOsobnichUdajuRoute
   '/servis': typeof ServisRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
@@ -226,6 +235,7 @@ export interface FileRouteTypes {
     | '/kosik'
     | '/o-mne'
     | '/obchodni-podminky'
+    | '/ochrana-osobnich-udaju'
     | '/servis'
     | '/admin'
     | '/elektrokola/$znacka'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/kosik'
     | '/o-mne'
     | '/obchodni-podminky'
+    | '/ochrana-osobnich-udaju'
     | '/servis'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/kosik'
     | '/o-mne'
     | '/obchodni-podminky'
+    | '/ochrana-osobnich-udaju'
     | '/servis'
     | '/_authenticated/admin'
     | '/elektrokola/$znacka'
@@ -295,6 +307,7 @@ export interface RootRouteChildren {
   KosikRoute: typeof KosikRoute
   OMneRoute: typeof OMneRoute
   ObchodniPodminkyRoute: typeof ObchodniPodminkyRoute
+  OchranaOsobnichUdajuRoute: typeof OchranaOsobnichUdajuRoute
   ServisRoute: typeof ServisRoute
   KoloSlugRoute: typeof KoloSlugRoute
 }
@@ -369,6 +382,13 @@ declare module '@tanstack/react-router' {
       path: '/obchodni-podminky'
       fullPath: '/obchodni-podminky'
       preLoaderRoute: typeof ObchodniPodminkyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ochrana-osobnich-udaju': {
+      id: '/ochrana-osobnich-udaju'
+      path: '/ochrana-osobnich-udaju'
+      fullPath: '/ochrana-osobnich-udaju'
+      preLoaderRoute: typeof OchranaOsobnichUdajuRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/servis': {
@@ -525,6 +545,7 @@ const rootRouteChildren: RootRouteChildren = {
   KosikRoute: KosikRoute,
   OMneRoute: OMneRoute,
   ObchodniPodminkyRoute: ObchodniPodminkyRoute,
+  OchranaOsobnichUdajuRoute: OchranaOsobnichUdajuRoute,
   ServisRoute: ServisRoute,
   KoloSlugRoute: KoloSlugRoute,
 }
