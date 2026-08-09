@@ -1,19 +1,16 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { formatCena, najdiProdukt, produkty, najdiZnacku, type ParametrSkupina, type Produkt } from "@/lib/produkty";
+import { formatCena, najdiProdukt, najdiZnacku, type ParametrSkupina, type Produkt } from "@/lib/produkty";
+import { useVsechnyProdukty } from "@/lib/produkty-hook";
 import { useKosik } from "@/lib/kosik";
 import { Drobky } from "@/components/Drobky";
 
 export const Route = createFileRoute("/kolo/$slug")({
-  loader: ({ params }): { produkt: Produkt } => {
-    const produkt = najdiProdukt(params.slug);
-    if (!produkt) throw notFound();
-    return { produkt };
-  },
+  loader: ({ params }): { produkt: Produkt | null } => ({ produkt: najdiProdukt(params.slug) ?? null }),
   head: ({ loaderData }) => {
-    if (!loaderData) {
-      return { meta: [{ title: "Kolo nenalezeno | Cursorbike" }, { name: "robots", content: "noindex" }] };
+    if (!loaderData?.produkt) {
+      return { meta: [{ title: "Detail kola | Cursorbike" }, { name: "robots", content: "noindex" }] };
     }
     const { produkt } = loaderData;
     return {
@@ -29,10 +26,30 @@ export const Route = createFileRoute("/kolo/$slug")({
 });
 
 function DetailProduktu() {
-  const { produkt } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  const { produkty, nacita } = useVsechnyProdukty();
   const { pridat } = useKosik();
+  const produkt = produkty.find((p) => p.slug === slug);
+
+  if (!produkt) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center md:px-6">
+        <h1 className="section-title text-3xl">{nacita ? "Načítáme kolo…" : "Kolo jsme nenašli"}</h1>
+        {!nacita && (
+          <p className="mt-3 text-muted-foreground">
+            Toto kolo už není v nabídce.{" "}
+            <Link to="/kola" className="font-semibold text-primary">
+              Zpět na kola
+            </Link>
+          </p>
+        )}
+      </div>
+    );
+  }
+
   const dalsi = produkty.filter((p) => p.slug !== produkt.slug).slice(0, 3);
   const znackaObj = najdiZnacku(produkt.kategorie, produkt.znacka);
+
 
 
   return (

@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { kontakt } from "@/lib/kontakt";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/servis")({
   head: () => ({
@@ -27,8 +29,23 @@ const cenik = [
   { ikona: BatteryCharging, nazev: "Repase baterie", cena: "od 4 900 Kč", text: "Výměna článků a test kapacity." },
 ];
 
+const poptavkaSchema = z.object({
+  jmeno: z.string().trim().min(2, { message: "Vyplňte jméno" }).max(100),
+  email: z.string().trim().email({ message: "Zadejte platný e-mail" }).max(255),
+  telefon: z.string().trim().max(30).optional(),
+  termin: z.string().trim().max(30).optional(),
+  popis: z.string().trim().max(1000).optional(),
+});
+
 function ServisPage() {
   const [odeslano, setOdeslano] = useState(false);
+  const [odesila, setOdesila] = useState(false);
+  const [jmeno, setJmeno] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefon, setTelefon] = useState("");
+  const [termin, setTermin] = useState("");
+  const [popis, setPopis] = useState("");
+  const [typSluzby, setTypSluzby] = useState(cenik[0]!.nazev);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
@@ -64,34 +81,83 @@ function ServisPage() {
 
         <form
           className="grid gap-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            setOdeslano(true);
-            toast.success("Poptávka odeslána", { description: "Ozveme se do jednoho pracovního dne." });
+            const parsed = poptavkaSchema.safeParse({ jmeno, email, telefon, termin, popis });
+            if (!parsed.success) {
+              toast.error(parsed.error.issues[0]?.message ?? "Zkontrolujte údaje");
+              return;
+            }
+            setOdesila(true);
+            try {
+              const { error } = await supabase.from("servis_poptavky").insert({
+                jmeno: parsed.data.jmeno,
+                email: parsed.data.email,
+                telefon: parsed.data.telefon || null,
+                termin: parsed.data.termin || null,
+                popis: parsed.data.popis || null,
+                typ_sluzby: typSluzby,
+              });
+              if (error) throw error;
+              setOdeslano(true);
+              setJmeno("");
+              setEmail("");
+              setTelefon("");
+              setTermin("");
+              setPopis("");
+              toast.success("Poptávka odeslána", { description: "Ozveme se do jednoho pracovního dne." });
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Poptávku se nepodařilo odeslat");
+            } finally {
+              setOdesila(false);
+            }
           }}
         >
           <div className="grid gap-2">
             <Label htmlFor="jmeno">Jméno a příjmení</Label>
-            <Input id="jmeno" required placeholder="Jan Novák" />
+            <Input id="jmeno" required maxLength={100} value={jmeno} onChange={(e) => setJmeno(e.target.value)} placeholder="Jan Novák" />
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input id="email" type="email" required maxLength={255} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jan@email.cz" />
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="tel">Telefon</Label>
-              <Input id="tel" type="tel" required placeholder="+420 …" />
+              <Input id="tel" type="tel" maxLength={30} value={telefon} onChange={(e) => setTelefon(e.target.value)} placeholder="+420 …" />
+            </div>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="typ">Co potřebujete</Label>
+              <select
+                id="typ"
+                className="h-10 rounded-md border bg-background px-3 text-sm"
+                value={typSluzby}
+                onChange={(e) => setTypSluzby(e.target.value)}
+              >
+                {cenik.map((s) => (
+                  <option key={s.nazev} value={s.nazev}>
+                    {s.nazev}
+                  </option>
+                ))}
+                <option value="Jiné">Jiné</option>
+              </select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="datum">Preferovaný termín</Label>
-              <Input id="datum" type="date" required />
+              <Input id="datum" type="date" value={termin} onChange={(e) => setTermin(e.target.value)} />
             </div>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="popis">Co je potřeba udělat?</Label>
-            <Textarea id="popis" rows={4} placeholder="Např. seřízení převodů a výměna řetězu." />
+            <Textarea id="popis" rows={4} maxLength={1000} value={popis} onChange={(e) => setPopis(e.target.value)} placeholder="Např. seřízení převodů a výměna řetězu." />
           </div>
-          <Button type="submit" size="lg">
+          <Button type="submit" size="lg" disabled={odesila}>
             {odeslano ? "Odesláno – ozveme se" : "Odeslat poptávku"}
           </Button>
         </form>
+
       </div>
     </div>
   );

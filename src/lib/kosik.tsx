@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { produkty, type Produkt } from "./produkty";
+import { type Produkt } from "./produkty";
+import { useVsechnyProdukty } from "./produkty-hook";
 
 export type Polozka = { slug: string; pocet: number };
 
@@ -19,6 +20,7 @@ const KEY = "cursorbike-kosik";
 
 export function KosikProvider({ children }: { children: ReactNode }) {
   const [polozky, setPolozky] = useState<Polozka[]>([]);
+  const { produkty: vsechnyProdukty } = useVsechnyProdukty();
 
   useEffect(() => {
     try {
@@ -40,7 +42,7 @@ export function KosikProvider({ children }: { children: ReactNode }) {
   const value = useMemo<KosikContext>(() => {
     const radky = polozky
       .map((p) => {
-        const produkt = produkty.find((x) => x.slug === p.slug);
+        const produkt = vsechnyProdukty.find((x) => x.slug === p.slug);
         return produkt ? { produkt, pocet: p.pocet } : null;
       })
       .filter((x): x is { produkt: Produkt; pocet: number } => x !== null);
@@ -63,7 +65,7 @@ export function KosikProvider({ children }: { children: ReactNode }) {
       odebrat: (slug) => setPolozky((prev) => prev.filter((p) => p.slug !== slug)),
       vyprazdnit: () => setPolozky([]),
     };
-  }, [polozky]);
+  }, [polozky, vsechnyProdukty]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

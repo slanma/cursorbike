@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BazarRouteImport } from './routes/bazar'
 import { Route as ElektrokolaRouteImport } from './routes/elektrokola'
 import { Route as KolaRouteImport } from './routes/kola'
@@ -17,15 +19,30 @@ import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as KosikRouteImport } from './routes/kosik'
 import { Route as OMneRouteImport } from './routes/o-mne'
 import { Route as ServisRouteImport } from './routes/servis'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ElektrokolaIndexRouteImport } from './routes/elektrokola.index'
 import { Route as ElektrokolaZnackaRouteImport } from './routes/elektrokola.$znacka'
 import { Route as KolaIndexRouteImport } from './routes/kola.index'
 import { Route as KolaZnackaRouteImport } from './routes/kola.$znacka'
 import { Route as KoloSlugRouteImport } from './routes/kolo.$slug'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminKategorieRouteImport } from './routes/_authenticated/admin.kategorie'
+import { Route as AuthenticatedAdminObjednavkyRouteImport } from './routes/_authenticated/admin.objednavky'
+import { Route as AuthenticatedAdminProduktyRouteImport } from './routes/_authenticated/admin.produkty'
+import { Route as AuthenticatedAdminServisRouteImport } from './routes/_authenticated/admin.servis'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BazarRoute = BazarRouteImport.update({
@@ -63,6 +80,11 @@ const ServisRoute = ServisRouteImport.update({
   path: '/servis',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ElektrokolaIndexRoute = ElektrokolaIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -88,9 +110,39 @@ const KoloSlugRoute = KoloSlugRouteImport.update({
   path: '/kolo/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminKategorieRoute =
+  AuthenticatedAdminKategorieRouteImport.update({
+    id: '/kategorie',
+    path: '/kategorie',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminObjednavkyRoute =
+  AuthenticatedAdminObjednavkyRouteImport.update({
+    id: '/objednavky',
+    path: '/objednavky',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminProduktyRoute =
+  AuthenticatedAdminProduktyRouteImport.update({
+    id: '/produkty',
+    path: '/produkty',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminServisRoute =
+  AuthenticatedAdminServisRouteImport.update({
+    id: '/servis',
+    path: '/servis',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/bazar': typeof BazarRoute
   '/elektrokola': typeof ElektrokolaRouteWithChildren
   '/kola': typeof KolaRouteWithChildren
@@ -98,14 +150,21 @@ export interface FileRoutesByFullPath {
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
   '/servis': typeof ServisRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
   '/elektrokola/': typeof ElektrokolaIndexRoute
   '/kola/': typeof KolaIndexRoute
+  '/admin/kategorie': typeof AuthenticatedAdminKategorieRoute
+  '/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
+  '/admin/produkty': typeof AuthenticatedAdminProduktyRoute
+  '/admin/servis': typeof AuthenticatedAdminServisRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/bazar': typeof BazarRoute
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
@@ -116,10 +175,17 @@ export interface FileRoutesByTo {
   '/kolo/$slug': typeof KoloSlugRoute
   '/elektrokola': typeof ElektrokolaIndexRoute
   '/kola': typeof KolaIndexRoute
+  '/admin/kategorie': typeof AuthenticatedAdminKategorieRoute
+  '/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
+  '/admin/produkty': typeof AuthenticatedAdminProduktyRoute
+  '/admin/servis': typeof AuthenticatedAdminServisRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/bazar': typeof BazarRoute
   '/elektrokola': typeof ElektrokolaRouteWithChildren
   '/kola': typeof KolaRouteWithChildren
@@ -127,16 +193,23 @@ export interface FileRoutesById {
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
   '/servis': typeof ServisRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
   '/elektrokola/': typeof ElektrokolaIndexRoute
   '/kola/': typeof KolaIndexRoute
+  '/_authenticated/admin/kategorie': typeof AuthenticatedAdminKategorieRoute
+  '/_authenticated/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
+  '/_authenticated/admin/produkty': typeof AuthenticatedAdminProduktyRoute
+  '/_authenticated/admin/servis': typeof AuthenticatedAdminServisRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/bazar'
     | '/elektrokola'
     | '/kola'
@@ -144,14 +217,21 @@ export interface FileRouteTypes {
     | '/kosik'
     | '/o-mne'
     | '/servis'
+    | '/admin'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
     | '/kolo/$slug'
     | '/elektrokola/'
     | '/kola/'
+    | '/admin/kategorie'
+    | '/admin/objednavky'
+    | '/admin/produkty'
+    | '/admin/servis'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/bazar'
     | '/kontakt'
     | '/kosik'
@@ -162,9 +242,16 @@ export interface FileRouteTypes {
     | '/kolo/$slug'
     | '/elektrokola'
     | '/kola'
+    | '/admin/kategorie'
+    | '/admin/objednavky'
+    | '/admin/produkty'
+    | '/admin/servis'
+    | '/admin'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
+    | '/auth'
     | '/bazar'
     | '/elektrokola'
     | '/kola'
@@ -172,15 +259,23 @@ export interface FileRouteTypes {
     | '/kosik'
     | '/o-mne'
     | '/servis'
+    | '/_authenticated/admin'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
     | '/kolo/$slug'
     | '/elektrokola/'
     | '/kola/'
+    | '/_authenticated/admin/kategorie'
+    | '/_authenticated/admin/objednavky'
+    | '/_authenticated/admin/produkty'
+    | '/_authenticated/admin/servis'
+    | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   BazarRoute: typeof BazarRoute
   ElektrokolaRoute: typeof ElektrokolaRouteWithChildren
   KolaRoute: typeof KolaRouteWithChildren
@@ -198,6 +293,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bazar': {
@@ -249,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServisRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/elektrokola/': {
       id: '/elektrokola/'
       path: '/'
@@ -284,8 +400,73 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KoloSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/kategorie': {
+      id: '/_authenticated/admin/kategorie'
+      path: '/kategorie'
+      fullPath: '/admin/kategorie'
+      preLoaderRoute: typeof AuthenticatedAdminKategorieRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/objednavky': {
+      id: '/_authenticated/admin/objednavky'
+      path: '/objednavky'
+      fullPath: '/admin/objednavky'
+      preLoaderRoute: typeof AuthenticatedAdminObjednavkyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/produkty': {
+      id: '/_authenticated/admin/produkty'
+      path: '/produkty'
+      fullPath: '/admin/produkty'
+      preLoaderRoute: typeof AuthenticatedAdminProduktyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/servis': {
+      id: '/_authenticated/admin/servis'
+      path: '/servis'
+      fullPath: '/admin/servis'
+      preLoaderRoute: typeof AuthenticatedAdminServisRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
+
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminKategorieRoute: typeof AuthenticatedAdminKategorieRoute
+  AuthenticatedAdminObjednavkyRoute: typeof AuthenticatedAdminObjednavkyRoute
+  AuthenticatedAdminProduktyRoute: typeof AuthenticatedAdminProduktyRoute
+  AuthenticatedAdminServisRoute: typeof AuthenticatedAdminServisRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminKategorieRoute: AuthenticatedAdminKategorieRoute,
+  AuthenticatedAdminObjednavkyRoute: AuthenticatedAdminObjednavkyRoute,
+  AuthenticatedAdminProduktyRoute: AuthenticatedAdminProduktyRoute,
+  AuthenticatedAdminServisRoute: AuthenticatedAdminServisRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface ElektrokolaRouteChildren {
   ElektrokolaZnackaRoute: typeof ElektrokolaZnackaRoute
@@ -315,6 +496,8 @@ const KolaRouteWithChildren = KolaRoute._addFileChildren(KolaRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   BazarRoute: BazarRoute,
   ElektrokolaRoute: ElektrokolaRouteWithChildren,
   KolaRoute: KolaRouteWithChildren,

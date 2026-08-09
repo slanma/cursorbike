@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, HelpCircle } from "lucide-react";
-import { formatCena, katalog, produktyZnacky, type Kategorie } from "@/lib/produkty";
+import { formatCena, katalog, type Kategorie } from "@/lib/produkty";
+import { useVsechnyProdukty } from "@/lib/produkty-hook";
 import { Drobky } from "@/components/Drobky";
 
 export function ZnackyPrehled({
@@ -13,6 +14,7 @@ export function ZnackyPrehled({
   perex: string;
 }) {
   const rootTo = kategorie === "kola" ? "/kola" : "/elektrokola";
+  const { produkty } = useVsechnyProdukty();
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
       <Drobky items={[{ label: nadpis }]} />
@@ -30,7 +32,7 @@ export function ZnackyPrehled({
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {katalog[kategorie].map((znacka) => {
-          const kola = produktyZnacky(kategorie, znacka.slug);
+          const kola = produkty.filter((p) => p.kategorie === kategorie && p.znacka === znacka.slug);
           const top = [...kola].sort((a, b) => b.cena - a.cena)[0];
 
           return (
