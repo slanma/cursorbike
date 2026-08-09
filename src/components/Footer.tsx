@@ -50,6 +50,10 @@ export function Footer() {
 
       <div className="border-t border-ink-foreground/10 py-4 text-center text-xs text-ink-muted">
         © {new Date().getFullYear()} Cursorbike — všechna práva vyhrazena
+        {" · "}
+        <Link to="/auth" className="hover:text-primary">
+          Správa e-shopu
+        </Link>
       </div>
     </footer>
   );
