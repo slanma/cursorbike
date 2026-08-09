@@ -44,8 +44,29 @@ const sluzby = [
   },
 ];
 
+const tipy = [
+  {
+    ikona: Settings2,
+    nazev: "Tlak v pláštích hlídejte každý týden",
+    text: "Správně nahuštěné pláště sníží riziko defektu a ušetří vám až 15 % energie při jízdě.",
+  },
+  {
+    ikona: BatteryCharging,
+    nazev: "Baterii skladujte na 60 %",
+    text: "Přes zimu nechte baterii v teple a nabitou zhruba na 60 %. Vydrží tak výrazně déle.",
+  },
+  {
+    ikona: Wrench,
+    nazev: "Řetěz mažte po každém dešti",
+    text: "Očištěný a namazaný řetěz vydrží třikrát déle a nezničí vám kazetu ani převodník.",
+  },
+];
+
 function Home() {
   const vybrana = produkty.slice(0, 3);
+  const vAkci = produkty.filter((p) => p.puvodniCena).slice(0, 3);
+  const akcniNeboVybrane = vAkci.length ? vAkci : vybrana;
+
 
   return (
     <div>
@@ -85,43 +106,47 @@ function Home() {
         </div>
       </section>
 
-      {/* O MNĚ */}
+      {/* AKCE & TIPY */}
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-6">
-        <div className="grid gap-10 rounded-lg border bg-card p-6 shadow-card md:grid-cols-[280px_minmax(0,1fr)] md:p-10">
-          <img
-            src={majitel}
-            alt="Majitel prodejny Cursorbike"
-            width={1600}
-            height={1104}
-            loading="lazy"
-            className="h-64 w-full rounded-lg object-cover md:h-full"
-          />
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
           <div>
-            <h2 className="section-title text-3xl">O mně a o prodejně</h2>
-            <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-primary">
-              Ahoj, jsem Petr, cyklistický nadšenec
+            <h2 className="section-title text-3xl">Kola v akci &amp; tipy z dílny</h2>
+            <p className="mt-2 text-muted-foreground">
+              Vybral jsem pro vás kola se zvýhodněnou cenou a pár rad, které vám ušetří peníze i čas.
             </p>
-            <p className="mt-4 text-muted-foreground">
-              Kolům se věnuji přes dvacet let — nejdřív jako závodník, dnes jako mechanik a prodejce. Všechno, co
-              tady najdete, mám osobně projeté. Nikdy vám neprodám kolo, na které bych sám nesedl.
-            </p>
-            <p className="mt-3 text-muted-foreground">
-              V dílně dělám všechno sám, takže víte, kdo se o vaše kolo stará. Přijďte se poradit — káva je u nás
-              zdarma.
-            </p>
-            <ul className="mt-6 grid gap-2 text-sm sm:grid-cols-2">
-              {["Elektrokola City a E-kola", "Horská a trekkingová kola", "Kola s nízkým nástupem", "Servis všech značek"].map(
-                (b) => (
-                  <li key={b} className="flex items-center gap-2">
-                    <ChevronRight className="h-4 w-4 shrink-0 text-primary" />
-                    {b}
-                  </li>
-                ),
-              )}
-            </ul>
           </div>
+          <Button asChild variant="outline">
+            <Link to="/kola">Všechna kola</Link>
+          </Button>
+        </div>
+
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {akcniNeboVybrane.map((p) => (
+            <ProductCard key={p.slug} produkt={p} />
+          ))}
+        </div>
+
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
+          {tipy.map((t) => (
+            <div key={t.nazev} className="rounded-lg border bg-card p-6 shadow-card">
+              <t.ikona className="h-7 w-7 text-primary" />
+              <h3 className="mt-4 text-lg font-bold">{t.nazev}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{t.text}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-10 rounded-lg border bg-surface p-6 text-center shadow-card">
+          <p className="text-muted-foreground">
+            Chcete vědět, kdo za Cursorbike stojí?{" "}
+            <Link to="/o-mne" className="font-semibold text-primary hover:underline">
+              Přečtěte si o mně
+            </Link>
+            .
+          </p>
         </div>
       </section>
+
 
       {/* SERVIS */}
       <section className="bg-surface py-16">

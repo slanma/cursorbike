@@ -8,6 +8,7 @@ const odkazy = [
   { to: "/kola", label: "Kola" },
   { to: "/elektrokola", label: "Elektrokola" },
   { to: "/servis", label: "Servis" },
+  { to: "/o-mne", label: "O mně" },
   { to: "/kontakt", label: "Kontakt" },
 ] as const;
 
