@@ -2,11 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
 import { Drobky } from "@/components/Drobky";
-import { produktyZnacky, type Kategorie, type Znacka } from "@/lib/produkty";
+import { type Kategorie, type Znacka } from "@/lib/produkty";
+import { useVsechnyProdukty } from "@/lib/produkty-hook";
 
 export function ZnackaVypis({ kategorie, znacka }: { kategorie: Kategorie; znacka: Znacka }) {
   const [podkategorie, setPodkategorie] = useState<string | null>(null);
-  const vse = produktyZnacky(kategorie, znacka.slug);
+  const { produkty } = useVsechnyProdukty();
+  const vse = produkty.filter((p) => p.kategorie === kategorie && p.znacka === znacka.slug);
   const seznam = podkategorie ? vse.filter((p) => p.podkategorie === podkategorie) : vse;
   const nadrazena = kategorie === "kola" ? "/kola" : "/elektrokola";
   const nadrazenyNazev = kategorie === "kola" ? "Kola" : "Elektrokola";
