@@ -16,6 +16,8 @@ import { Route as KontaktRouteImport } from './routes/kontakt'
 import { Route as KosikRouteImport } from './routes/kosik'
 import { Route as OMneRouteImport } from './routes/o-mne'
 import { Route as ServisRouteImport } from './routes/servis'
+import { Route as KolaIndexRouteImport } from './routes/kola.index'
+import { Route as KolaSekceRouteImport } from './routes/kola.$sekce'
 import { Route as KoloSlugRouteImport } from './routes/kolo.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +55,16 @@ const ServisRoute = ServisRouteImport.update({
   path: '/servis',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KolaIndexRoute = KolaIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => KolaRoute,
+} as any)
+const KolaSekceRoute = KolaSekceRouteImport.update({
+  id: '/$sekce',
+  path: '/$sekce',
+  getParentRoute: () => KolaRoute,
+} as any)
 const KoloSlugRoute = KoloSlugRouteImport.update({
   id: '/kolo/$slug',
   path: '/kolo/$slug',
@@ -62,33 +74,38 @@ const KoloSlugRoute = KoloSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/elektrokola': typeof ElektrokolaRoute
-  '/kola': typeof KolaRoute
+  '/kola': typeof KolaRouteWithChildren
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
   '/servis': typeof ServisRoute
+  '/kola/$sekce': typeof KolaSekceRoute
   '/kolo/$slug': typeof KoloSlugRoute
+  '/kola/': typeof KolaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/elektrokola': typeof ElektrokolaRoute
-  '/kola': typeof KolaRoute
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
   '/servis': typeof ServisRoute
+  '/kola/$sekce': typeof KolaSekceRoute
   '/kolo/$slug': typeof KoloSlugRoute
+  '/kola': typeof KolaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/elektrokola': typeof ElektrokolaRoute
-  '/kola': typeof KolaRoute
+  '/kola': typeof KolaRouteWithChildren
   '/kontakt': typeof KontaktRoute
   '/kosik': typeof KosikRoute
   '/o-mne': typeof OMneRoute
   '/servis': typeof ServisRoute
+  '/kola/$sekce': typeof KolaSekceRoute
   '/kolo/$slug': typeof KoloSlugRoute
+  '/kola/': typeof KolaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,17 +117,20 @@ export interface FileRouteTypes {
     | '/kosik'
     | '/o-mne'
     | '/servis'
+    | '/kola/$sekce'
     | '/kolo/$slug'
+    | '/kola/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/elektrokola'
-    | '/kola'
     | '/kontakt'
     | '/kosik'
     | '/o-mne'
     | '/servis'
+    | '/kola/$sekce'
     | '/kolo/$slug'
+    | '/kola'
   id:
     | '__root__'
     | '/'
@@ -120,13 +140,15 @@ export interface FileRouteTypes {
     | '/kosik'
     | '/o-mne'
     | '/servis'
+    | '/kola/$sekce'
     | '/kolo/$slug'
+    | '/kola/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ElektrokolaRoute: typeof ElektrokolaRoute
-  KolaRoute: typeof KolaRoute
+  KolaRoute: typeof KolaRouteWithChildren
   KontaktRoute: typeof KontaktRoute
   KosikRoute: typeof KosikRoute
   OMneRoute: typeof OMneRoute
@@ -185,6 +207,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServisRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kola/': {
+      id: '/kola/'
+      path: '/'
+      fullPath: '/kola/'
+      preLoaderRoute: typeof KolaIndexRouteImport
+      parentRoute: typeof KolaRoute
+    }
+    '/kola/$sekce': {
+      id: '/kola/$sekce'
+      path: '/$sekce'
+      fullPath: '/kola/$sekce'
+      preLoaderRoute: typeof KolaSekceRouteImport
+      parentRoute: typeof KolaRoute
+    }
     '/kolo/$slug': {
       id: '/kolo/$slug'
       path: '/kolo/$slug'
@@ -195,10 +231,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface KolaRouteChildren {
+  KolaSekceRoute: typeof KolaSekceRoute
+  KolaIndexRoute: typeof KolaIndexRoute
+}
+
+const KolaRouteChildren: KolaRouteChildren = {
+  KolaSekceRoute: KolaSekceRoute,
+  KolaIndexRoute: KolaIndexRoute,
+}
+
+const KolaRouteWithChildren = KolaRoute._addFileChildren(KolaRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ElektrokolaRoute: ElektrokolaRoute,
-  KolaRoute: KolaRoute,
+  KolaRoute: KolaRouteWithChildren,
   KontaktRoute: KontaktRoute,
   KosikRoute: KosikRoute,
   OMneRoute: OMneRoute,
