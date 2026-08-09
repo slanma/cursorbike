@@ -1,9 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
 import { useKosik } from "@/lib/kosik";
 import { formatCena } from "@/lib/produkty";
+
+const objednavkaSchema = z.object({
+  jmeno: z.string().trim().min(2, { message: "Vyplňte jméno" }).max(100),
+  email: z.string().trim().email({ message: "Zadejte platný e-mail" }).max(255),
+  telefon: z.string().trim().max(30).optional(),
+  poznamka: z.string().trim().max(1000).optional(),
+});
 
 export const Route = createFileRoute("/kosik")({
   head: () => ({
@@ -19,6 +32,58 @@ export const Route = createFileRoute("/kosik")({
 
 function KosikPage() {
   const { radky, celkem, zmenit, odebrat, vyprazdnit } = useKosik();
+  const [jmeno, setJmeno] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefon, setTelefon] = useState("");
+  const [poznamka, setPoznamka] = useState("");
+  const [odesila, setOdesila] = useState(false);
+
+  const odeslat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = objednavkaSchema.safeParse({ jmeno, email, telefon, poznamka });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Zkontrolujte údaje");
+      return;
+    }
+    setOdesila(true);
+    try {
+      const { data, error } = await supabase
+        .from("objednavky")
+        .insert({
+          jmeno: parsed.data.jmeno,
+          email: parsed.data.email,
+          telefon: parsed.data.telefon || null,
+          poznamka: parsed.data.poznamka || null,
+          celkem,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      const { error: chybaPolozek } = await supabase.from("objednavka_polozky").insert(
+        radky.map((r) => ({
+          objednavka_id: data.id,
+          nazev: r.produkt.nazev,
+          slug: r.produkt.slug,
+          cena: r.produkt.cena,
+          pocet: r.pocet,
+        })),
+      );
+      if (chybaPolozek) throw chybaPolozek;
+
+      vyprazdnit();
+      setJmeno("");
+      setEmail("");
+      setTelefon("");
+      setPoznamka("");
+      toast.success("Objednávka odeslána", { description: "Ozveme se vám s potvrzením dostupnosti." });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Objednávku se nepodařilo odeslat");
+    } finally {
+      setOdesila(false);
+    }
+  };
+
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 md:px-6">
