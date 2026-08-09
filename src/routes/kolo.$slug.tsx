@@ -32,6 +32,8 @@ function DetailProduktu() {
   const { produkt } = Route.useLoaderData();
   const { pridat } = useKosik();
   const dalsi = produkty.filter((p) => p.slug !== produkt.slug).slice(0, 3);
+  const znackaObj = najdiZnacku(produkt.kategorie, produkt.znacka);
+
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
