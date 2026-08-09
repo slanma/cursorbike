@@ -9,11 +9,15 @@ export type ParametrSkupina = {
   polozky: { label: string; hodnota: string }[];
 };
 
+export type SekceSlug = "panska" | "damska" | "detska";
+
 export type Produkt = {
   slug: string;
   nazev: string;
   kategorie: Kategorie;
   typ: string;
+  sekce?: SekceSlug;
+  velikost?: string;
   cena: number;
   puvodniCena?: number;
   obrazek: string;
@@ -87,6 +91,8 @@ export const produkty: Produkt[] = [
     nazev: "MTB Enduro Trail",
     kategorie: "kola",
     typ: "Horské",
+    sekce: "panska",
+    velikost: '29"',
     cena: 36900,
     obrazek: mtb,
     kratky: "Hliníkový rám, 140mm vidlice, brzdy pro prudké sjezdy.",
@@ -133,6 +139,8 @@ export const produkty: Produkt[] = [
     nazev: "Trekkingové kolo Tour",
     kategorie: "kola",
     typ: "Trekking",
+    sekce: "damska",
+    velikost: '27,5"',
     cena: 25900,
     obrazek: trekking,
     kratky: "Nosič, blatníky a světla – připravené na cesty.",
@@ -232,6 +240,8 @@ export const produkty: Produkt[] = [
     nazev: "MTB Hardtail Start",
     kategorie: "kola",
     typ: "Horské",
+    sekce: "detska",
+    velikost: '26"',
     cena: 18900,
     obrazek: mtb,
     kratky: "Dostupný začátek do terénu, seřízené u nás v dílně.",
@@ -324,6 +334,32 @@ export const produkty: Produkt[] = [
     ],
   },
 ];
+
+export const sekceKol: { slug: SekceSlug; nazev: string; popis: string; velikosti: string[] }[] = [
+  {
+    slug: "panska",
+    nazev: "Pánská",
+    popis: "Jízdní kola pánská — horská 29\".",
+    velikosti: ['29"'],
+  },
+  {
+    slug: "damska",
+    nazev: "Dámská",
+    popis: "Jízdní kola dámská — horská 27,5\" a 29\".",
+    velikosti: ['27,5"', '29"'],
+  },
+  {
+    slug: "detska",
+    nazev: "Dětská",
+    popis: "Jízdní kola dětská — 26\", 27,5\" a 29\".",
+    velikosti: ['26"', '27,5"', '29"'],
+  },
+];
+
+export const kolaSekce = (sekce: SekceSlug) =>
+  produkty.filter((p) => p.kategorie === "kola" && p.sekce === sekce);
+
+export const najdiSekci = (slug: string) => sekceKol.find((s) => s.slug === slug);
 
 export const formatCena = (cena: number) =>
   new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", maximumFractionDigits: 0 }).format(cena);
