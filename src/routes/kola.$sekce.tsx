@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
-import { kolaSekce, najdiSekci, type SekceSlug } from "@/lib/produkty";
+import { kolaSekce, najdiSekci, sekceKol, type SekceSlug } from "@/lib/produkty";
 
 export const Route = createFileRoute("/kola/$sekce")({
   loader: ({ params }) => {
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/kola/$sekce")({
 });
 
 function SekcePage() {
-  const { sekce } = Route.useLoaderData();
+  const { sekce } = Route.useLoaderData() as { sekce: (typeof sekceKol)[number] };
   const [velikost, setVelikost] = useState<string | null>(null);
   const vse = kolaSekce(sekce.slug as SekceSlug);
   const seznam = velikost ? vse.filter((p) => p.velikost === velikost) : vse;
