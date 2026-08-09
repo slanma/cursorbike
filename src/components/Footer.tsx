@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import logo from "@/assets/cursorbike-logo.jpg.asset.json";
+import { kontakt } from "@/lib/kontakt";
+
 
 export function Footer() {
   return (
