@@ -44,8 +44,29 @@ const sluzby = [
   },
 ];
 
+const tipy = [
+  {
+    ikona: Settings2,
+    nazev: "Tlak v pláštích hlídejte každý týden",
+    text: "Správně nahuštěné pláště sníží riziko defektu a ušetří vám až 15 % energie při jízdě.",
+  },
+  {
+    ikona: BatteryCharging,
+    nazev: "Baterii skladujte na 60 %",
+    text: "Přes zimu nechte baterii v teple a nabitou zhruba na 60 %. Vydrží tak výrazně déle.",
+  },
+  {
+    ikona: Wrench,
+    nazev: "Řetěz mažte po každém dešti",
+    text: "Očištěný a namazaný řetěz vydrží třikrát déle a nezničí vám kazetu ani převodník.",
+  },
+];
+
 function Home() {
   const vybrana = produkty.slice(0, 3);
+  const vAkci = produkty.filter((p) => p.puvodniCena).slice(0, 3);
+  const akcniNeboVybrane = vAkci.length ? vAkci : vybrana;
+
 
   return (
     <div>
