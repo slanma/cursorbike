@@ -102,7 +102,7 @@ export function naProdukt(db: DbProdukt, kategorie: DbKategorie[]): Produkt {
     kategorie: (k?.sekce === "elektrokola" ? "elektrokola" : "kola") as Kategorie,
     typ: k?.nazev ?? "Kolo",
     znacka: k?.znacka ?? "",
-    podkategorie: k?.slug ?? "",
+    podkategorie: k ? k.slug.replace(`${k.sekce}-${k.znacka ?? ""}-`, "") : "",
     cena: db.cena,
     ...(db.puvodni_cena ? { puvodniCena: db.puvodni_cena } : {}),
     oblibene: db.oblibene,
