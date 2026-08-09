@@ -142,20 +142,34 @@ function KosikPage() {
               <span>Celkem</span>
               <span>{formatCena(celkem)}</span>
             </div>
-            <Button
-              className="mt-6 w-full"
-              size="lg"
-              onClick={() => {
-                vyprazdnit();
-                toast.success("Objednávka odeslána", { description: "Ozveme se vám s potvrzením dostupnosti." });
-              }}
-            >
-              Odeslat objednávku
-            </Button>
+
+            <form className="mt-6 grid gap-3" onSubmit={odeslat}>
+              <div className="grid gap-1.5">
+                <Label htmlFor="k-jmeno">Jméno a příjmení</Label>
+                <Input id="k-jmeno" value={jmeno} maxLength={100} onChange={(e) => setJmeno(e.target.value)} required />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="k-email">E-mail</Label>
+                <Input id="k-email" type="email" value={email} maxLength={255} onChange={(e) => setEmail(e.target.value)} required />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="k-tel">Telefon</Label>
+                <Input id="k-tel" type="tel" value={telefon} maxLength={30} onChange={(e) => setTelefon(e.target.value)} />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="k-pozn">Poznámka</Label>
+                <Textarea id="k-pozn" rows={3} value={poznamka} maxLength={1000} onChange={(e) => setPoznamka(e.target.value)} />
+              </div>
+              <Button type="submit" className="w-full" size="lg" disabled={odesila}>
+                Odeslat objednávku
+              </Button>
+            </form>
+
             <p className="mt-3 text-xs text-muted-foreground">
               Objednávka je nezávazná — potvrdíme dostupnost a domluvíme převzetí.
             </p>
           </aside>
+
         </div>
       )}
     </div>
