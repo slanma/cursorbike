@@ -33,6 +33,7 @@ import { Route as AuthenticatedAdminKategorieRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminObjednavkyRouteImport } from './routes/_authenticated/admin.objednavky'
 import { Route as AuthenticatedAdminProduktyRouteImport } from './routes/_authenticated/admin.produkty'
 import { Route as AuthenticatedAdminServisRouteImport } from './routes/_authenticated/admin.servis'
+import { Route as AuthenticatedAdminSpravciRouteImport } from './routes/_authenticated/admin.spravci'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -157,6 +158,12 @@ const AuthenticatedAdminServisRoute =
     path: '/servis',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminSpravciRoute =
+  AuthenticatedAdminSpravciRouteImport.update({
+    id: '/spravci',
+    path: '/spravci',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
   '/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/admin/servis': typeof AuthenticatedAdminServisRoute
+  '/admin/spravci': typeof AuthenticatedAdminSpravciRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -203,6 +211,7 @@ export interface FileRoutesByTo {
   '/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
   '/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/admin/servis': typeof AuthenticatedAdminServisRoute
+  '/admin/spravci': typeof AuthenticatedAdminSpravciRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -230,6 +239,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
   '/_authenticated/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/_authenticated/admin/servis': typeof AuthenticatedAdminServisRoute
+  '/_authenticated/admin/spravci': typeof AuthenticatedAdminSpravciRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/admin/objednavky'
     | '/admin/produkty'
     | '/admin/servis'
+    | '/admin/spravci'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/admin/objednavky'
     | '/admin/produkty'
     | '/admin/servis'
+    | '/admin/spravci'
     | '/admin'
   id:
     | '__root__'
@@ -305,6 +317,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/objednavky'
     | '/_authenticated/admin/produkty'
     | '/_authenticated/admin/servis'
+    | '/_authenticated/admin/spravci'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -495,6 +508,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminServisRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/spravci': {
+      id: '/_authenticated/admin/spravci'
+      path: '/spravci'
+      fullPath: '/admin/spravci'
+      preLoaderRoute: typeof AuthenticatedAdminSpravciRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
@@ -503,6 +523,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminObjednavkyRoute: typeof AuthenticatedAdminObjednavkyRoute
   AuthenticatedAdminProduktyRoute: typeof AuthenticatedAdminProduktyRoute
   AuthenticatedAdminServisRoute: typeof AuthenticatedAdminServisRoute
+  AuthenticatedAdminSpravciRoute: typeof AuthenticatedAdminSpravciRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -511,6 +532,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminObjednavkyRoute: AuthenticatedAdminObjednavkyRoute,
   AuthenticatedAdminProduktyRoute: AuthenticatedAdminProduktyRoute,
   AuthenticatedAdminServisRoute: AuthenticatedAdminServisRoute,
+  AuthenticatedAdminSpravciRoute: AuthenticatedAdminSpravciRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
