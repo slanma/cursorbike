@@ -73,7 +73,7 @@ function DetailProduktu() {
           </div>
 
           <dl className="mt-8 divide-y rounded-lg border bg-card">
-            {produkt.parametry.map((p) => (
+            {produkt.parametry.map((p: { label: string; hodnota: string }) => (
               <div key={p.label} className="flex justify-between gap-4 px-4 py-3 text-sm">
                 <dt className="text-muted-foreground">{p.label}</dt>
                 <dd className="font-semibold">{p.hodnota}</dd>
