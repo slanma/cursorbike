@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bike, CalendarCheck, ChevronRight, Settings2, BatteryCharging, Wrench, Stethoscope } from "lucide-react";
+import { Bike, CalendarCheck, ChevronRight, Settings2, BatteryCharging, Wrench, Stethoscope, Store, MapPin, TestTube, ShieldCheck, Tag, Handshake } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
