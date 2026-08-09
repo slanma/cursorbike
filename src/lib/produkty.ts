@@ -295,6 +295,7 @@ export const produkty: Produkt[] = [
     znacka: "liberty",
     podkategorie: "e-city-26",
     cena: 39900,
+    oblibene: true,
     obrazek: eletroCity,
     kratky: "Menší kola, snadné parkování, ideální do města.",
     popis:
