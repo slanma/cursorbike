@@ -9,15 +9,14 @@ export type ParametrSkupina = {
   polozky: { label: string; hodnota: string }[];
 };
 
-export type SekceSlug = "panska" | "damska" | "detska";
 
 export type Produkt = {
   slug: string;
   nazev: string;
   kategorie: Kategorie;
   typ: string;
-  sekce?: SekceSlug;
-  velikost?: string;
+  znacka: string;
+  podkategorie: string;
   cena: number;
   puvodniCena?: number;
   obrazek: string;
@@ -34,6 +33,8 @@ export const produkty: Produkt[] = [
     nazev: "Elektrokolo City s nízkým nástupem",
     kategorie: "elektrokola",
     typ: "Městské",
+    znacka: "crussis",
+    podkategorie: "mestska",
     cena: 44900,
     puvodniCena: 49900,
     obrazek: eletroCity,
@@ -91,8 +92,8 @@ export const produkty: Produkt[] = [
     nazev: "MTB Enduro Trail",
     kategorie: "kola",
     typ: "Horské",
-    sekce: "panska",
-    velikost: '29"',
+        znacka: "author",
+    podkategorie: "panska-horska-29",
     cena: 36900,
     obrazek: mtb,
     kratky: "Hliníkový rám, 140mm vidlice, brzdy pro prudké sjezdy.",
@@ -139,8 +140,8 @@ export const produkty: Produkt[] = [
     nazev: "Trekkingové kolo Tour",
     kategorie: "kola",
     typ: "Trekking",
-    sekce: "damska",
-    velikost: '27,5"',
+        znacka: "author",
+    podkategorie: "damska-horska-275",
     cena: 25900,
     obrazek: trekking,
     kratky: "Nosič, blatníky a světla – připravené na cesty.",
@@ -185,6 +186,8 @@ export const produkty: Produkt[] = [
     nazev: "Elektrokolo Trek Power",
     kategorie: "elektrokola",
     typ: "Trekkingové",
+    znacka: "author",
+    podkategorie: "trekingova-ecross-29",
     cena: 58900,
     obrazek: trekking,
     kratky: "Silný motor a velká baterie pro dlouhé trasy.",
@@ -240,8 +243,8 @@ export const produkty: Produkt[] = [
     nazev: "MTB Hardtail Start",
     kategorie: "kola",
     typ: "Horské",
-    sekce: "detska",
-    velikost: '26"',
+        znacka: "author",
+    podkategorie: "detska-26",
     cena: 18900,
     obrazek: mtb,
     kratky: "Dostupný začátek do terénu, seřízené u nás v dílně.",
@@ -286,6 +289,8 @@ export const produkty: Produkt[] = [
     nazev: "Elektrokolo Compact",
     kategorie: "elektrokola",
     typ: "Kompaktní",
+    znacka: "liberty",
+    podkategorie: "e-city-26",
     cena: 39900,
     obrazek: eletroCity,
     kratky: "Menší kola, snadné parkování, ideální do města.",
@@ -335,31 +340,91 @@ export const produkty: Produkt[] = [
   },
 ];
 
-export const sekceKol: { slug: SekceSlug; nazev: string; popis: string; velikosti: string[] }[] = [
-  {
-    slug: "panska",
-    nazev: "Pánská",
-    popis: "Jízdní kola pánská — horská 29\".",
-    velikosti: ['29"'],
-  },
-  {
-    slug: "damska",
-    nazev: "Dámská",
-    popis: "Jízdní kola dámská — horská 27,5\" a 29\".",
-    velikosti: ['27,5"', '29"'],
-  },
-  {
-    slug: "detska",
-    nazev: "Dětská",
-    popis: "Jízdní kola dětská — 26\", 27,5\" a 29\".",
-    velikosti: ['26"', '27,5"', '29"'],
-  },
-];
+export type Podkategorie = { slug: string; nazev: string };
+export type Znacka = { slug: string; nazev: string; popis: string; podkategorie: Podkategorie[] };
 
-export const kolaSekce = (sekce: SekceSlug) =>
-  produkty.filter((p) => p.kategorie === "kola" && p.sekce === sekce);
+export const katalog: Record<Kategorie, Znacka[]> = {
+  kola: [
+    {
+      slug: "author",
+      nazev: "Author",
+      popis: "Pánská, dámská i dětská jízdní kola značky Author.",
+      podkategorie: [
+        { slug: "panska-horska-29", nazev: 'Pánská | Horská 29"' },
+        { slug: "damska-horska-275", nazev: 'Dámská | Horská 27,5"' },
+        { slug: "damska-horska-29", nazev: 'Dámská | Horská 29"' },
+        { slug: "detska-26", nazev: "Dětská | 26 palců" },
+        { slug: "detska-275", nazev: "Dětská | 27,5 palců" },
+        { slug: "detska-29", nazev: "Dětská | 29 palců" },
+      ],
+    },
+    {
+      slug: "liberty",
+      nazev: "Liberty",
+      popis: "Městská kola Liberty.",
+      podkategorie: [{ slug: "city-26", nazev: 'City 26"' }],
+    },
+  ],
+  elektrokola: [
+    {
+      slug: "author",
+      nazev: "Author",
+      popis: "Horská, trekingová i dámská elektrokola Author.",
+      podkategorie: [
+        { slug: "horska-emtb-29", nazev: "Horská elektrokola (E-MTB) | 29 palců" },
+        { slug: "trekingova-ecross-29", nazev: "Trekingová elektrokola (E-Cross) | 29 palců" },
+        { slug: "trekingova-ecross-29-damske", nazev: "Trekingová (E-Cross) | 29 palců dámské" },
+        { slug: "damska-275", nazev: "Dámská elektrokola | 27,5 palců" },
+        { slug: "e-city-damske", nazev: "E-city | Dámské" },
+      ],
+    },
+    {
+      slug: "crussis",
+      nazev: "Crussis",
+      popis: "Česká elektrokola Crussis pro terén i město.",
+      podkategorie: [
+        { slug: "horska", nazev: "Horská elektrokola" },
+        { slug: "celoodpruzena", nazev: "Celoodpružená elektrokola" },
+        { slug: "trekova", nazev: "Treková elektrokola" },
+        { slug: "krosova", nazev: "Krosová elektrokola" },
+        { slug: "mestska", nazev: "Městská elektrokola" },
+      ],
+    },
+    {
+      slug: "emerix",
+      nazev: "eMERIX",
+      popis: "Elektrokola Profil Bicycles s motory Yamaha a Bafang.",
+      podkategorie: [
+        { slug: "yamaha", nazev: "Profil Bicycles | Yamaha" },
+        { slug: "bafang", nazev: "Profil Bicycles | Bafang" },
+      ],
+    },
+    {
+      slug: "liberty",
+      nazev: "Liberty",
+      popis: "Pohodlná městská elektrokola Liberty.",
+      podkategorie: [
+        { slug: "e-city-28", nazev: 'e-City 28"' },
+        { slug: "e-city-26", nazev: 'e-City 26"' },
+      ],
+    },
+    {
+      slug: "lectron",
+      nazev: "Lectron",
+      popis: "Trekingová a horská elektrokola Lectron.",
+      podkategorie: [
+        { slug: "trekingova", nazev: "Trekingová elektrokola" },
+        { slug: "horska", nazev: "Horská elektrokola" },
+      ],
+    },
+  ],
+};
 
-export const najdiSekci = (slug: string) => sekceKol.find((s) => s.slug === slug);
+export const najdiZnacku = (kategorie: Kategorie, slug: string) =>
+  katalog[kategorie].find((z) => z.slug === slug);
+
+export const produktyZnacky = (kategorie: Kategorie, znacka: string) =>
+  produkty.filter((p) => p.kategorie === kategorie && p.znacka === znacka);
 
 export const formatCena = (cena: number) =>
   new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK", maximumFractionDigits: 0 }).format(cena);
