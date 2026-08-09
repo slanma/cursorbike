@@ -145,6 +145,7 @@ export const produkty: Produkt[] = [
         znacka: "author",
     podkategorie: "damska-horska-275",
     cena: 25900,
+    oblibene: true,
     obrazek: trekking,
     kratky: "Nosič, blatníky a světla – připravené na cesty.",
     popis:
