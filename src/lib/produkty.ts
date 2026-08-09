@@ -38,6 +38,7 @@ export const produkty: Produkt[] = [
     podkategorie: "mestska",
     cena: 44900,
     puvodniCena: 49900,
+    oblibene: true,
     obrazek: eletroCity,
     kratky: "Pohodlný nástup, středový motor a baterie na 90 km.",
     popis:
