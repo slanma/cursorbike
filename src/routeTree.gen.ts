@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ElektrokolaRouteImport } from './routes/elektrokola'
+import { Route as KolaRouteImport } from './routes/kola'
+import { Route as KontaktRouteImport } from './routes/kontakt'
+import { Route as KosikRouteImport } from './routes/kosik'
+import { Route as ServisRouteImport } from './routes/servis'
+import { Route as KoloSlugRouteImport } from './routes/kolo.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ElektrokolaRoute = ElektrokolaRouteImport.update({
+  id: '/elektrokola',
+  path: '/elektrokola',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KolaRoute = KolaRouteImport.update({
+  id: '/kola',
+  path: '/kola',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KontaktRoute = KontaktRouteImport.update({
+  id: '/kontakt',
+  path: '/kontakt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KosikRoute = KosikRouteImport.update({
+  id: '/kosik',
+  path: '/kosik',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServisRoute = ServisRouteImport.update({
+  id: '/servis',
+  path: '/servis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KoloSlugRoute = KoloSlugRouteImport.update({
+  id: '/kolo/$slug',
+  path: '/kolo/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/elektrokola': typeof ElektrokolaRoute
+  '/kola': typeof KolaRoute
+  '/kontakt': typeof KontaktRoute
+  '/kosik': typeof KosikRoute
+  '/servis': typeof ServisRoute
+  '/kolo/$slug': typeof KoloSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/elektrokola': typeof ElektrokolaRoute
+  '/kola': typeof KolaRoute
+  '/kontakt': typeof KontaktRoute
+  '/kosik': typeof KosikRoute
+  '/servis': typeof ServisRoute
+  '/kolo/$slug': typeof KoloSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/elektrokola': typeof ElektrokolaRoute
+  '/kola': typeof KolaRoute
+  '/kontakt': typeof KontaktRoute
+  '/kosik': typeof KosikRoute
+  '/servis': typeof ServisRoute
+  '/kolo/$slug': typeof KoloSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/elektrokola'
+    | '/kola'
+    | '/kontakt'
+    | '/kosik'
+    | '/servis'
+    | '/kolo/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/elektrokola'
+    | '/kola'
+    | '/kontakt'
+    | '/kosik'
+    | '/servis'
+    | '/kolo/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/elektrokola'
+    | '/kola'
+    | '/kontakt'
+    | '/kosik'
+    | '/servis'
+    | '/kolo/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ElektrokolaRoute: typeof ElektrokolaRoute
+  KolaRoute: typeof KolaRoute
+  KontaktRoute: typeof KontaktRoute
+  KosikRoute: typeof KosikRoute
+  ServisRoute: typeof ServisRoute
+  KoloSlugRoute: typeof KoloSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +130,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/elektrokola': {
+      id: '/elektrokola'
+      path: '/elektrokola'
+      fullPath: '/elektrokola'
+      preLoaderRoute: typeof ElektrokolaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kola': {
+      id: '/kola'
+      path: '/kola'
+      fullPath: '/kola'
+      preLoaderRoute: typeof KolaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kontakt': {
+      id: '/kontakt'
+      path: '/kontakt'
+      fullPath: '/kontakt'
+      preLoaderRoute: typeof KontaktRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kosik': {
+      id: '/kosik'
+      path: '/kosik'
+      fullPath: '/kosik'
+      preLoaderRoute: typeof KosikRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/servis': {
+      id: '/servis'
+      path: '/servis'
+      fullPath: '/servis'
+      preLoaderRoute: typeof ServisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kolo/$slug': {
+      id: '/kolo/$slug'
+      path: '/kolo/$slug'
+      fullPath: '/kolo/$slug'
+      preLoaderRoute: typeof KoloSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ElektrokolaRoute: ElektrokolaRoute,
+  KolaRoute: KolaRoute,
+  KontaktRoute: KontaktRoute,
+  KosikRoute: KosikRoute,
+  ServisRoute: ServisRoute,
+  KoloSlugRoute: KoloSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
