@@ -135,6 +135,31 @@ function Home() {
         </div>
       </section>
 
+      {/* PROČ MY — hlavní výhody */}
+      <section className="border-b bg-card">
+        <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16">
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+            <h2 className="section-title text-3xl">Proč nakupovat u Cursorbike</h2>
+          </div>
+          <div className="mt-8 grid gap-6 lg:grid-cols-3">
+            {vyhody.map((v) => (
+              <div key={v.nazev} className="flex flex-col rounded-lg border bg-background p-6 shadow-card">
+                <v.ikona className="h-9 w-9 text-primary" />
+                <h3 className="mt-4 text-xl font-bold">{v.nazev}</h3>
+                <ul className="mt-4 space-y-3">
+                  {v.body.map((b) => (
+                    <li key={b} className="flex gap-2 text-sm text-muted-foreground">
+                      <ChevronRight className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* AKCE & TIPY */}
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-6">
         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
