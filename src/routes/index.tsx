@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bike, CalendarCheck, ChevronRight, Settings2, BatteryCharging, Wrench, Stethoscope } from "lucide-react";
+import { Bike, CalendarCheck, ChevronRight, Settings2, BatteryCharging, Wrench, Stethoscope, Store, ShieldCheck } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -62,6 +62,35 @@ const tipy = [
   },
 ];
 
+const vyhody = [
+  {
+    ikona: Store,
+    nazev: "Online e-shop & kamenná prodejna",
+    body: [
+      "Široký výběr pro každého: prodáváme klasická jízdní kola, moderní elektrokola všech typů i elektrokoloběžky a cyklo brašny.",
+      "Komfortní modely: specializujeme se mimo jiné na bezpečná elektrokola s nízkým nástupem pro snadné nasedání.",
+      "Vyzkoušení zdarma: vše si můžete prohlédnout na e-shopu a osobně otestovat přímo na naší prodejně v Kravařích.",
+    ],
+  },
+  {
+    ikona: Wrench,
+    nazev: "Odborný cykloservis v regionu",
+    body: [
+      "Kompletní péče: provádíme profesionální opravy, údržbu, seřízení a diagnostiku kol.",
+      "Repase baterií: nabízíme profesionální testování a repase baterií pro elektrokola a elektrokoloběžky. Vrátíme vaší baterii plnou kapacitu a ušetříme vám náklady za nákup nové.",
+      "Pro všechny cyklisty: náš servis je plně otevřený — opravíme i kola a elektrokola zakoupená u jiných prodejců.",
+    ],
+  },
+  {
+    ikona: ShieldCheck,
+    nazev: "Garance nejvýhodnější ceny",
+    body: [
+      "Trvale nízké ceny: držíme ceny produktů dlouhodobě pod úrovní běžné konkurence.",
+      "Dorovnání ceny: pokud na internetu nebo v okolí narazíte na výhodnější nabídku, při návštěvě prodejny vám cenu dorovnáme.",
+    ],
+  },
+];
+
 function Home() {
   const vybrana = produkty.slice(0, 3);
   const vAkci = produkty.filter((p) => p.puvodniCena).slice(0, 3);
@@ -102,6 +131,31 @@ function Home() {
                 <Link to="/kola">Prohlédnout kola</Link>
               </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PROČ MY — hlavní výhody */}
+      <section className="border-b bg-card">
+        <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16">
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+            <h2 className="section-title text-3xl">Proč nakupovat u Cursorbike</h2>
+          </div>
+          <div className="mt-8 grid gap-6 lg:grid-cols-3">
+            {vyhody.map((v) => (
+              <div key={v.nazev} className="flex flex-col rounded-lg border bg-background p-6 shadow-card">
+                <v.ikona className="h-9 w-9 text-primary" />
+                <h3 className="mt-4 text-xl font-bold">{v.nazev}</h3>
+                <ul className="mt-4 space-y-3">
+                  {v.body.map((b) => (
+                    <li key={b} className="flex gap-2 text-sm text-muted-foreground">
+                      <ChevronRight className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </section>
