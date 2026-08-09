@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { kontakt } from "@/lib/kontakt";
 
 export const Route = createFileRoute("/servis")({
   head: () => ({
@@ -52,12 +53,12 @@ function ServisPage() {
           <h2 className="section-title text-2xl">Objednat termín</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Vyplňte formulář a my se vám ozveme s potvrzením termínu. Nebo zavolejte na{" "}
-            <a href="tel:+420123456789" className="font-semibold text-primary">+420 123 456 789</a>.
+            <a href={kontakt.telefonHref} className="font-semibold text-primary">{kontakt.telefon}</a>.
           </p>
           <ul className="mt-6 space-y-2 text-sm text-muted-foreground">
-            <li>Po–Pá 9:00–17:00</li>
-            <li>So 9:00–12:00</li>
-            <li>Kravaře 123, 747 21</li>
+            <li>Po–Pá 9:00–12:00 a 13:00–17:00</li>
+            <li>So a Ne zavřeno</li>
+            <li>{kontakt.adresaJednoradek}</li>
           </ul>
         </div>
 

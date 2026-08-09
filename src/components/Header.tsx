@@ -3,6 +3,7 @@ import { Menu, Phone, ShoppingCart, X } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/cursorbike-logo.jpg.asset.json";
 import { useKosik } from "@/lib/kosik";
+import { kontakt } from "@/lib/kontakt";
 
 const odkazy = [
   { to: "/kola", label: "Kola" },
@@ -43,7 +44,7 @@ export function Header() {
             className="hidden items-center gap-2 border-l border-ink-foreground/15 pl-6 text-sm lg:flex"
           >
             <Phone className="h-4 w-4 shrink-0 text-primary" />
-            <span className="font-semibold">+420 123 456 789</span>
+            <a href={kontakt.telefonHref} className="font-semibold hover:text-primary">{kontakt.telefon}</a>
           </a>
 
           <Link

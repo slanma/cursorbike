@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Phone, RefreshCcw, ShieldCheck, Wrench } from "lucide-react";
 import { Drobky } from "@/components/Drobky";
+import { kontakt } from "@/lib/kontakt";
 
 export const Route = createFileRoute("/bazar")({
   head: () => ({
@@ -71,7 +72,7 @@ function BazarPage() {
             href="tel:+420123456789"
             className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold"
           >
-            <Phone className="h-4 w-4" /> +420 123 456 789
+            <Phone className="h-4 w-4" /> {kontakt.telefon}
           </a>
         </div>
       </div>

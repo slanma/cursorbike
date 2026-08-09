@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import majitel from "@/assets/majitel-hero.jpg";
 import { produkty } from "@/lib/produkty";
+import { kontakt } from "@/lib/kontakt";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -252,7 +253,7 @@ function Home() {
           <div>
             <h2 className="section-title text-3xl">Časté dotazy</h2>
             <p className="mt-2 text-muted-foreground">
-              Nenašli jste odpověď? Zavolejte na <a href="tel:+420123456789" className="font-semibold text-primary">+420 123 456 789</a>.
+              Nenašli jste odpověď? Zavolejte na <a href={kontakt.telefonHref} className="font-semibold text-primary">{kontakt.telefon}</a>.
             </p>
             <div className="mt-6 flex flex-wrap gap-3 text-sm">
               <span className="inline-flex items-center gap-2 rounded-md bg-card px-3 py-2 shadow-card">
