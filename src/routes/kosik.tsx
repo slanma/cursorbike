@@ -160,14 +160,28 @@ function KosikPage() {
                 <Label htmlFor="k-pozn">Poznámka</Label>
                 <Textarea id="k-pozn" rows={3} value={poznamka} maxLength={1000} onChange={(e) => setPoznamka(e.target.value)} />
               </div>
+              <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                <input type="checkbox" required className="mt-0.5 h-4 w-4 accent-primary" />
+                <span>
+                  Souhlasím s{" "}
+                  <Link to="/obchodni-podminky" className="text-primary hover:underline">obchodními podmínkami</Link> a beru
+                  na vědomí{" "}
+                  <Link to="/ochrana-osobnich-udaju" className="text-primary hover:underline">
+                    zásady zpracování osobních údajů
+                  </Link>
+                  .
+                </span>
+              </label>
               <Button type="submit" className="w-full" size="lg" disabled={odesila}>
                 Odeslat objednávku
               </Button>
             </form>
 
             <p className="mt-3 text-xs text-muted-foreground">
-              Objednávka je nezávazná — potvrdíme dostupnost a domluvíme převzetí.
+              Objednávka je nezávazná — potvrdíme dostupnost a domluvíme převzetí. Kupní smlouva vzniká až naším
+              potvrzením e-mailem.
             </p>
+
           </aside>
 
         </div>
