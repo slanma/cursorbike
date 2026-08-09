@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, HelpCircle } from "lucide-react";
 import { formatCena, katalog, produktyZnacky, type Kategorie } from "@/lib/produkty";
+import { Drobky } from "@/components/Drobky";
 
 export function ZnackyPrehled({
   kategorie,
@@ -11,10 +12,21 @@ export function ZnackyPrehled({
   nadpis: string;
   perex: string;
 }) {
+  const rootTo = kategorie === "kola" ? "/kola" : "/elektrokola";
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
+      <Drobky items={[{ label: nadpis }]} />
       <h1 className="section-title text-4xl">{nadpis}</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">{perex}</p>
+
+      <div className="mt-6 flex flex-col gap-2 rounded-lg border bg-accent/40 p-4 sm:flex-row sm:items-start sm:gap-3">
+        <HelpCircle className="h-5 w-5 shrink-0 text-primary" />
+        <p className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">Nevíte, kterou značku?</span> Většina lidí vybírá podle
+          toho, kdo na kolo pojede. Klikněte na značku a pak nahoře zvolte typ (Pánská / Dámská / Dětská …).
+          Nejste si jistí? Zavolejte nám — rádi poradíme.
+        </p>
+      </div>
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {katalog[kategorie].map((znacka) => {
