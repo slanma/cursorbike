@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, Phone, ShoppingCart, X } from "lucide-react";
 import { useState } from "react";
-import logo from "@/assets/cursorbike-logo.jpg.asset.json";
+import logo from "@/assets/cursorbike-logo-light.png";
 import { useKosik } from "@/lib/kosik";
 import { kontakt } from "@/lib/kontakt";
 
