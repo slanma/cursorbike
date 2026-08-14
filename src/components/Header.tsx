@@ -22,7 +22,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b bg-background text-foreground">
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 md:px-6">
         <Link to="/" className="flex min-w-0 items-center" onClick={() => setOpen(false)}>
-          <img src={logo} alt="Cursorbike" className="h-9 w-auto shrink-0" width={220} height={60} />
+          <img src={logo} alt="Cursorbike" className="h-11 w-auto shrink-0" width={220} height={60} />
         </Link>
 
         <div className="flex items-center gap-2 md:gap-6">
