@@ -101,36 +101,50 @@ function Home() {
   return (
     <div>
       {/* HERO */}
-      <section className="relative bg-surface text-foreground">
-        <div className="mx-auto grid max-w-7xl items-stretch gap-0 md:grid-cols-2">
-          <div className="relative min-h-[280px] md:min-h-[520px]">
+      <section className="relative overflow-hidden bg-surface text-foreground">
+        <div className="mx-auto grid max-w-[1600px] items-stretch gap-0 md:grid-cols-[1.05fr_1fr]">
+          <div className="relative min-h-[300px] md:min-h-[560px]">
             <img
               src={majitel}
               alt="Petr, majitel prodejny Cursorbike, ve své dílně"
               width={1600}
               height={1104}
-              className="absolute inset-0 h-full w-full object-cover md:[clip-path:polygon(0_0,100%_0,88%_100%,0_100%)]"
+              className="absolute inset-0 h-full w-full object-cover md:[clip-path:polygon(0_0,100%_0,84%_100%,0_100%)]"
             />
+            <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-px bg-primary/60 md:block md:[transform:skewX(-9deg)]" />
           </div>
 
-          <div className="flex flex-col justify-center gap-6 px-6 py-12 md:px-12 md:py-20">
-            <span className="inline-flex w-fit items-center gap-3 text-xs font-semibold uppercase tracking-widest text-primary">
+          <div className="flex flex-col justify-center gap-6 px-6 py-12 md:px-14 md:py-24">
+            <span className="inline-flex w-fit items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               <span className="h-px w-8 bg-primary" />
               Prodejna &amp; servis Kravaře
             </span>
-            <h1 className="text-4xl font-bold uppercase leading-[1.05] md:text-5xl">
-              Cursorbike — vaše kolo <span className="text-primary">v dobrých rukou</span>
+            <h1 className="text-4xl font-bold uppercase leading-[1.05] md:text-6xl">
+              Cursorbike — vaše kolo
+              <br />
+              <span className="text-primary">v dobrých rukou</span>
             </h1>
-            <p className="max-w-md text-muted-foreground">
+            <p className="max-w-lg text-base leading-relaxed text-muted-foreground md:text-lg">
               Osobní přístup, profesionální servis a vybraná kola přímo u nás v Kravařích. Poradíme vám s výběrem
               i s tím, co vaše kolo právě potřebuje.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg">
-                <Link to="/servis">Rezervujte si servis</Link>
+            <div className="flex flex-wrap gap-4">
+              <Button asChild size="lg" className="h-13 rounded-lg px-7 text-base">
+                <Link to="/servis">
+                  <CalendarCheck className="h-5 w-5" />
+                  Rezervujte si servis
+                </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-primary/40 text-foreground hover:bg-primary/10">
-                <Link to="/kola">Prohlédnout kola</Link>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="h-13 rounded-lg border-primary/40 bg-background px-7 text-base text-foreground hover:bg-primary/10"
+              >
+                <Link to="/kola">
+                  <Eye className="h-5 w-5" />
+                  Prohlédnout kola
+                </Link>
               </Button>
             </div>
           </div>
@@ -138,29 +152,34 @@ function Home() {
       </section>
 
       {/* PROČ MY — hlavní výhody */}
-      <section className="border-b bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16">
-          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-            <h2 className="section-title text-3xl">Proč nakupovat u Cursorbike</h2>
-          </div>
-          <div className="mt-8 grid gap-6 lg:grid-cols-3">
+      <section className="border-b bg-background">
+        <div className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-20">
+          <h2 className="section-title text-center text-3xl md:text-4xl">
+            Proč nakupovat u <span className="text-primary">Cursorbike</span>
+          </h2>
+          <div className="mt-10 grid gap-6 lg:grid-cols-3">
             {vyhody.map((v) => (
-              <div key={v.nazev} className="flex flex-col rounded-lg border bg-background p-6 shadow-card">
-                <v.ikona className="h-9 w-9 text-primary" />
-                <h3 className="mt-4 text-xl font-bold">{v.nazev}</h3>
-                <ul className="mt-4 space-y-3">
-                  {v.body.map((b) => (
-                    <li key={b} className="flex gap-2 text-sm text-muted-foreground">
-                      <ChevronRight className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div key={v.nazev} className="flex gap-5 rounded-2xl bg-surface p-7 shadow-card">
+                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary/10">
+                  <v.ikona className="h-7 w-7 text-primary" />
+                </span>
+                <div>
+                  <h3 className="text-lg font-bold">{v.nazev}</h3>
+                  <ul className="mt-3 space-y-2.5">
+                    {v.body.map((b) => (
+                      <li key={b} className="flex gap-2 text-sm leading-relaxed text-muted-foreground">
+                        <ChevronRight className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
+
 
       {/* AKCE & TIPY */}
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-6">
