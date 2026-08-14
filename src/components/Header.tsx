@@ -72,7 +72,7 @@ export function Header() {
               key={o.to}
               to={o.to}
               onClick={() => setOpen(false)}
-              className="block px-4 py-3 text-sm font-semibold uppercase tracking-wide text-ink-foreground/85"
+              className="block px-4 py-3 text-sm font-semibold uppercase tracking-wide text-foreground/80"
               activeProps={{ className: "text-primary" }}
             >
               {o.label}
