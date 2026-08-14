@@ -101,7 +101,7 @@ function Home() {
   return (
     <div>
       {/* HERO */}
-      <section className="relative bg-ink text-ink-foreground">
+      <section className="relative bg-surface text-foreground">
         <div className="mx-auto grid max-w-7xl items-stretch gap-0 md:grid-cols-2">
           <div className="relative min-h-[280px] md:min-h-[520px]">
             <img
@@ -109,18 +109,19 @@ function Home() {
               alt="Petr, majitel prodejny Cursorbike, ve své dílně"
               width={1600}
               height={1104}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover md:[clip-path:polygon(0_0,100%_0,88%_100%,0_100%)]"
             />
           </div>
 
           <div className="flex flex-col justify-center gap-6 px-6 py-12 md:px-12 md:py-20">
-            <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
-              Prodejna & servis Kravaře
+            <span className="inline-flex w-fit items-center gap-3 text-xs font-semibold uppercase tracking-widest text-primary">
+              <span className="h-px w-8 bg-primary" />
+              Prodejna &amp; servis Kravaře
             </span>
             <h1 className="text-4xl font-bold uppercase leading-[1.05] md:text-5xl">
               Cursorbike — vaše kolo <span className="text-primary">v dobrých rukou</span>
             </h1>
-            <p className="max-w-md text-ink-muted">
+            <p className="max-w-md text-muted-foreground">
               Osobní přístup, profesionální servis a vybraná kola přímo u nás v Kravařích. Poradíme vám s výběrem
               i s tím, co vaše kolo právě potřebuje.
             </p>
@@ -128,7 +129,7 @@ function Home() {
               <Button asChild size="lg">
                 <Link to="/servis">Rezervujte si servis</Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-ink-foreground/25 bg-transparent text-ink-foreground hover:bg-ink-foreground/10">
+              <Button asChild size="lg" variant="outline" className="border-primary/40 text-foreground hover:bg-primary/10">
                 <Link to="/kola">Prohlédnout kola</Link>
               </Button>
             </div>

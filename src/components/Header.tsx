@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, Phone, ShoppingCart, X } from "lucide-react";
 import { useState } from "react";
-import logo from "@/assets/cursorbike-logo.jpg.asset.json";
+import logo from "@/assets/cursorbike-logo-light.png";
 import { useKosik } from "@/lib/kosik";
 import { kontakt } from "@/lib/kontakt";
 
@@ -19,10 +19,10 @@ export function Header() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-ink text-ink-foreground">
+    <header className="sticky top-0 z-50 border-b bg-background text-foreground">
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 md:px-6">
         <Link to="/" className="flex min-w-0 items-center" onClick={() => setOpen(false)}>
-          <img src={logo.url} alt="Cursorbike" className="h-9 w-auto shrink-0" width={220} height={60} />
+          <img src={logo} alt="Cursorbike" className="h-9 w-auto shrink-0" width={220} height={60} />
         </Link>
 
         <div className="flex items-center gap-2 md:gap-6">
@@ -31,7 +31,7 @@ export function Header() {
               <Link
                 key={o.to}
                 to={o.to}
-                className="text-sm font-semibold uppercase tracking-wide text-ink-foreground/85 transition-colors hover:text-primary"
+                className="text-sm font-semibold uppercase tracking-wide text-foreground/75 transition-colors hover:text-primary"
                 activeProps={{ className: "text-primary" }}
               >
                 {o.label}
@@ -39,29 +39,24 @@ export function Header() {
             ))}
           </nav>
 
-          <a
-            href="tel:+420123456789"
-            className="hidden items-center gap-2 border-l border-ink-foreground/15 pl-6 text-sm lg:flex"
-          >
+          <span className="hidden items-center gap-2 border-l pl-6 text-sm lg:flex">
             <Phone className="h-4 w-4 shrink-0 text-primary" />
             <a href={kontakt.telefonHref} className="font-semibold hover:text-primary">{kontakt.telefon}</a>
-          </a>
+          </span>
 
           <Link
             to="/kosik"
-            className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-ink-foreground/10 transition-colors hover:bg-primary hover:text-primary-foreground"
+            className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface transition-colors hover:bg-primary hover:text-primary-foreground"
             aria-label="Košík"
           >
             <ShoppingCart className="h-4 w-4" />
-            {pocetKusu > 0 && (
-              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-brand-red px-1 text-[11px] font-bold text-ink-foreground">
-                {pocetKusu}
-              </span>
-            )}
+            <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground">
+              {pocetKusu}
+            </span>
           </Link>
 
           <button
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-ink-foreground/10 md:hidden"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface md:hidden"
             onClick={() => setOpen((v) => !v)}
             aria-label="Menu"
           >
@@ -71,13 +66,13 @@ export function Header() {
       </div>
 
       {open && (
-        <nav className="border-t border-ink-foreground/10 md:hidden">
+        <nav className="border-t md:hidden">
           {odkazy.map((o) => (
             <Link
               key={o.to}
               to={o.to}
               onClick={() => setOpen(false)}
-              className="block px-4 py-3 text-sm font-semibold uppercase tracking-wide text-ink-foreground/85"
+              className="block px-4 py-3 text-sm font-semibold uppercase tracking-wide text-foreground/80"
               activeProps={{ className: "text-primary" }}
             >
               {o.label}
