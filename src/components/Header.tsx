@@ -66,7 +66,7 @@ export function Header() {
       </div>
 
       {open && (
-        <nav className="border-t border-ink-foreground/10 md:hidden">
+        <nav className="border-t md:hidden">
           {odkazy.map((o) => (
             <Link
               key={o.to}
