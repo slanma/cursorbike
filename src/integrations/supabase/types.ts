@@ -246,6 +246,36 @@ export type Database = {
         }
         Relationships: []
       }
+      zpravy: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          jmeno: string
+          stav: string
+          telefon: string | null
+          zprava: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          jmeno: string
+          stav?: string
+          telefon?: string | null
+          zprava: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          jmeno?: string
+          stav?: string
+          telefon?: string | null
+          zprava?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
