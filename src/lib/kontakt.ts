@@ -1,5 +1,5 @@
 export const kontakt = {
-  nazev: "Cursorbike",
+  nazev: "Cursorbike s.r.o.",
   ulice: "Novodvorská 310/13",
   mesto: "Kravaře",
   psc: "747 21",

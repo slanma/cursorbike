@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { BatteryCharging, Stethoscope, Wrench } from "lucide-react";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { kontakt } from "@/lib/kontakt";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { drobkyLd, jsonLdScript, kanonicka, servisLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/servis")({
   head: () => ({
@@ -17,6 +18,11 @@ export const Route = createFileRoute("/servis")({
       { name: "description", content: "Diagnostika, opravy a repase baterií. Objednejte se online, opravy do 48 hodin." },
       { property: "og:title", content: "Servis kol a elektrokol | Cursorbike" },
       { property: "og:description", content: "Rychlý a spolehlivý servis všech značek kol v Kravařích." },
+    ],
+    links: [kanonicka("/servis")],
+    scripts: [
+      jsonLdScript(servisLd()),
+      jsonLdScript(drobkyLd([{ nazev: "Úvod", cesta: "/" }, { nazev: "Servis", cesta: "/servis" }])),
     ],
   }),
   component: ServisPage,
@@ -153,6 +159,16 @@ function ServisPage() {
             <Label htmlFor="popis">Co je potřeba udělat?</Label>
             <Textarea id="popis" rows={4} maxLength={1000} value={popis} onChange={(e) => setPopis(e.target.value)} placeholder="Např. seřízení převodů a výměna řetězu." />
           </div>
+          <label className="flex items-start gap-2 text-xs text-muted-foreground">
+            <input type="checkbox" required className="mt-0.5 h-4 w-4 shrink-0 accent-primary" />
+            <span>
+              Beru na vědomí{" "}
+              <Link to="/ochrana-osobnich-udaju" className="text-primary hover:underline">
+                zásady zpracování osobních údajů
+              </Link>
+              .
+            </span>
+          </label>
           <Button type="submit" size="lg" disabled={odesila}>
             {odeslano ? "Odesláno – ozveme se" : "Odeslat poptávku"}
           </Button>

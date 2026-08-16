@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { prodavajici } from "@/lib/pravni";
+import { kanonicka } from "@/lib/seo";
 
 export const Route = createFileRoute("/ochrana-osobnich-udaju")({
   head: () => ({
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/ochrana-osobnich-udaju")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [kanonicka("/ochrana-osobnich-udaju")],
   }),
   component: GdprPage,
 });
@@ -80,8 +82,9 @@ function GdprPage() {
 
       <H2>1. Kdo údaje zpracovává (správce)</H2>
       <P>
-        Správcem vašich osobních údajů je {prodavajici.jmeno}, se sídlem {prodavajici.sidlo}, IČO {prodavajici.ico},
-        DIČ {prodavajici.dic}, zapsán {prodavajici.zapis} (dále jen „správce" nebo „prodejna").
+        Správcem vašich osobních údajů je {prodavajici.jmeno}, se sídlem {prodavajici.sidlo}, IČO {prodavajici.ico}
+        {prodavajici.dic ? `, DIČ ${prodavajici.dic}` : ""}, zapsán {prodavajici.zapis} (dále jen „správce" nebo
+        „prodejna").
       </P>
       <P>
         Kontakt ve věcech ochrany osobních údajů: e-mail{" "}
@@ -165,7 +168,7 @@ function GdprPage() {
       <P>
         Svá práva uplatníte e-mailem na{" "}
         <a className="text-primary hover:underline" href={prodavajici.emailHref}>{prodavajici.email}</a> nebo písemně na
-        adrese {prodavajici.sidlo}. Vyřídíme je bez zbytečného odkladu, nejpozději do jednoho měsíce od doručení
+        adrese {prodavajici.adresaProVraceni}. Vyřídíme je bez zbytečného odkladu, nejpozději do jednoho měsíce od doručení
         žádosti. Můžeme přitom požádat o ověření vaší totožnosti, abychom údaje nevydali nesprávné osobě.
       </P>
 

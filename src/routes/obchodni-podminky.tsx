@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { prodavajici } from "@/lib/pravni";
+import { kanonicka } from "@/lib/seo";
 
 export const Route = createFileRoute("/obchodni-podminky")({
   head: () => ({
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/obchodni-podminky")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [kanonicka("/obchodni-podminky")],
   }),
   component: ObchodniPodminky,
 });
@@ -57,10 +59,18 @@ function ObchodniPodminky() {
             <tr><td className="w-1/2 bg-muted/40 px-4 py-2 font-medium">Jméno / firma</td><td className="px-4 py-2">{prodavajici.jmeno}</td></tr>
             <tr><td className="bg-muted/40 px-4 py-2 font-medium">Sídlo</td><td className="px-4 py-2">{prodavajici.sidlo}</td></tr>
             <tr><td className="bg-muted/40 px-4 py-2 font-medium">IČO</td><td className="px-4 py-2">{prodavajici.ico}</td></tr>
-            <tr><td className="bg-muted/40 px-4 py-2 font-medium">DIČ</td><td className="px-4 py-2">{prodavajici.dic}</td></tr>
+            {prodavajici.dic && (
+              <tr><td className="bg-muted/40 px-4 py-2 font-medium">DIČ</td><td className="px-4 py-2">{prodavajici.dic}</td></tr>
+            )}
             <tr><td className="bg-muted/40 px-4 py-2 font-medium">Zapsán</td><td className="px-4 py-2">{prodavajici.zapis}</td></tr>
+            {prodavajici.jednatel && (
+              <tr><td className="bg-muted/40 px-4 py-2 font-medium">Zastoupen</td><td className="px-4 py-2">{prodavajici.jednatel}, jednatel</td></tr>
+            )}
             <tr><td className="bg-muted/40 px-4 py-2 font-medium">E-mail</td><td className="px-4 py-2"><a className="text-primary hover:underline" href={prodavajici.emailHref}>{prodavajici.email}</a></td></tr>
             <tr><td className="bg-muted/40 px-4 py-2 font-medium">Telefon</td><td className="px-4 py-2"><a className="text-primary hover:underline" href={prodavajici.telefonHref}>{prodavajici.telefon}</a></td></tr>
+            {prodavajici.datovaSchranka && (
+              <tr><td className="bg-muted/40 px-4 py-2 font-medium">ID datové schránky</td><td className="px-4 py-2">{prodavajici.datovaSchranka}</td></tr>
+            )}
             <tr><td className="bg-muted/40 px-4 py-2 font-medium">Adresa pro vracení zboží a reklamace</td><td className="px-4 py-2">{prodavajici.adresaProVraceni}</td></tr>
           </tbody>
         </table>
@@ -107,7 +117,11 @@ function ObchodniPodminky() {
       <P>3.1 Prodávající v souladu s § 1811 a § 1820 občanského zákoníku sděluje kupujícímu, že:</P>
       <UL>
         <li>náklady na prostředky komunikace na dálku se neliší od základní sazby a prodávající si neúčtuje žádné další poplatky;</li>
-        <li>ceny zboží jsou uvedeny včetně DPH a všech souvisejících poplatků, s výjimkou nákladů na dodání, které jsou uvedeny samostatně v objednávkovém procesu;</li>
+        <li>
+          {prodavajici.platceDph
+            ? "ceny zboží jsou uvedeny včetně DPH a všech souvisejících poplatků, s výjimkou nákladů na dodání, které jsou uvedeny samostatně v objednávkovém procesu;"
+            : "prodávající není plátcem DPH; ceny zboží jsou uvedeny jako konečné včetně všech souvisejících poplatků, s výjimkou nákladů na dodání, které jsou uvedeny samostatně v objednávkovém procesu;"}
+        </li>
         <li>prodávající nepožaduje zálohu ani jinou obdobnou platbu, s výjimkou zboží na zakázku nebo zboží upraveného podle přání kupujícího (o tom je kupující vždy předem informován);</li>
         <li>prodávající není ve vztahu ke kupujícímu vázán žádnými kodexy chování ve smyslu § 1826 odst. 1 písm. e) občanského zákoníku;</li>
         <li>smlouvu lze uzavřít v českém jazyce;</li>
@@ -169,7 +183,8 @@ function ObchodniPodminky() {
 
       <H2>5. Kupní cena a platební podmínky</H2>
       <P>
-        5.1 Všechny ceny uvedené v e-shopu jsou konečné, včetně DPH. Náklady na dodání zboží nejsou v ceně zboží
+        5.1 Všechny ceny uvedené v e-shopu jsou konečné
+        {prodavajici.platceDph ? ", včetně DPH" : "; prodávající není plátcem DPH"}. Náklady na dodání zboží nejsou v ceně zboží
         zahrnuty a jsou uvedeny samostatně.
       </P>
       <P>5.2 Kupní cenu lze uhradit způsoby uvedenými v objednávkovém procesu, zejména:</P>
@@ -410,6 +425,11 @@ function ObchodniPodminky() {
         10.2 Zpráva je doručena okamžikem jejího přijetí na server příchozí pošty. Za doručenou se považuje i zpráva,
         jejíž přijetí adresát odmítl nebo jejíž doručení zmařil.
       </P>
+      {prodavajici.datovaSchranka && (
+        <P>
+          10.3 Kupující může prodávajícímu doručovat rovněž do datové schránky ID {prodavajici.datovaSchranka}.
+        </P>
+      )}
 
       <H2>11. Obchodní sdělení</H2>
       <P>
@@ -491,9 +511,21 @@ function ObchodniPodminky() {
         bydliště, od nichž se nelze smluvně odchýlit.
       </P>
       <P>
-        14.4 Tyto obchodní podmínky nabývají platnosti a účinnosti dne {prodavajici.ucinnostOd} a nahrazují předchozí
-        znění účinné od 1. 1. 2014.
+        14.4 Tyto obchodní podmínky nabývají platnosti a účinnosti dne {prodavajici.ucinnostOd}
+        {prodavajici.predchoziUcinnostOd
+          ? ` a nahrazují předchozí znění účinné od ${prodavajici.predchoziUcinnostOd}.`
+          : "."}
       </P>
+      {prodavajici.predchudce && (
+        <P>
+          14.5 Přechodné ustanovení. Do {prodavajici.predchudce.doDne} provozoval e-shop cursorbike.cz{" "}
+          {prodavajici.predchudce.jmeno}, IČO {prodavajici.predchudce.ico}. Kupní smlouvy uzavřené do tohoto dne se
+          řídí zněním obchodních podmínek účinným ke dni odeslání objednávky.{" "}
+          {prodavajici.predchudce.zavazkyPrevzaty
+            ? `Práva a povinnosti z těchto smluv převzal prodávající; reklamace a odstoupení od smlouvy u zboží zakoupeného před uvedeným dnem proto kupující uplatňuje u prodávajícího podle čl. 1.2, a to na stejné adrese i stejným postupem.`
+            : `Práva a povinnosti z těchto smluv nadále náleží ${prodavajici.predchudce.jmeno}, IČO ${prodavajici.predchudce.ico}; reklamace a odstoupení od smlouvy u zboží zakoupeného před uvedeným dnem je proto třeba uplatnit u něj. Prodávající kupujícímu s uplatněním rád pomůže.`}
+        </P>
+      )}
 
       <div className="mt-12 rounded-lg border bg-card p-6 shadow-card">
         <h2 className="section-title text-lg">Příloha č. 1 – Vzorový formulář pro odstoupení od smlouvy</h2>

@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
-import logo from "@/assets/cursorbike-logo.jpg.asset.json";
 import { kontakt } from "@/lib/kontakt";
 import { otevriNastaveniCookies } from "@/components/CookieLista";
+import { prodavajici } from "@/lib/pravni";
 
 
 export function Footer() {
@@ -10,7 +10,14 @@ export function Footer() {
     <footer className="mt-20 bg-ink text-ink-foreground">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-4 md:px-6">
         <div>
-          <img src={logo.url} alt="Cursorbike" className="h-9 w-auto" width={220} height={60} loading="lazy" />
+          <img
+            src="/cursorbike-logo-svetly.png"
+            alt="Cursorbike"
+            className="h-9 w-auto"
+            width={359}
+            height={79}
+            loading="lazy"
+          />
           <p className="mt-4 text-sm text-ink-muted">
             Prodejna, e-shop a cykloservis v Kravařích ve Slezsku. Na trhu od roku {kontakt.odRoku}.
           </p>
@@ -61,7 +68,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-ink-foreground/10 py-4 text-center text-xs text-ink-muted">
-        © {new Date().getFullYear()} Miroslav Dékany – Cursorbike, IČO 40338797 — všechna práva vyhrazena
+        © {new Date().getFullYear()} {prodavajici.oznaceni}, IČO {prodavajici.ico} — všechna práva vyhrazena
         {" · "}
         <Link to="/auth" className="hover:text-primary">
           Správa e-shopu

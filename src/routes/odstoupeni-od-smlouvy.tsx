@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { prodavajici } from "@/lib/pravni";
+import { kanonicka } from "@/lib/seo";
 
 export const Route = createFileRoute("/odstoupeni-od-smlouvy")({
   head: () => ({
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/odstoupeni-od-smlouvy")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [kanonicka("/odstoupeni-od-smlouvy")],
   }),
   component: OdstoupeniPage,
 });
@@ -60,7 +62,7 @@ function OdstoupeniPage() {
       <div className="mt-4 rounded-lg border bg-muted/40 p-4 text-sm leading-relaxed text-muted-foreground">
         <strong className="text-foreground">{prodavajici.jmeno}</strong>
         <br />
-        {prodavajici.sidlo}
+        {prodavajici.adresaProVraceni}
         <br />
         IČO: {prodavajici.ico}
         <br />
@@ -98,8 +100,9 @@ function OdstoupeniPage() {
         </p>
 
         <div className="mt-5 text-sm text-muted-foreground">
-          <strong className="text-foreground">Adresát:</strong> {prodavajici.jmeno}, {prodavajici.sidlo}, IČO{" "}
-          {prodavajici.ico}, e-mail {prodavajici.email}
+          <strong className="text-foreground">Adresát:</strong> {prodavajici.jmeno}, se sídlem {prodavajici.sidlo},
+          IČO {prodavajici.ico}, adresa pro doručování a vracení zboží {prodavajici.adresaProVraceni}, e-mail{" "}
+          {prodavajici.email}
         </div>
 
         <p className="mt-4 text-sm text-foreground">

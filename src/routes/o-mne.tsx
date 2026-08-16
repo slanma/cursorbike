@@ -2,24 +2,27 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import majitel from "@/assets/majitel-hero.jpg";
+import { drobkyLd, jsonLdScript, kanonicka } from "@/lib/seo";
 
 export const Route = createFileRoute("/o-mne")({
   head: () => ({
     meta: [
-      { title: "O mně — Petr z prodejny Cursorbike v Kravařích" },
+      { title: "O nás — prodejna a servis Cursorbike v Kravařích" },
       {
         name: "description",
         content:
-          "Poznejte Petra, majitele prodejny a servisu Cursorbike. Dvacet let u kol, osobní přístup a servis všech značek.",
+          "Cursorbike s.r.o. — prodejna a servis jízdních kol v Kravařích. Osobní přístup, vybraná kola a servis všech značek.",
       },
-      { property: "og:title", content: "O mně — Cursorbike" },
+      { property: "og:title", content: "O nás — Cursorbike" },
       {
         property: "og:description",
-        content: "Majitel prodejny Cursorbike o tom, jak vybírá kola a proč dělá servis sám.",
+        content: "Jak v Cursorbike vybíráme kola a proč servis děláme sami.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [kanonicka("/o-mne")],
+    scripts: [jsonLdScript(drobkyLd([{ nazev: "Úvod", cesta: "/" }, { nazev: "O nás", cesta: "/o-mne" }]))],
   }),
   component: OMne,
 });
@@ -40,10 +43,10 @@ function OMne() {
             Cursorbike Kravaře
           </span>
           <h1 className="mt-4 text-4xl font-bold uppercase leading-[1.05] md:text-5xl">
-            O mně a <span className="text-primary">o prodejně</span>
+            O nás a <span className="text-primary">o prodejně</span>
           </h1>
           <p className="mt-4 max-w-2xl text-ink-muted">
-            Ahoj, jsem Petr, cyklistický nadšenec. Kola jsou moje práce i koníček už přes dvacet let.
+            Kola jsou pro nás práce i koníček. V Kravařích je prodáváme a servisujeme už přes dvacet let.
           </p>
         </div>
       </section>
@@ -52,19 +55,19 @@ function OMne() {
         <div className="grid gap-10 rounded-lg border bg-card p-6 shadow-card md:grid-cols-[320px_minmax(0,1fr)] md:p-10">
           <img
             src={majitel}
-            alt="Petr, majitel prodejny Cursorbike, ve své dílně"
+            alt="Majitel prodejny Cursorbike ve své dílně"
             width={1600}
             height={1104}
             className="h-72 w-full rounded-lg object-cover md:h-full"
           />
           <div>
-            <h2 className="section-title text-3xl">Kolům se věnuji přes dvacet let</h2>
+            <h2 className="section-title text-3xl">Kolům se věnujeme přes dvacet let</h2>
             <p className="mt-4 text-muted-foreground">
-              Nejdřív jako závodník, dnes jako mechanik a prodejce. Všechno, co tady najdete, mám osobně projeté.
-              Nikdy vám neprodám kolo, na které bych sám nesedl.
+              Nejdřív závodně, dnes jako mechanici a prodejci. Všechno, co tady najdete, máme osobně projeté.
+              Nikdy vám neprodáme kolo, na které bychom sami nesedli.
             </p>
             <p className="mt-3 text-muted-foreground">
-              V dílně dělám všechno sám, takže víte, kdo se o vaše kolo stará. Přijďte se poradit — káva je u nás
+              Servis si děláme sami, takže víte, kdo se o vaše kolo stará. Přijďte se poradit — káva je u nás
               zdarma.
             </p>
             <ul className="mt-6 grid gap-2 text-sm sm:grid-cols-2">
@@ -80,7 +83,7 @@ function OMne() {
                 <Link to="/servis">Rezervovat servis</Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/kontakt">Napsat mi</Link>
+                <Link to="/kontakt">Napsat nám</Link>
               </Button>
             </div>
           </div>

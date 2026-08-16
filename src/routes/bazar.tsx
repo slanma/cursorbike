@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Phone, RefreshCcw, ShieldCheck, Wrench } from "lucide-react";
 import { Drobky } from "@/components/Drobky";
 import { kontakt } from "@/lib/kontakt";
+import { drobkyLd, jsonLdScript, kanonicka } from "@/lib/seo";
 
 export const Route = createFileRoute("/bazar")({
   head: () => ({
@@ -14,6 +15,8 @@ export const Route = createFileRoute("/bazar")({
       { property: "og:title", content: "Bazar | Cursorbike" },
       { property: "og:description", content: "Ojetá kola a elektrokola prověřená naším servisem." },
     ],
+    links: [kanonicka("/bazar")],
+    scripts: [jsonLdScript(drobkyLd([{ nazev: "Úvod", cesta: "/" }, { nazev: "Bazar", cesta: "/bazar" }]))],
   }),
   component: BazarPage,
 });
@@ -69,7 +72,7 @@ function BazarPage() {
             Napsat nám
           </Link>
           <a
-            href="tel:+420123456789"
+            href={kontakt.telefonHref}
             className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold"
           >
             <Phone className="h-4 w-4" /> {kontakt.telefon}

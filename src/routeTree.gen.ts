@@ -34,6 +34,7 @@ import { Route as AuthenticatedAdminObjednavkyRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminProduktyRouteImport } from './routes/_authenticated/admin.produkty'
 import { Route as AuthenticatedAdminServisRouteImport } from './routes/_authenticated/admin.servis'
 import { Route as AuthenticatedAdminSpravciRouteImport } from './routes/_authenticated/admin.spravci'
+import { Route as AuthenticatedAdminZpravyRouteImport } from './routes/_authenticated/admin.zpravy'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -164,6 +165,12 @@ const AuthenticatedAdminSpravciRoute =
     path: '/spravci',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminZpravyRoute =
+  AuthenticatedAdminZpravyRouteImport.update({
+    id: '/zpravy',
+    path: '/zpravy',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/admin/servis': typeof AuthenticatedAdminServisRoute
   '/admin/spravci': typeof AuthenticatedAdminSpravciRoute
+  '/admin/zpravy': typeof AuthenticatedAdminZpravyRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -212,6 +220,7 @@ export interface FileRoutesByTo {
   '/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/admin/servis': typeof AuthenticatedAdminServisRoute
   '/admin/spravci': typeof AuthenticatedAdminSpravciRoute
+  '/admin/zpravy': typeof AuthenticatedAdminZpravyRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -240,6 +249,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/_authenticated/admin/servis': typeof AuthenticatedAdminServisRoute
   '/_authenticated/admin/spravci': typeof AuthenticatedAdminSpravciRoute
+  '/_authenticated/admin/zpravy': typeof AuthenticatedAdminZpravyRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/admin/produkty'
     | '/admin/servis'
     | '/admin/spravci'
+    | '/admin/zpravy'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/admin/produkty'
     | '/admin/servis'
     | '/admin/spravci'
+    | '/admin/zpravy'
     | '/admin'
   id:
     | '__root__'
@@ -318,6 +330,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/produkty'
     | '/_authenticated/admin/servis'
     | '/_authenticated/admin/spravci'
+    | '/_authenticated/admin/zpravy'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -515,6 +528,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSpravciRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/zpravy': {
+      id: '/_authenticated/admin/zpravy'
+      path: '/zpravy'
+      fullPath: '/admin/zpravy'
+      preLoaderRoute: typeof AuthenticatedAdminZpravyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
@@ -524,6 +544,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminProduktyRoute: typeof AuthenticatedAdminProduktyRoute
   AuthenticatedAdminServisRoute: typeof AuthenticatedAdminServisRoute
   AuthenticatedAdminSpravciRoute: typeof AuthenticatedAdminSpravciRoute
+  AuthenticatedAdminZpravyRoute: typeof AuthenticatedAdminZpravyRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -533,6 +554,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminProduktyRoute: AuthenticatedAdminProduktyRoute,
   AuthenticatedAdminServisRoute: AuthenticatedAdminServisRoute,
   AuthenticatedAdminSpravciRoute: AuthenticatedAdminSpravciRoute,
+  AuthenticatedAdminZpravyRoute: AuthenticatedAdminZpravyRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 

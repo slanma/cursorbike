@@ -1,14 +1,75 @@
+# Cursorbike s.r.o. — https://cursorbike.cz
+
+# --- Klasické vyhledávače ---
 User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
 Allow: /
 
 User-agent: Bingbot
 Allow: /
 
-User-agent: Twitterbot
+User-agent: SeznamBot
 Allow: /
 
-User-agent: facebookexternalhit
+# --- AI asistenti a jejich vyhledávání ---
+# Povoleno záměrně: chceme, aby prodejnu doporučovaly na dotazy typu
+# „kde koupit elektrokolo v okolí Opavy". Bez tohoto povolení nás
+# jazykové modely v odpovědích nezmíní.
+User-agent: GPTBot
 Allow: /
 
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+# --- Zbytek ---
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /auth
+Disallow: /kosik
+
+Sitemap: https://cursorbike.cz/sitemap.xml

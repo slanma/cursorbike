@@ -12,25 +12,34 @@ function Prehled() {
   const { data } = useQuery({
     queryKey: ["admin-prehled"],
     queryFn: async () => {
-      const [produkty, objednavky, poptavky] = await Promise.all([
+      const [produkty, objednavky, poptavky, novychObjednavek, novychPoptavek, novychZprav] = await Promise.all([
         supabase.from("produkty").select("id", { count: "exact", head: true }),
         supabase.from("objednavky").select("*").order("created_at", { ascending: false }).limit(5),
         supabase.from("servis_poptavky").select("*").order("created_at", { ascending: false }).limit(5),
+        // Počty čteme samostatným count dotazem — dřív se „nové" počítaly jen
+        // z posledních 5 záznamů, takže se šesté a další nové objednávky nezobrazily.
+        supabase.from("objednavky").select("id", { count: "exact", head: true }).eq("stav", "nova"),
+        supabase.from("servis_poptavky").select("id", { count: "exact", head: true }).eq("stav", "nova"),
+        supabase.from("zpravy").select("id", { count: "exact", head: true }).eq("stav", "nova"),
       ]);
       return {
         pocetProduktu: produkty.count ?? 0,
         objednavky: objednavky.data ?? [],
         poptavky: poptavky.data ?? [],
+        novychObjednavek: novychObjednavek.count ?? 0,
+        novychPoptavek: novychPoptavek.count ?? 0,
+        novychZprav: novychZprav.count ?? 0,
       };
     },
   });
 
   return (
     <div className="grid gap-8">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Karta nazev="Produkty v e-shopu" hodnota={String(data?.pocetProduktu ?? 0)} to="/admin/produkty" />
-        <Karta nazev="Nové objednávky" hodnota={String((data?.objednavky ?? []).filter((o) => o.stav === "nova").length)} to="/admin/objednavky" />
-        <Karta nazev="Nové poptávky servisu" hodnota={String((data?.poptavky ?? []).filter((p) => p.stav === "nova").length)} to="/admin/servis" />
+        <Karta nazev="Nové objednávky" hodnota={String(data?.novychObjednavek ?? 0)} to="/admin/objednavky" />
+        <Karta nazev="Nové poptávky servisu" hodnota={String(data?.novychPoptavek ?? 0)} to="/admin/servis" />
+        <Karta nazev="Nové zprávy" hodnota={String(data?.novychZprav ?? 0)} to="/admin/zpravy" />
       </div>
 
       <section className="rounded-lg border bg-card p-6 shadow-card">

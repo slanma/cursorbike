@@ -61,6 +61,18 @@ export type DbPoptavka = {
   created_at: string;
 };
 
+export type DbZprava = {
+  id: string;
+  jmeno: string;
+  email: string;
+  telefon: string | null;
+  zprava: string;
+  stav: string;
+  created_at: string;
+};
+
+export const STAVY_ZPRAVY = ["nova", "vyrizuje-se", "hotovo"] as const;
+
 export const STAVY_OBJEDNAVKY = ["nova", "vyrizuje-se", "pripravena", "dokoncena", "zrusena"] as const;
 export const STAVY_POPTAVKY = ["nova", "domluveno", "hotovo", "zrusena"] as const;
 
@@ -73,6 +85,16 @@ export const stavLabel: Record<string, string> = {
   domluveno: "Domluven termín",
   hotovo: "Hotovo",
 };
+
+/** Načte zprávy z kontaktního formuláře (jen pro administraci). */
+export async function nactiZpravy(): Promise<DbZprava[]> {
+  const { data, error } = await supabase
+    .from("zpravy")
+    .select("id, jmeno, email, telefon, zprava, stav, created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as DbZprava[];
+}
 
 /** Načte kategorie (veřejné). */
 export async function nactiKategorie(): Promise<DbKategorie[]> {
@@ -115,15 +137,18 @@ export function naProdukt(db: DbProdukt, kategorie: DbKategorie[]): Produkt {
   };
 }
 
-/** Nahraje fotku produktu a vrátí dlouhodobě platnou adresu. */
+/**
+ * Nahraje fotku produktu a vrátí trvale platnou veřejnou adresu.
+ * Bucket „produkty" je veřejný (viz migrace 20260814090000), takže nepotřebujeme
+ * podepsané URL s expirací — veřejná URL se navíc dá cachovat na CDN.
+ */
 export async function nahrajFotku(file: File): Promise<string> {
-  const pripona = file.name.split(".").pop() ?? "jpg";
+  const pripona = (file.name.split(".").pop() ?? "jpg").toLowerCase();
   const cesta = `${crypto.randomUUID()}.${pripona}`;
-  const { error } = await supabase.storage.from("produkty").upload(cesta, file, { upsert: false });
-  if (error) throw error;
-  const { data, error: signErr } = await supabase.storage
+  const { error } = await supabase.storage
     .from("produkty")
-    .createSignedUrl(cesta, 60 * 60 * 24 * 365 * 10);
-  if (signErr) throw signErr;
-  return data.signedUrl;
+    .upload(cesta, file, { upsert: false, contentType: file.type, cacheControl: "31536000" });
+  if (error) throw error;
+  const { data } = supabase.storage.from("produkty").getPublicUrl(cesta);
+  return data.publicUrl;
 }

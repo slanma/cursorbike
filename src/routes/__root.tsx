@@ -91,7 +91,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Cursorbike — kola, elektrokola a servis" },
       { property: "og:description", content: "Prodejna a servis jízdních kol v Kravařích." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Cursorbike" },
+      { property: "og:locale", content: "cs_CZ" },
+      // Bez og:image se web sdílí bez náhledu — na Facebooku i v Messengeru
+      // se pak zobrazí jen holý odkaz.
+      { property: "og:image", content: "https://cursorbike.cz/og-cursorbike.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Cursorbike — prodejna a servis jízdních kol" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://cursorbike.cz/og-cursorbike.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -102,6 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap",
       },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,
