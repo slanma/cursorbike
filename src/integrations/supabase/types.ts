@@ -225,39 +225,6 @@ export type Database = {
         }
         Relationships: []
       }
-      zpravy: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          jmeno: string
-          stav: string
-          telefon: string | null
-          updated_at: string
-          zprava: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          jmeno: string
-          stav?: string
-          telefon?: string | null
-          updated_at?: string
-          zprava: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          jmeno?: string
-          stav?: string
-          telefon?: string | null
-          updated_at?: string
-          zprava?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
