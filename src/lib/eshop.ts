@@ -43,6 +43,11 @@ export type DbProdukt = {
   na_objednavku: boolean;
   obrazky: string[];
   ean: string | null;
+  cena_feed: number | null;
+  dodavatel: string | null;
+  dodavatel_kod: string | null;
+  barva: string | null;
+  importovano_at: string | null;
   created_at: string;
 };
 
@@ -152,6 +157,25 @@ export async function nactiNastaveni(): Promise<NastaveniEshopu> {
     .maybeSingle();
   if (error) throw error;
   return { ...VYCHOZI_NASTAVENI, ...((data?.hodnota ?? {}) as Partial<NastaveniEshopu>) };
+}
+
+/** Načte uložené přiřazení kategorií z feedu na naše kategorie. */
+export async function nactiMapovani(): Promise<Record<string, string>> {
+  const { data, error } = await supabase
+    .from("nastaveni")
+    .select("hodnota")
+    .eq("klic", "import-mapovani")
+    .maybeSingle();
+  if (error) throw error;
+  return (data?.hodnota ?? {}) as Record<string, string>;
+}
+
+/** Uloží přiřazení kategorií, ať se neodklikává při každém importu znovu. */
+export async function ulozMapovani(mapovani: Record<string, string>): Promise<void> {
+  const { error } = await supabase
+    .from("nastaveni")
+    .upsert({ klic: "import-mapovani", hodnota: mapovani }, { onConflict: "klic" });
+  if (error) throw error;
 }
 
 /** Uloží nastavení e-shopu (jen administrace). */

@@ -195,12 +195,17 @@ export type Database = {
       produkty: {
         Row: {
           aktivni: boolean
+          barva: string | null
           cena: number
+          cena_feed: number | null
           created_at: string
+          dodavatel: string | null
+          dodavatel_kod: string | null
           ean: string | null
           id: string
           kategorie_id: string | null
           kratky: string
+          importovano_at: string | null
           na_objednavku: boolean
           nazev: string
           neni_pro_koho: string | null
@@ -214,16 +219,22 @@ export type Database = {
           skladem: number
           slug: string
           updated_at: string
+          varianty: Json
           velikosti: string[]
         }
         Insert: {
           aktivni?: boolean
+          barva?: string | null
           cena?: number
+          cena_feed?: number | null
           created_at?: string
+          dodavatel?: string | null
+          dodavatel_kod?: string | null
           ean?: string | null
           id?: string
           kategorie_id?: string | null
           kratky?: string
+          importovano_at?: string | null
           na_objednavku?: boolean
           nazev: string
           neni_pro_koho?: string | null
@@ -237,16 +248,22 @@ export type Database = {
           skladem?: number
           slug: string
           updated_at?: string
+          varianty?: Json
           velikosti?: string[]
         }
         Update: {
           aktivni?: boolean
+          barva?: string | null
           cena?: number
+          cena_feed?: number | null
           created_at?: string
+          dodavatel?: string | null
+          dodavatel_kod?: string | null
           ean?: string | null
           id?: string
           kategorie_id?: string | null
           kratky?: string
+          importovano_at?: string | null
           na_objednavku?: boolean
           nazev?: string
           neni_pro_koho?: string | null
@@ -260,6 +277,7 @@ export type Database = {
           skladem?: number
           slug?: string
           updated_at?: string
+          varianty?: Json
           velikosti?: string[]
         }
         Relationships: [

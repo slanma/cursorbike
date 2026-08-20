@@ -29,6 +29,7 @@ import { Route as KolaIndexRouteImport } from './routes/kola.index'
 import { Route as KolaZnackaRouteImport } from './routes/kola.$znacka'
 import { Route as KoloSlugRouteImport } from './routes/kolo.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminFeedyRouteImport } from './routes/_authenticated/admin.feedy'
 import { Route as AuthenticatedAdminKategorieRouteImport } from './routes/_authenticated/admin.kategorie'
 import { Route as AuthenticatedAdminNastaveniRouteImport } from './routes/_authenticated/admin.nastaveni'
 import { Route as AuthenticatedAdminObjednavkyRouteImport } from './routes/_authenticated/admin.objednavky'
@@ -136,6 +137,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminFeedyRoute = AuthenticatedAdminFeedyRouteImport.update({
+  id: '/feedy',
+  path: '/feedy',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminKategorieRoute =
   AuthenticatedAdminKategorieRouteImport.update({
     id: '/kategorie',
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/kolo/$slug': typeof KoloSlugRoute
   '/elektrokola/': typeof ElektrokolaIndexRoute
   '/kola/': typeof KolaIndexRoute
+  '/admin/feedy': typeof AuthenticatedAdminFeedyRoute
   '/admin/kategorie': typeof AuthenticatedAdminKategorieRoute
   '/admin/nastaveni': typeof AuthenticatedAdminNastaveniRoute
   '/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/kolo/$slug': typeof KoloSlugRoute
   '/elektrokola': typeof ElektrokolaIndexRoute
   '/kola': typeof KolaIndexRoute
+  '/admin/feedy': typeof AuthenticatedAdminFeedyRoute
   '/admin/kategorie': typeof AuthenticatedAdminKategorieRoute
   '/admin/nastaveni': typeof AuthenticatedAdminNastaveniRoute
   '/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
@@ -253,6 +261,7 @@ export interface FileRoutesById {
   '/kolo/$slug': typeof KoloSlugRoute
   '/elektrokola/': typeof ElektrokolaIndexRoute
   '/kola/': typeof KolaIndexRoute
+  '/_authenticated/admin/feedy': typeof AuthenticatedAdminFeedyRoute
   '/_authenticated/admin/kategorie': typeof AuthenticatedAdminKategorieRoute
   '/_authenticated/admin/nastaveni': typeof AuthenticatedAdminNastaveniRoute
   '/_authenticated/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
@@ -283,6 +292,7 @@ export interface FileRouteTypes {
     | '/kolo/$slug'
     | '/elektrokola/'
     | '/kola/'
+    | '/admin/feedy'
     | '/admin/kategorie'
     | '/admin/nastaveni'
     | '/admin/objednavky'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/kolo/$slug'
     | '/elektrokola'
     | '/kola'
+    | '/admin/feedy'
     | '/admin/kategorie'
     | '/admin/nastaveni'
     | '/admin/objednavky'
@@ -337,6 +348,7 @@ export interface FileRouteTypes {
     | '/kolo/$slug'
     | '/elektrokola/'
     | '/kola/'
+    | '/_authenticated/admin/feedy'
     | '/_authenticated/admin/kategorie'
     | '/_authenticated/admin/nastaveni'
     | '/_authenticated/admin/objednavky'
@@ -506,6 +518,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/feedy': {
+      id: '/_authenticated/admin/feedy'
+      path: '/feedy'
+      fullPath: '/admin/feedy'
+      preLoaderRoute: typeof AuthenticatedAdminFeedyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/kategorie': {
       id: '/_authenticated/admin/kategorie'
       path: '/kategorie'
@@ -559,6 +578,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminFeedyRoute: typeof AuthenticatedAdminFeedyRoute
   AuthenticatedAdminKategorieRoute: typeof AuthenticatedAdminKategorieRoute
   AuthenticatedAdminNastaveniRoute: typeof AuthenticatedAdminNastaveniRoute
   AuthenticatedAdminObjednavkyRoute: typeof AuthenticatedAdminObjednavkyRoute
@@ -570,6 +590,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminFeedyRoute: AuthenticatedAdminFeedyRoute,
   AuthenticatedAdminKategorieRoute: AuthenticatedAdminKategorieRoute,
   AuthenticatedAdminNastaveniRoute: AuthenticatedAdminNastaveniRoute,
   AuthenticatedAdminObjednavkyRoute: AuthenticatedAdminObjednavkyRoute,
