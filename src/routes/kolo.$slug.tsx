@@ -1,27 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { formatCena, najdiProdukt, najdiZnacku, type ParametrSkupina, type Produkt } from "@/lib/produkty";
+import { dostupnost, formatCena, type ParametrSkupina } from "@/lib/produkty";
 import { useVsechnyProdukty } from "@/lib/produkty-hook";
+import { useZnacka } from "@/lib/katalog-hook";
 import { useKosik } from "@/lib/kosik";
 import { Drobky } from "@/components/Drobky";
 
 export const Route = createFileRoute("/kolo/$slug")({
-  loader: ({ params }): { produkt: Produkt | null } => ({ produkt: najdiProdukt(params.slug) ?? null }),
-  head: ({ loaderData }) => {
-    if (!loaderData?.produkt) {
-      return { meta: [{ title: "Detail kola | Cursorbike" }, { name: "robots", content: "noindex" }] };
-    }
-    const { produkt } = loaderData;
-    return {
-      meta: [
-        { title: `${produkt.nazev} | Cursorbike` },
-        { name: "description", content: produkt.kratky },
-        { property: "og:title", content: `${produkt.nazev} | Cursorbike` },
-        { property: "og:description", content: produkt.kratky },
-      ],
-    };
-  },
+  head: () => ({
+    meta: [
+      { title: "Detail kola | Cursorbike" },
+      { name: "description", content: "Detail kola z nabídky prodejny Cursorbike v Kravařích." },
+    ],
+  }),
   component: DetailProduktu,
 });
 
@@ -29,7 +22,13 @@ function DetailProduktu() {
   const { slug } = Route.useParams();
   const { produkty, nacita } = useVsechnyProdukty();
   const { pridat } = useKosik();
+  const [velikost, setVelikost] = useState<string | null>(null);
+  const [hlavniFotka, setHlavniFotka] = useState(0);
   const produkt = produkty.find((p) => p.slug === slug);
+  const { znacka: znackaObj } = useZnacka(
+    produkt?.kategorie ?? "kola",
+    produkt?.znacka ?? "",
+  );
 
   if (!produkt) {
     return (
@@ -48,28 +47,63 @@ function DetailProduktu() {
   }
 
   const dalsi = produkty.filter((p) => p.slug !== produkt.slug).slice(0, 3);
-  const znackaObj = najdiZnacku(produkt.kategorie, produkt.znacka);
-
+  const stav = dostupnost(produkt);
+  const musiVybratVelikost = produkt.velikosti.length > 0 && !velikost;
+  const galerie = [produkt.obrazek, ...produkt.obrazky];
 
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
       <Drobky
         items={[
-          { label: produkt.kategorie === "kola" ? "Kola" : "Elektrokola", to: produkt.kategorie === "kola" ? "/kola" : "/elektrokola" },
-          ...(znackaObj ? [{ label: znackaObj.nazev, to: produkt.kategorie === "kola" ? "/kola/$znacka" : "/elektrokola/$znacka", params: { znacka: produkt.znacka } }] : []),
+          ...(produkt.kategorie === "bazar"
+            ? [{ label: "Bazar", to: "/bazar" }]
+            : [
+                {
+                  label: produkt.kategorie === "kola" ? "Kola" : "Elektrokola",
+                  to: produkt.kategorie === "kola" ? "/kola" : "/elektrokola",
+                },
+                ...(znackaObj
+                  ? [
+                      {
+                        label: znackaObj.nazev,
+                        to: produkt.kategorie === "kola" ? "/kola/$znacka" : "/elektrokola/$znacka",
+                        params: { znacka: produkt.znacka },
+                      },
+                    ]
+                  : []),
+              ]),
           { label: produkt.nazev },
         ]}
       />
       <div className="grid gap-10 md:grid-cols-2">
-        <div className="rounded-lg border bg-surface p-6">
-          <img
-            src={produkt.obrazek}
-            alt={produkt.nazev}
-            width={900}
-            height={700}
-            className="w-full object-contain"
-          />
+        <div>
+          <div className="rounded-lg border bg-surface p-6">
+            <img
+              src={galerie[hlavniFotka] ?? produkt.obrazek}
+              alt={produkt.nazev}
+              width={900}
+              height={700}
+              className="w-full object-contain"
+            />
+          </div>
+          {galerie.length > 1 && (
+            <div className="mt-3 flex flex-wrap gap-3">
+              {galerie.map((url, i) => (
+                <button
+                  key={url}
+                  type="button"
+                  onClick={() => setHlavniFotka(i)}
+                  aria-label={`Fotka ${i + 1}`}
+                  className={`h-20 w-24 overflow-hidden rounded-md border-2 bg-surface transition-colors ${
+                    i === hlavniFotka ? "border-primary" : "hover:border-primary/50"
+                  }`}
+                >
+                  <img src={url} alt="" loading="lazy" className="h-full w-full object-contain" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
@@ -84,15 +118,50 @@ function DetailProduktu() {
             <span className="text-3xl font-bold">{formatCena(produkt.cena)}</span>
           </div>
 
+          <p className={`mt-2 font-semibold ${stav.lzeKoupit ? "text-primary" : "text-muted-foreground"}`}>
+            {stav.text}
+          </p>
+
+          {produkt.velikosti.length > 0 && (
+            <div className="mt-6">
+              <h2 className="text-sm font-bold">
+                Velikost rámu{" "}
+                <span className="font-normal text-muted-foreground">— vyberte prosím jednu</span>
+              </h2>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {produkt.velikosti.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setVelikost(v)}
+                    className={`rounded-md border-2 px-4 py-2.5 text-sm font-bold transition-colors ${
+                      velikost === v
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "hover:border-primary hover:bg-primary/5"
+                    }`}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Nevíte, jaká velikost je vaše? Zavolejte nám nebo se stavte na prodejnu — rádi změříme.
+              </p>
+            </div>
+          )}
+
           <div className="mt-6 flex flex-wrap gap-3">
             <Button
               size="lg"
+              disabled={!stav.lzeKoupit || musiVybratVelikost}
               onClick={() => {
-                pridat(produkt.slug);
-                toast.success("Přidáno do košíku", { description: produkt.nazev });
+                pridat(produkt.slug, velikost ?? undefined);
+                toast.success("Přidáno do košíku", {
+                  description: velikost ? `${produkt.nazev} — velikost ${velikost}` : produkt.nazev,
+                });
               }}
             >
-              Přidat do košíku
+              {musiVybratVelikost ? "Nejdřív vyberte velikost" : "Přidat do košíku"}
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link to="/kontakt">Domluvit testovací jízdu</Link>

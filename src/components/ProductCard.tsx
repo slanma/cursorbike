@@ -2,10 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useKosik } from "@/lib/kosik";
-import { formatCena, type Produkt } from "@/lib/produkty";
+import { dostupnost, formatCena, type Produkt } from "@/lib/produkty";
 
 export function ProductCard({ produkt }: { produkt: Produkt }) {
   const { pridat } = useKosik();
+  const stav = dostupnost(produkt);
+  // Kolo s velikostmi rámu nejde koupit z výpisu — velikost se vybírá v detailu.
+  const vybiraVelikost = produkt.velikosti.length > 0;
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-lg border bg-card shadow-card transition-shadow hover:shadow-lg">
@@ -40,6 +43,9 @@ export function ProductCard({ produkt }: { produkt: Produkt }) {
           </Link>
         </h3>
         <p className="text-sm text-muted-foreground">{produkt.kratky}</p>
+        <p className={`text-sm font-semibold ${stav.lzeKoupit ? "text-primary" : "text-muted-foreground"}`}>
+          {stav.text}
+        </p>
 
         <div className="mt-auto flex items-end justify-between gap-3 pt-4">
           <div>
@@ -48,14 +54,22 @@ export function ProductCard({ produkt }: { produkt: Produkt }) {
             )}
             <div className="text-xl font-bold">{formatCena(produkt.cena)}</div>
           </div>
-          <Button
-            onClick={() => {
-              pridat(produkt.slug);
-              toast.success("Přidáno do košíku", { description: produkt.nazev });
-            }}
-          >
-            Do košíku
-          </Button>
+          {vybiraVelikost || !stav.lzeKoupit ? (
+            <Button asChild variant={stav.lzeKoupit ? "default" : "outline"}>
+              <Link to="/kolo/$slug" params={{ slug: produkt.slug }}>
+                {stav.lzeKoupit ? "Vybrat velikost" : "Detail"}
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                pridat(produkt.slug);
+                toast.success("Přidáno do košíku", { description: produkt.nazev });
+              }}
+            >
+              Do košíku
+            </Button>
+          )}
         </div>
       </div>
     </article>

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bike, ClipboardList, LayoutGrid, LogOut, Mail, Users, Wrench } from "lucide-react";
+import { Bike, ClipboardList, LayoutGrid, LogOut, Mail, Settings, Users, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { zjistiSpravce } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ const odkazy = [
   { to: "/admin/servis", label: "Servis", icon: Wrench, exact: false },
   { to: "/admin/zpravy", label: "Zprávy", icon: Mail, exact: false },
   { to: "/admin/spravci", label: "Správci", icon: Users, exact: false },
+  { to: "/admin/nastaveni", label: "Nastavení", icon: Settings, exact: false },
 ] as const;
 
 function AdminLayout() {

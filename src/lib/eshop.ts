@@ -2,12 +2,24 @@ import { supabase } from "@/integrations/supabase/client";
 import placeholder from "@/assets/kolo-trekking.jpg";
 import type { Kategorie, ParametrSkupina, Produkt } from "@/lib/produkty";
 
+export type DbZnacka = {
+  id: string;
+  sekce: string;
+  slug: string;
+  nazev: string;
+  popis: string;
+  poradi: number;
+  aktivni: boolean;
+};
+
 export type DbKategorie = {
   id: string;
   slug: string;
   nazev: string;
   sekce: string;
   znacka: string | null;
+  znacka_id: string | null;
+  popis: string;
   poradi: number;
 };
 
@@ -26,7 +38,21 @@ export type DbProdukt = {
   pro_koho: string[];
   neni_pro_koho: string | null;
   parametry: ParametrSkupina[];
+  velikosti: string[];
+  skladem: number;
+  na_objednavku: boolean;
+  obrazky: string[];
+  ean: string | null;
   created_at: string;
+};
+
+/** Nastavení e-shopu (tabulka `nastaveni`, řádek s klíčem `eshop`). */
+export type NastaveniEshopu = {
+  zobrazovat_ukazkove: boolean;
+};
+
+export const VYCHOZI_NASTAVENI: NastaveniEshopu = {
+  zobrazovat_ukazkove: true,
 };
 
 export type DbObjednavka = {
@@ -47,6 +73,7 @@ export type DbObjednavkaPolozka = {
   slug: string | null;
   cena: number;
   pocet: number;
+  velikost: string | null;
 };
 
 export type DbPoptavka = {
@@ -100,10 +127,39 @@ export async function nactiZpravy(): Promise<DbZprava[]> {
 export async function nactiKategorie(): Promise<DbKategorie[]> {
   const { data, error } = await supabase
     .from("kategorie")
-    .select("id, slug, nazev, sekce, znacka, poradi")
+    .select("id, slug, nazev, sekce, znacka, znacka_id, popis, poradi")
     .order("poradi", { ascending: true });
   if (error) throw error;
   return (data ?? []) as DbKategorie[];
+}
+
+/** Načte značky (veřejné). */
+export async function nactiZnacky(): Promise<DbZnacka[]> {
+  const { data, error } = await supabase
+    .from("znacky")
+    .select("id, sekce, slug, nazev, popis, poradi, aktivni")
+    .order("poradi", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as DbZnacka[];
+}
+
+/** Načte nastavení e-shopu. Chybějící řádek není chyba — vrátíme výchozí hodnoty. */
+export async function nactiNastaveni(): Promise<NastaveniEshopu> {
+  const { data, error } = await supabase
+    .from("nastaveni")
+    .select("hodnota")
+    .eq("klic", "eshop")
+    .maybeSingle();
+  if (error) throw error;
+  return { ...VYCHOZI_NASTAVENI, ...((data?.hodnota ?? {}) as Partial<NastaveniEshopu>) };
+}
+
+/** Uloží nastavení e-shopu (jen administrace). */
+export async function ulozNastaveni(hodnota: NastaveniEshopu): Promise<void> {
+  const { error } = await supabase
+    .from("nastaveni")
+    .upsert({ klic: "eshop", hodnota }, { onConflict: "klic" });
+  if (error) throw error;
 }
 
 /** Načte produkty z databáze. `vseVcetneSkrytych` používá jen administrace. */
@@ -118,13 +174,21 @@ export async function nactiDbProdukty(vseVcetneSkrytych = false): Promise<DbProd
 /** Převede databázový produkt na tvar, který používají veřejné stránky. */
 export function naProdukt(db: DbProdukt, kategorie: DbKategorie[]): Produkt {
   const k = kategorie.find((x) => x.id === db.kategorie_id);
+  const sekce: Kategorie =
+    k?.sekce === "elektrokola" ? "elektrokola" : k?.sekce === "bazar" ? "bazar" : "kola";
   return {
     slug: db.slug,
     nazev: db.nazev,
-    kategorie: (k?.sekce === "elektrokola" ? "elektrokola" : "kola") as Kategorie,
+    kategorie: sekce,
     typ: k?.nazev ?? "Kolo",
     znacka: k?.znacka ?? "",
-    podkategorie: k ? k.slug.replace(`${k.sekce}-${k.znacka ?? ""}-`, "") : "",
+    // Pozn.: `podkategorie` nese slug kategorie z databáze. Dřív se z něj
+    // odřezávala předpona, což se rozcházelo s tím, co ukládala administrace.
+    podkategorie: k?.slug ?? "",
+    velikosti: db.velikosti ?? [],
+    skladem: db.skladem ?? 0,
+    naObjednavku: db.na_objednavku ?? true,
+    obrazky: Array.isArray(db.obrazky) ? db.obrazky : [],
     cena: db.cena,
     ...(db.puvodni_cena ? { puvodniCena: db.puvodni_cena } : {}),
     oblibene: db.oblibene,

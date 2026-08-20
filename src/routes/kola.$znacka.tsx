@@ -1,31 +1,40 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ZnackaVypis } from "@/components/ZnackaVypis";
-import { najdiZnacku, type Znacka } from "@/lib/produkty";
+import { useZnacka } from "@/lib/katalog-hook";
 
 export const Route = createFileRoute("/kola/$znacka")({
-  loader: ({ params }) => {
-    const znacka = najdiZnacku("kola", params.znacka);
-    if (!znacka) throw notFound();
-    return { znacka };
-  },
-  head: ({ loaderData }) => {
-    if (!loaderData) {
-      return { meta: [{ title: "Značka nenalezena | Cursorbike" }, { name: "robots", content: "noindex" }] };
-    }
-    const t = `${loaderData.znacka.nazev} jízdní kola | Cursorbike`;
-    return {
-      meta: [
-        { title: t },
-        { name: "description", content: loaderData.znacka.popis },
-        { property: "og:title", content: t },
-        { property: "og:description", content: loaderData.znacka.popis },
-      ],
-    };
-  },
-  component: KolaZnacka,
+  head: () => ({
+    meta: [
+      { title: "Jízdní kola | Cursorbike" },
+      { name: "description", content: "Jízdní kola v prodejně Cursorbike v Kravařích." },
+    ],
+  }),
+  component: ZnackaStranka,
 });
 
-function KolaZnacka() {
-  const { znacka } = Route.useLoaderData() as { znacka: Znacka };
+function ZnackaStranka() {
+  const { znacka: slug } = Route.useParams();
+  // Značky jsou nově v databázi, takže je nelze ověřit v loaderu jako dřív —
+  // seznam se načítá až v prohlížeči.
+  const { znacka, nacita } = useZnacka("kola", slug);
+
+  if (nacita) {
+    return <div className="mx-auto max-w-7xl px-4 py-20 text-muted-foreground md:px-6">Načítáme nabídku…</div>;
+  }
+
+  if (!znacka) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center md:px-6">
+        <h1 className="section-title text-3xl">Značku jsme nenašli</h1>
+        <p className="mt-3 text-muted-foreground">
+          Tuto značku už nenabízíme.{" "}
+          <Link to="/kola" className="font-semibold text-primary">
+            Zpět na přehled
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
   return <ZnackaVypis kategorie="kola" znacka={znacka} />;
 }

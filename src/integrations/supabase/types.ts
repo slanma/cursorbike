@@ -19,31 +19,99 @@ export type Database = {
           created_at: string
           id: string
           nazev: string
+          popis: string
           poradi: number
           sekce: string
           slug: string
           updated_at: string
           znacka: string | null
+          znacka_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           nazev: string
+          popis?: string
           poradi?: number
           sekce?: string
           slug: string
           updated_at?: string
           znacka?: string | null
+          znacka_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           nazev?: string
+          popis?: string
           poradi?: number
           sekce?: string
           slug?: string
           updated_at?: string
           znacka?: string | null
+          znacka_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kategorie_znacka_id_fkey"
+            columns: ["znacka_id"]
+            isOneToOne: false
+            referencedRelation: "znacky"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nastaveni: {
+        Row: {
+          hodnota: Json
+          klic: string
+          updated_at: string
+        }
+        Insert: {
+          hodnota?: Json
+          klic: string
+          updated_at?: string
+        }
+        Update: {
+          hodnota?: Json
+          klic?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      znacky: {
+        Row: {
+          aktivni: boolean
+          created_at: string
+          id: string
+          nazev: string
+          popis: string
+          poradi: number
+          sekce: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          aktivni?: boolean
+          created_at?: string
+          id?: string
+          nazev: string
+          popis?: string
+          poradi?: number
+          sekce?: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          aktivni?: boolean
+          created_at?: string
+          id?: string
+          nazev?: string
+          popis?: string
+          poradi?: number
+          sekce?: string
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -56,6 +124,7 @@ export type Database = {
           objednavka_id: string
           pocet: number
           slug: string | null
+          velikost: string | null
         }
         Insert: {
           cena?: number
@@ -65,6 +134,7 @@ export type Database = {
           objednavka_id: string
           pocet?: number
           slug?: string | null
+          velikost?: string | null
         }
         Update: {
           cena?: number
@@ -74,6 +144,7 @@ export type Database = {
           objednavka_id?: string
           pocet?: number
           slug?: string | null
+          velikost?: string | null
         }
         Relationships: [
           {
@@ -126,55 +197,70 @@ export type Database = {
           aktivni: boolean
           cena: number
           created_at: string
+          ean: string | null
           id: string
           kategorie_id: string | null
           kratky: string
+          na_objednavku: boolean
           nazev: string
           neni_pro_koho: string | null
           oblibene: boolean
           obrazek_url: string | null
+          obrazky: Json
           parametry: Json
           popis: string
           pro_koho: string[]
           puvodni_cena: number | null
+          skladem: number
           slug: string
           updated_at: string
+          velikosti: string[]
         }
         Insert: {
           aktivni?: boolean
           cena?: number
           created_at?: string
+          ean?: string | null
           id?: string
           kategorie_id?: string | null
           kratky?: string
+          na_objednavku?: boolean
           nazev: string
           neni_pro_koho?: string | null
           oblibene?: boolean
           obrazek_url?: string | null
+          obrazky?: Json
           parametry?: Json
           popis?: string
           pro_koho?: string[]
           puvodni_cena?: number | null
+          skladem?: number
           slug: string
           updated_at?: string
+          velikosti?: string[]
         }
         Update: {
           aktivni?: boolean
           cena?: number
           created_at?: string
+          ean?: string | null
           id?: string
           kategorie_id?: string | null
           kratky?: string
+          na_objednavku?: boolean
           nazev?: string
           neni_pro_koho?: string | null
           oblibene?: boolean
           obrazek_url?: string | null
+          obrazky?: Json
           parametry?: Json
           popis?: string
           pro_koho?: string[]
           puvodni_cena?: number | null
+          skladem?: number
           slug?: string
           updated_at?: string
+          velikosti?: string[]
         }
         Relationships: [
           {

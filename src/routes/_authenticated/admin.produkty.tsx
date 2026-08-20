@@ -26,11 +26,16 @@ type Formular = {
   kratky: string;
   popis: string;
   obrazek_url: string;
+  obrazky: string[];
   oblibene: boolean;
   aktivni: boolean;
   pro_koho: string;
   neni_pro_koho: string;
   parametry: string;
+  velikosti: string;
+  skladem: string;
+  na_objednavku: boolean;
+  ean: string;
 };
 
 const prazdny: Formular = {
@@ -42,11 +47,16 @@ const prazdny: Formular = {
   kratky: "",
   popis: "",
   obrazek_url: "",
+  obrazky: [],
   oblibene: false,
   aktivni: true,
   pro_koho: "",
   neni_pro_koho: "",
   parametry: "",
+  velikosti: "",
+  skladem: "0",
+  na_objednavku: true,
+  ean: "",
 };
 
 const naSlug = (text: string) =>
@@ -103,6 +113,14 @@ function SpravaProduktu() {
         kratky: f.kratky.trim(),
         popis: f.popis.trim(),
         obrazek_url: f.obrazek_url || null,
+        obrazky: f.obrazky,
+        velikosti: f.velikosti
+          .split(",")
+          .map((x) => x.trim())
+          .filter(Boolean),
+        skladem: Number(f.skladem) || 0,
+        na_objednavku: f.na_objednavku,
+        ean: f.ean.trim() || null,
         oblibene: f.oblibene,
         aktivni: f.aktivni,
         pro_koho: f.pro_koho.split("\n").map((x) => x.trim()).filter(Boolean),
@@ -147,6 +165,11 @@ function SpravaProduktu() {
       kratky: p.kratky,
       popis: p.popis,
       obrazek_url: p.obrazek_url ?? "",
+      obrazky: Array.isArray(p.obrazky) ? p.obrazky : [],
+      velikosti: (p.velikosti ?? []).join(", "),
+      skladem: String(p.skladem ?? 0),
+      na_objednavku: p.na_objednavku ?? true,
+      ean: p.ean ?? "",
       oblibene: p.oblibene,
       aktivni: p.aktivni,
       pro_koho: (p.pro_koho ?? []).join("\n"),
@@ -214,6 +237,49 @@ function SpravaProduktu() {
             </div>
           </div>
 
+          <div className="grid gap-4 rounded-lg border bg-surface p-4 sm:grid-cols-3">
+            <div className="grid gap-2 sm:col-span-3">
+              <Label htmlFor="velikosti">Velikosti rámu</Label>
+              <Input
+                id="velikosti"
+                value={form.velikosti}
+                placeholder="S, M, L, XL"
+                onChange={(e) => setForm({ ...form, velikosti: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Oddělujte čárkou. Když necháte prázdné, zákazník velikost nevybírá (doplňky, dětská kola).
+                Jakmile je vyplněná, kolo nejde koupit bez zvolené velikosti.
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="skladem">Skladem (ks)</Label>
+              <Input
+                id="skladem"
+                type="number"
+                min={0}
+                value={form.skladem}
+                onChange={(e) => setForm({ ...form, skladem: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="ean">EAN / čárový kód</Label>
+              <Input
+                id="ean"
+                maxLength={20}
+                value={form.ean}
+                placeholder="8590000000000"
+                onChange={(e) => setForm({ ...form, ean: e.target.value })}
+              />
+            </div>
+            <label className="flex items-center gap-2 self-end pb-2 text-sm font-semibold">
+              <Switch
+                checked={form.na_objednavku}
+                onCheckedChange={(v) => setForm({ ...form, na_objednavku: v })}
+              />
+              Lze objednat i když není skladem
+            </label>
+          </div>
+
           <div className="grid gap-2">
             <Label htmlFor="kratky">Krátký popis (do výpisu)</Label>
             <Input id="kratky" maxLength={200} value={form.kratky} onChange={(e) => setForm({ ...form, kratky: e.target.value })} />
@@ -248,6 +314,50 @@ function SpravaProduktu() {
             {nahrava && <p className="text-sm text-muted-foreground">Nahrávám fotku…</p>}
             {form.obrazek_url && (
               <img src={form.obrazek_url} alt="Náhled produktu" className="h-32 w-auto rounded border bg-surface object-contain" />
+            )}
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="galerie">Další fotky do galerie</Label>
+            <Input
+              id="galerie"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={async (e) => {
+                const soubory = Array.from(e.target.files ?? []);
+                if (!soubory.length) return;
+                setNahrava(true);
+                try {
+                  const url = await Promise.all(soubory.map(nahrajFotku));
+                  setForm((f) => (f ? { ...f, obrazky: [...f.obrazky, ...url] } : f));
+                  toast.success(soubory.length > 1 ? "Fotky nahrány" : "Fotka nahrána");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Nahrání se nezdařilo");
+                } finally {
+                  setNahrava(false);
+                  e.target.value = "";
+                }
+              }}
+            />
+            {form.obrazky.length > 0 && (
+              <div className="flex flex-wrap gap-3">
+                {form.obrazky.map((url) => (
+                  <div key={url} className="relative">
+                    <img src={url} alt="" className="h-24 w-28 rounded border bg-surface object-contain" />
+                    <button
+                      type="button"
+                      aria-label="Odebrat fotku"
+                      onClick={() =>
+                        setForm((f) => (f ? { ...f, obrazky: f.obrazky.filter((x) => x !== url) } : f))
+                      }
+                      className="absolute -right-2 -top-2 rounded-full border bg-background p-1 shadow"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
@@ -301,6 +411,7 @@ function SpravaProduktu() {
             <tr>
               <th className="px-4 py-3">Produkt</th>
               <th className="px-4 py-3">Cena</th>
+              <th className="px-4 py-3">Skladem</th>
               <th className="px-4 py-3">Na webu</th>
               <th className="px-4 py-3" />
             </tr>
@@ -310,6 +421,7 @@ function SpravaProduktu() {
               <tr key={p.id}>
                 <td className="px-4 py-3 font-semibold">{p.nazev}</td>
                 <td className="px-4 py-3">{formatCena(p.cena)}</td>
+                <td className="px-4 py-3">{p.skladem ?? 0} ks</td>
                 <td className="px-4 py-3">{p.aktivni ? "Ano" : "Skryto"}</td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-2">
@@ -331,7 +443,7 @@ function SpravaProduktu() {
             ))}
             {(produkty.data ?? []).length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
                   Zatím tu nejsou žádné produkty. Přidejte první tlačítkem nahoře.
                 </td>
               </tr>

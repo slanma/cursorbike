@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import majitel from "@/assets/majitel-hero.jpg";
-import { produkty } from "@/lib/produkty";
+import { useVsechnyProdukty } from "@/lib/produkty-hook";
 import { kontakt } from "@/lib/kontakt";
 import { kanonicka } from "@/lib/seo";
 
@@ -95,7 +95,11 @@ const vyhody = [
 ];
 
 function Home() {
-  const vybrana = produkty.slice(0, 3);
+  // Dřív titulka ukazovala jen ukázková kola z kódu — kola založená
+  // v administraci se na ni nikdy nedostala.
+  const { produkty } = useVsechnyProdukty();
+  const oblibena = produkty.filter((p) => p.oblibene);
+  const vybrana = (oblibena.length ? oblibena : produkty).slice(0, 3);
   const vAkci = produkty.filter((p) => p.puvodniCena).slice(0, 3);
   const akcniNeboVybrane = vAkci.length ? vAkci : vybrana;
 

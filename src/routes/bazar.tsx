@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Phone, RefreshCcw, ShieldCheck, Wrench } from "lucide-react";
 import { Drobky } from "@/components/Drobky";
+import { ProductCard } from "@/components/ProductCard";
+import { useVsechnyProdukty } from "@/lib/produkty-hook";
 import { kontakt } from "@/lib/kontakt";
 import { drobkyLd, jsonLdScript, kanonicka } from "@/lib/seo";
 
@@ -40,6 +42,11 @@ const body = [
 ];
 
 function BazarPage() {
+  // Bazarová kola se dřív do sekce Bazar vůbec nedostala — v převodu na
+  // produkt se mapovala mezi nová kola.
+  const { produkty, nacita } = useVsechnyProdukty();
+  const bazar = produkty.filter((p) => p.kategorie === "bazar");
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
       <Drobky items={[{ label: "Bazar" }]} />
@@ -48,6 +55,21 @@ function BazarPage() {
         Ojetá kola a elektrokola prověřená naším servisem. Nabídka se mění každý týden — aktuální kusy máme
         vystavené na prodejně v Kravařích.
       </p>
+
+      {bazar.length > 0 && (
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {bazar.map((p) => (
+            <ProductCard key={p.slug} produkt={p} />
+          ))}
+        </div>
+      )}
+
+      {!nacita && bazar.length === 0 && (
+        <p className="mt-10 rounded-lg border bg-card p-8 text-center text-muted-foreground shadow-card">
+          Právě teď nemáme v bazaru žádné kolo online. Aktuální kusy máme vystavené na prodejně —
+          zavolejte nám a řekneme vám, co je k dispozici.
+        </p>
+      )}
 
       <div className="mt-10 grid gap-6 md:grid-cols-3">
         {body.map((b) => (
