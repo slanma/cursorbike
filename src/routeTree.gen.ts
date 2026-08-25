@@ -22,6 +22,7 @@ import { Route as ObchodniPodminkyRouteImport } from './routes/obchodni-podminky
 import { Route as OchranaOsobnichUdajuRouteImport } from './routes/ochrana-osobnich-udaju'
 import { Route as OdstoupeniOdSmlouvyRouteImport } from './routes/odstoupeni-od-smlouvy'
 import { Route as ServisRouteImport } from './routes/servis'
+import { Route as SpravaRouteImport } from './routes/sprava'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ElektrokolaIndexRouteImport } from './routes/elektrokola.index'
 import { Route as ElektrokolaZnackaRouteImport } from './routes/elektrokola.$znacka'
@@ -100,6 +101,11 @@ const OdstoupeniOdSmlouvyRoute = OdstoupeniOdSmlouvyRouteImport.update({
 const ServisRoute = ServisRouteImport.update({
   id: '/servis',
   path: '/servis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpravaRoute = SpravaRouteImport.update({
+  id: '/sprava',
+  path: '/sprava',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/ochrana-osobnich-udaju': typeof OchranaOsobnichUdajuRoute
   '/odstoupeni-od-smlouvy': typeof OdstoupeniOdSmlouvyRoute
   '/servis': typeof ServisRoute
+  '/sprava': typeof SpravaRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/ochrana-osobnich-udaju': typeof OchranaOsobnichUdajuRoute
   '/odstoupeni-od-smlouvy': typeof OdstoupeniOdSmlouvyRoute
   '/servis': typeof ServisRoute
+  '/sprava': typeof SpravaRoute
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/ochrana-osobnich-udaju': typeof OchranaOsobnichUdajuRoute
   '/odstoupeni-od-smlouvy': typeof OdstoupeniOdSmlouvyRoute
   '/servis': typeof ServisRoute
+  '/sprava': typeof SpravaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
@@ -286,6 +295,7 @@ export interface FileRouteTypes {
     | '/ochrana-osobnich-udaju'
     | '/odstoupeni-od-smlouvy'
     | '/servis'
+    | '/sprava'
     | '/admin'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/ochrana-osobnich-udaju'
     | '/odstoupeni-od-smlouvy'
     | '/servis'
+    | '/sprava'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
     | '/kolo/$slug'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/ochrana-osobnich-udaju'
     | '/odstoupeni-od-smlouvy'
     | '/servis'
+    | '/sprava'
     | '/_authenticated/admin'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
@@ -373,6 +385,7 @@ export interface RootRouteChildren {
   OchranaOsobnichUdajuRoute: typeof OchranaOsobnichUdajuRoute
   OdstoupeniOdSmlouvyRoute: typeof OdstoupeniOdSmlouvyRoute
   ServisRoute: typeof ServisRoute
+  SpravaRoute: typeof SpravaRoute
   KoloSlugRoute: typeof KoloSlugRoute
 }
 
@@ -467,6 +480,13 @@ declare module '@tanstack/react-router' {
       path: '/servis'
       fullPath: '/servis'
       preLoaderRoute: typeof ServisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sprava': {
+      id: '/sprava'
+      path: '/sprava'
+      fullPath: '/sprava'
+      preLoaderRoute: typeof SpravaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -655,6 +675,7 @@ const rootRouteChildren: RootRouteChildren = {
   OchranaOsobnichUdajuRoute: OchranaOsobnichUdajuRoute,
   OdstoupeniOdSmlouvyRoute: OdstoupeniOdSmlouvyRoute,
   ServisRoute: ServisRoute,
+  SpravaRoute: SpravaRoute,
   KoloSlugRoute: KoloSlugRoute,
 }
 export const routeTree = rootRouteImport

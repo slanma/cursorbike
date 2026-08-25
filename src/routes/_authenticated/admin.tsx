@@ -36,7 +36,12 @@ function AdminLayout() {
       <div className="mx-auto max-w-2xl px-4 py-20 text-center md:px-6">
         <h1 className="section-title text-3xl">Nemáte přístup do správy</h1>
         <p className="mt-3 text-muted-foreground">
-          Tento účet nemá oprávnění obchodníka. Přihlaste se prosím účtem prodejny.
+          Tento účet nemá oprávnění správce. Do správy se dostanou jen účty, kterým roli výslovně
+          přidělil stávající správce — samotná registrace na webu nestačí.
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Pokud jste roli právě dostali, odhlaste se a přihlaste znovu — oprávnění se načítá
+          při přihlášení.
         </p>
         <Button
           className="mt-6"

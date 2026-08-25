@@ -70,7 +70,7 @@ export function Footer() {
       <div className="border-t border-ink-foreground/10 py-4 text-center text-xs text-ink-muted">
         © {new Date().getFullYear()} {prodavajici.oznaceni}, IČO {prodavajici.ico} — všechna práva vyhrazena
         {" · "}
-        <Link to="/auth" className="hover:text-primary">
+        <Link to="/sprava" className="hover:text-primary">
           Správa e-shopu
         </Link>
       </div>

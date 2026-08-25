@@ -6,6 +6,7 @@ import { AlertTriangle, CheckCircle2, Upload } from "lucide-react";
 import { nactiKategorie, nactiMapovani, ulozMapovani } from "@/lib/eshop";
 import { nactiFeed, shrnUpozorneni, type FeedVysledek } from "@/lib/feed";
 import {
+  navrhniMapovani,
   nactiProPorovnani,
   nazevProWeb,
   provedImport,
@@ -34,6 +35,13 @@ async function precti(soubor: File): Promise<string> {
   return new TextDecoder(kodovani).decode(buffer);
 }
 
+/** Věta pod souhrnem — kolik kategorií ještě čeká na rozhodnutí. */
+function chibiText(chybi: number) {
+  if (chybi === 0) return "Vše je přiřazené, můžete pokračovat.";
+  if (chybi === 1) return "Jednu jsme si přiřadit netroufli — je nahoře v seznamu.";
+  return `${chybi} jsme si přiřadit netroufli — jsou nahoře v seznamu.`;
+}
+
 function ImportFeedu() {
   const qc = useQueryClient();
   const [feed, setFeed] = useState<FeedVysledek | null>(null);
@@ -43,28 +51,61 @@ function ImportFeedu() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [prubeh, setPrubeh] = useState<string | null>(null);
   const [hotovo, setHotovo] = useState<{ novych: number; aktualizovano: number } | null>(null);
+  const [automaticky, setAutomaticky] = useState<Set<string>>(new Set());
 
   const kategorie = useQuery({ queryKey: ["admin-kategorie"], queryFn: nactiKategorie });
 
   const kategorieFeedu = feed
     ? [...new Set(feed.produkty.map((p) => p.kategorieFeed))]
         .map((k) => ({ nazev: k, pocet: feed.produkty.filter((p) => p.kategorieFeed === k).length }))
-        .sort((a, b) => b.pocet - a.pocet)
+        // Nepřiřazené dopředu — jen ty potřebují pozornost.
+        .sort((a, b) => Number(!!mapovani[a.nazev]) - Number(!!mapovani[b.nazev]) || b.pocet - a.pocet)
     : [];
 
-  const nactiSoubor = async (soubor: File) => {
+  const prirazeno = kategorieFeedu.filter((k) => mapovani[k.nazev]).length;
+  const chybi = kategorieFeedu.length - prirazeno;
+
+  const nactiSoubory = async (soubory: File[]) => {
     setFeed(null);
     setPlan(null);
     setHotovo(null);
-    setPrubeh("Čtu soubor…");
+    setPrubeh(soubory.length > 1 ? `Čtu ${soubory.length} souborů…` : "Čtu soubor…");
     try {
-      const text = await precti(soubor);
-      const vysledek = nactiFeed(soubor.name, text);
-      const [ulozene, produkty] = await Promise.all([nactiMapovani(), nactiProPorovnani()]);
+      // Víc souborů se poskládá do jednoho výsledku. Stejný produkt ve dvou
+      // souborech bereme jednou — u kategorií se exporty často překrývají.
+      const casti = await Promise.all(
+        soubory.map(async (f) => nactiFeed(f.name, await precti(f))),
+      );
+      const videno = new Set<string>();
+      const vysledek: FeedVysledek = {
+        dodavatel: casti[0]!.dodavatel,
+        produkty: casti.flatMap((c) => c.produkty).filter((p) => {
+          const klic = `${p.dodavatel}|${p.kod}`;
+          if (videno.has(klic)) return false;
+          videno.add(klic);
+          return true;
+        }),
+        upozorneni: casti.flatMap((c) => c.upozorneni),
+        polozekVeFeedu: casti.reduce((s, c) => s + c.polozekVeFeedu, 0),
+      };
+
+      const [ulozene, produkty, nase] = await Promise.all([
+        nactiMapovani(),
+        nactiProPorovnani(),
+        nactiKategorie(),
+      ]);
+
+      // Nejdřív se zkusí přiřadit samo, ručně uložené přiřazení má přednost.
+      const navrh = navrhniMapovani(
+        [...new Set(vysledek.produkty.map((p) => p.kategorieFeed))],
+        nase.map((k) => ({ id: k.id, nazev: k.nazev, sekce: k.sekce, znacka: k.znacka })),
+      );
+
       setFeed(vysledek);
-      setNazevSouboru(soubor.name);
+      setNazevSouboru(soubory.map((f) => f.name).join(", "));
       setExistujici(produkty);
-      setMapovani(ulozene ?? {});
+      setMapovani({ ...navrh, ...(ulozene ?? {}) });
+      setAutomaticky(new Set(Object.keys(navrh)));
       toast.success(`Načteno ${vysledek.produkty.length} produktů`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Soubor se nepodařilo přečíst");
@@ -117,12 +158,16 @@ function ImportFeedu() {
           id="soubor"
           type="file"
           accept=".xml,.csv,.txt"
+          multiple
           onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void nactiSoubor(f);
+            const soubory = Array.from(e.target.files ?? []);
+            if (soubory.length) void nactiSoubory(soubory);
             e.target.value = "";
           }}
         />
+        <p className="text-xs text-muted-foreground">
+          Můžete vybrat i víc souborů najednou — podržte Cmd a klikejte.
+        </p>
         {prubeh && <p className="text-sm text-muted-foreground">{prubeh}</p>}
         {feed && (
           <p className="text-sm">
@@ -140,17 +185,30 @@ function ImportFeedu() {
           <div>
             <h3 className="text-base font-bold">2. Kam co patří</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Vlevo je kategorie tak, jak ji píše dodavatel. Vpravo vyberte, kam patří u vás. Co necháte
-              nepřiřazené, se nenaimportuje. Přiřazení si zapamatujeme na příště.
+              Kategorie jsme se pokusili přiřadit sami. Projděte je a opravte, co nesedí. Co zůstane na
+              „neimportovat", se přeskočí. Přiřazení si zapamatujeme na příště.
+            </p>
+            <p className="mt-3 rounded-md border bg-surface px-4 py-3 text-sm">
+              <span className="font-semibold text-primary">{prirazeno} z {kategorieFeedu.length}</span>{" "}
+              přiřazeno automaticky.{" "}
+              {chibiText(chybi)}
             </p>
           </div>
 
           <div className="grid gap-2">
             {kategorieFeedu.map((k) => (
-              <div key={k.nazev} className="grid items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
+              <div
+                key={k.nazev}
+                className={`grid items-center gap-3 rounded-md px-3 py-2 sm:grid-cols-[1fr_auto_1fr] ${
+                  mapovani[k.nazev] ? "" : "bg-surface"
+                }`}
+              >
                 <span className="text-sm">
                   <span className="font-semibold">{k.nazev || "(bez kategorie)"}</span>{" "}
                   <span className="text-muted-foreground">— {k.pocet} produktů</span>
+                  {automaticky.has(k.nazev) && mapovani[k.nazev] && (
+                    <span className="ml-2 text-xs text-primary">✓ přiřazeno samo</span>
+                  )}
                 </span>
                 <span aria-hidden className="hidden text-muted-foreground sm:inline">
                   →
