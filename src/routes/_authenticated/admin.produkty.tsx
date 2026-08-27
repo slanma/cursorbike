@@ -98,9 +98,68 @@ function SpravaProduktu() {
   const qc = useQueryClient();
   const [form, setForm] = useState<Formular | null>(null);
   const [nahrava, setNahrava] = useState(false);
+  const [vybrane, setVybrane] = useState<Set<string>>(new Set());
+  const [hledani, setHledani] = useState("");
+  const [filtrKategorie, setFiltrKategorie] = useState("");
+  const [hromadnaKategorie, setHromadnaKategorie] = useState("");
 
   const kategorie = useQuery({ queryKey: ["admin-kategorie"], queryFn: nactiKategorie });
+
+  /**
+   * Hromadné akce. S dvěma stovkami kol se jinak nedá pracovat — zveřejnit
+   * padesát kol po jednom je půlhodina klikání.
+   */
+  const hromadne = useMutation({
+    mutationFn: async (akce: "zobrazit" | "skryt" | "smazat" | "presunout") => {
+      const ids = [...vybrane];
+      if (!ids.length) throw new Error("Nic není vybrané");
+      if (akce === "smazat") {
+        const { error } = await supabase.from("produkty").delete().in("id", ids);
+        if (error) throw error;
+      } else if (akce === "presunout") {
+        if (!hromadnaKategorie) throw new Error("Vyberte kategorii");
+        const { error } = await supabase
+          .from("produkty")
+          .update({ kategorie_id: hromadnaKategorie })
+          .in("id", ids);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("produkty")
+          .update({ aktivni: akce === "zobrazit" })
+          .in("id", ids);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Hotovo");
+      setVybrane(new Set());
+      setHromadnaKategorie("");
+      qc.invalidateQueries({ queryKey: ["admin-produkty"] });
+      qc.invalidateQueries({ queryKey: ["verejne-produkty"] });
+      qc.invalidateQueries({ queryKey: ["pocty-produktu"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const produkty = useQuery({ queryKey: ["admin-produkty"], queryFn: () => nactiDbProdukty(true) });
+
+  const nazevKategorie = (id: string | null) =>
+    kategorie.data?.find((k) => k.id === id)?.nazev ?? "—";
+
+  const seznam = (produkty.data ?? []).filter((p) => {
+    if (filtrKategorie && p.kategorie_id !== filtrKategorie) return false;
+    if (!hledani.trim()) return true;
+    return p.nazev.toLowerCase().includes(hledani.trim().toLowerCase());
+  });
+
+  const vsechnyVybrane = seznam.length > 0 && seznam.every((p) => vybrane.has(p.id));
+  const prepnout = (id: string) =>
+    setVybrane((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
 
   const ulozit = useMutation({
     mutationFn: async (f: Formular) => {
@@ -405,11 +464,110 @@ function SpravaProduktu() {
         </form>
       )}
 
+      <div className="grid gap-3 rounded-lg border bg-card p-4 shadow-card sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <div className="grid gap-2">
+          <Label htmlFor="hledani">Najít kolo podle názvu</Label>
+          <Input
+            id="hledani"
+            placeholder="například: Solution"
+            value={hledani}
+            onChange={(e) => setHledani(e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="filtr">Zobrazit jen kategorii</Label>
+          <select
+            id="filtr"
+            className="h-10 rounded-md border bg-background px-3 text-sm"
+            value={filtrKategorie}
+            onChange={(e) => setFiltrKategorie(e.target.value)}
+          >
+            <option value="">všechny kategorie</option>
+            {(kategorie.data ?? []).map((k) => (
+              <option key={k.id} value={k.id}>
+                {k.sekce === "elektrokola" ? "Elektrokola" : k.sekce === "bazar" ? "Bazar" : "Kola"} ·{" "}
+                {k.znacka ?? "—"} · {k.nazev}
+              </option>
+            ))}
+          </select>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {seznam.length} z {(produkty.data ?? []).length} kol
+        </p>
+      </div>
+
+      {vybrane.size > 0 && (
+        <div className="sticky top-2 z-10 grid gap-3 rounded-lg border-2 border-primary bg-card p-4 shadow-card">
+          <p className="font-bold">Vybráno {vybrane.size} kol — co s nimi?</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" onClick={() => hromadne.mutate("zobrazit")} disabled={hromadne.isPending}>
+              Zobrazit na webu
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => hromadne.mutate("skryt")} disabled={hromadne.isPending}>
+              Skrýt z webu
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setVybrane(new Set())}>
+              Zrušit výběr
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (confirm(`Opravdu smazat ${vybrane.size} kol? Tohle už nejde vzít zpět.`))
+                  hromadne.mutate("smazat");
+              }}
+              disabled={hromadne.isPending}
+            >
+              <Trash2 className="mr-2 h-4 w-4 text-destructive" /> Smazat
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-end gap-2 border-t pt-3">
+            <div className="grid gap-2">
+              <Label htmlFor="presun">Přesunout do jiné kategorie</Label>
+              <select
+                id="presun"
+                className="h-10 min-w-72 rounded-md border bg-background px-3 text-sm"
+                value={hromadnaKategorie}
+                onChange={(e) => setHromadnaKategorie(e.target.value)}
+              >
+                <option value="">— vyberte kategorii —</option>
+                {(kategorie.data ?? []).map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.sekce === "elektrokola" ? "Elektrokola" : k.sekce === "bazar" ? "Bazar" : "Kola"} ·{" "}
+                    {k.znacka ?? "—"} · {k.nazev}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!hromadnaKategorie || hromadne.isPending}
+              onClick={() => hromadne.mutate("presunout")}
+            >
+              Přesunout
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded-lg border bg-card shadow-card">
         <table className="w-full text-sm">
           <thead className="bg-surface text-left">
             <tr>
+              <th className="w-10 px-4 py-3">
+                <input
+                  type="checkbox"
+                  aria-label="Vybrat všechna zobrazená kola"
+                  className="h-4 w-4"
+                  checked={vsechnyVybrane}
+                  onChange={() =>
+                    setVybrane(vsechnyVybrane ? new Set() : new Set(seznam.map((p) => p.id)))
+                  }
+                />
+              </th>
               <th className="px-4 py-3">Produkt</th>
+              <th className="px-4 py-3">Kategorie</th>
               <th className="px-4 py-3">Cena</th>
               <th className="px-4 py-3">Skladem</th>
               <th className="px-4 py-3">Na webu</th>
@@ -417,9 +575,19 @@ function SpravaProduktu() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {(produkty.data ?? []).map((p) => (
-              <tr key={p.id}>
+            {seznam.map((p) => (
+              <tr key={p.id} className={vybrane.has(p.id) ? "bg-surface" : ""}>
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    aria-label={`Vybrat ${p.nazev}`}
+                    className="h-4 w-4"
+                    checked={vybrane.has(p.id)}
+                    onChange={() => prepnout(p.id)}
+                  />
+                </td>
                 <td className="px-4 py-3 font-semibold">{p.nazev}</td>
+                <td className="px-4 py-3 text-muted-foreground">{nazevKategorie(p.kategorie_id)}</td>
                 <td className="px-4 py-3">{formatCena(p.cena)}</td>
                 <td className="px-4 py-3">{p.skladem ?? 0} ks</td>
                 <td className="px-4 py-3">{p.aktivni ? "Ano" : "Skryto"}</td>
@@ -441,10 +609,12 @@ function SpravaProduktu() {
                 </td>
               </tr>
             ))}
-            {(produkty.data ?? []).length === 0 && (
+            {seznam.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                  Zatím tu nejsou žádné produkty. Přidejte první tlačítkem nahoře.
+                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                  {(produkty.data ?? []).length === 0
+                    ? "Zatím tu nejsou žádné produkty. Přidejte první tlačítkem nahoře."
+                    : "Žádné kolo neodpovídá hledání."}
                 </td>
               </tr>
             )}
