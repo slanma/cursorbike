@@ -49,6 +49,20 @@ export type FeedVysledek = {
   polozekVeFeedu: number;
 };
 
+/**
+ * Fotky Authora zatím neumíme poskládat.
+ *
+ * Feed uvádí jen název souboru (`42966402_solution_b.jpg`). Adresa
+ * `cz.author.eu/data/x_produkty/14067/main/ua<soubor>`, kterou jsme znali
+ * z dřívějšího importu do PrestaShopu, platí jen pro model Espirit — číslo
+ * složky je u každého modelu jiné a ověřený odkaz na jiný model vede na
+ * Authorovu mapu webu, ne na obrázek.
+ *
+ * Proto se u Authora ukládají jen názvy souborů. Dokud dodavatel nedodá
+ * adresu nebo pravidlo, bereme fotky odjinud (starý web, vlastní nahrání) —
+ * lepší žádná fotka než odkaz, který nikam nevede.
+ */
+
 /** Cena, u které dodavatel značí „cenu zatím neurčujeme". */
 const CENA_NEURCENA = 99999;
 
@@ -315,6 +329,12 @@ export function nactiAuthorXml(xml: string): FeedVysledek {
   for (const p of produkty) {
     if (!p.obrazkySoubory.length) {
       upozorneni.push({ druh: "bez-fotky", produkt: p.nazev, detail: "Feed neuvádí žádnou fotku." });
+    } else {
+      upozorneni.push({
+        druh: "fotka-bez-adresy",
+        produkt: p.nazev,
+        detail: "Author posílá jen název souboru, ne adresu — fotku doplňte odjinud.",
+      });
     }
   }
 
@@ -484,6 +504,7 @@ export function shrnUpozorneni(upozorneni: Upozorneni[]): { druh: string; popis:
     "bez-fotky": "bez fotky",
     "bez-eanu": "bez čárového kódu — nejdou spolehlivě spárovat",
     "bez-kategorie": "bez kategorie — nevíme, kam patří",
+    "fotka-bez-adresy": "bez použitelné fotky — Author neposílá adresu, jen název souboru",
     "nulovy-sklad": "nula kusů skladem u všech velikostí",
   };
   const mapa = new Map<string, number>();

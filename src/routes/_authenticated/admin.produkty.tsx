@@ -6,6 +6,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { nactiDbProdukty, nactiKategorie, nahrajFotku, type DbProdukt } from "@/lib/eshop";
 import { formatCena, type ParametrSkupina } from "@/lib/produkty";
+import { stahniFotky } from "@/lib/fotky.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,6 +103,7 @@ function SpravaProduktu() {
   const [hledani, setHledani] = useState("");
   const [filtrKategorie, setFiltrKategorie] = useState("");
   const [hromadnaKategorie, setHromadnaKategorie] = useState("");
+  const [stahovaniPrubeh, setStahovaniPrubeh] = useState<string | null>(null);
 
   const kategorie = useQuery({ queryKey: ["admin-kategorie"], queryFn: nactiKategorie });
 
@@ -198,6 +200,43 @@ function SpravaProduktu() {
       qc.invalidateQueries({ queryKey: ["verejne-produkty"] });
     },
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  /**
+   * Fotky u naimportovaných kol vedou odkazem na starý web, který se v září
+   * vypne. Tímhle se stáhnou k nám, po dávkách po 20 kolech, aby to server
+   * zvládl.
+   */
+  const stahnout = useMutation({
+    mutationFn: async () => {
+      const ids = [...vybrane];
+      if (!ids.length) throw new Error("Nic není vybrané");
+      let stazeno = 0;
+      let preskoceno = 0;
+      const chyby: string[] = [];
+      for (let i = 0; i < ids.length; i += 20) {
+        const davka = ids.slice(i, i + 20);
+        setStahovaniPrubeh(`Stahuji fotky… ${Math.min(i + davka.length, ids.length)} z ${ids.length}`);
+        const v = await stahniFotky({ data: { ids: davka } });
+        stazeno += v.stazeno;
+        preskoceno += v.preskoceno;
+        chyby.push(...v.chyby);
+      }
+      return { stazeno, preskoceno, chyby };
+    },
+    onSuccess: (v) => {
+      if (v.chyby.length) {
+        toast.warning(`Stáhnuto ${v.stazeno} kol, u ${v.chyby.length} to nešlo`, {
+          description: v.chyby.slice(0, 3).join(" · "),
+        });
+      } else {
+        toast.success(`Fotky stáhnuty u ${v.stazeno} kol${v.preskoceno ? `, ${v.preskoceno} už bylo hotových` : ""}`);
+      }
+      qc.invalidateQueries({ queryKey: ["admin-produkty"] });
+      qc.invalidateQueries({ queryKey: ["verejne-produkty"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+    onSettled: () => setStahovaniPrubeh(null),
   });
 
   const smazat = useMutation({
@@ -499,12 +538,21 @@ function SpravaProduktu() {
       {vybrane.size > 0 && (
         <div className="sticky top-2 z-10 grid gap-3 rounded-lg border-2 border-primary bg-card p-4 shadow-card">
           <p className="font-bold">Vybráno {vybrane.size} kol — co s nimi?</p>
+          {stahovaniPrubeh && <p className="text-sm text-muted-foreground">{stahovaniPrubeh}</p>}
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" onClick={() => hromadne.mutate("zobrazit")} disabled={hromadne.isPending}>
               Zobrazit na webu
             </Button>
             <Button size="sm" variant="outline" onClick={() => hromadne.mutate("skryt")} disabled={hromadne.isPending}>
               Skrýt z webu
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => stahnout.mutate()}
+              disabled={stahnout.isPending}
+            >
+              Stáhnout fotky k nám
             </Button>
             <Button size="sm" variant="outline" onClick={() => setVybrane(new Set())}>
               Zrušit výběr
