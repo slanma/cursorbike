@@ -15,8 +15,10 @@ import {
   type Mapovani,
   type Plan,
 } from "@/lib/feed-import";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_authenticated/admin/feedy")({
   component: ImportFeedu,
@@ -38,6 +40,35 @@ async function precti(soubor: File): Promise<string> {
 const popisSekce = (s: string) =>
   s === "elektrokola" ? "Elektrokola" : s === "bazar" ? "Bazar" : "Kola";
 
+const naSlug = (text: string) =>
+  text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+/**
+ * Z cesty, jak ji píše dodavatel („Elektrokola|Crussis|Horská elektrokola"),
+ * odhadne sekci, značku a název. Slouží jen k předvyplnění formuláře —
+ * poslední slovo má obsluha.
+ */
+function rozeberCestu(cesta: string): { sekce: string; znacka: string; nazev: string } {
+  const casti = cesta.split("|").map((x) => x.trim()).filter(Boolean);
+  const prvni = (casti[0] ?? "").toLowerCase();
+  const sekce = prvni.includes("elektro")
+    ? "elektrokola"
+    : prvni.includes("bazar")
+      ? "bazar"
+      : "kola";
+  const zbytek = casti.length > 1 ? casti.slice(1) : casti;
+  return {
+    sekce,
+    znacka: zbytek.length > 1 ? zbytek[0]! : "",
+    nazev: zbytek[zbytek.length - 1] ?? cesta,
+  };
+}
+
 /**
  * Import od dodavatelů.
  *
@@ -56,6 +87,11 @@ function ImportFeedu() {
   const [prubeh, setPrubeh] = useState<string | null>(null);
   const [hotovo, setHotovo] = useState<{ novych: number; aktualizovano: number } | null>(null);
   const [rozbaleno, setRozbaleno] = useState(false);
+  const [zaklada, setZaklada] = useState<string | null>(null);
+  const [novaSekce, setNovaSekce] = useState("kola");
+  const [novaZnacka, setNovaZnacka] = useState("");
+  const [novyNazev, setNovyNazev] = useState("");
+  const [uklada, setUklada] = useState(false);
 
   const kategorieFeedu = feed
     ? [...new Set(feed.produkty.map((p) => p.kategorieFeed))]
@@ -120,6 +156,73 @@ function ImportFeedu() {
       toast.error(e instanceof Error ? e.message : "Soubor se nepodařilo přečíst");
     } finally {
       setPrubeh(null);
+    }
+  };
+
+  /**
+   * Založí kategorii, kterou dodavatel používá, ale my ji ještě nemáme.
+   * Když chybí i značka, vytvoří se zároveň — obsluha tak nemusí odbíhat
+   * do jiné části administrace a vracet se zpátky k importu.
+   */
+  const zalozKategorii = async (cestaFeedu: string) => {
+    if (!novyNazev.trim()) {
+      toast.error("Vyplňte název kategorie");
+      return;
+    }
+    if (!novaZnacka.trim()) {
+      toast.error("Vyplňte značku");
+      return;
+    }
+    setUklada(true);
+    try {
+      const slugZnacky = naSlug(novaZnacka);
+      // Značku hledáme podle sekce a adresy; když není, založíme ji.
+      const { data: existujiciZnacka, error: chybaHledani } = await supabase
+        .from("znacky")
+        .select("id")
+        .eq("sekce", novaSekce)
+        .eq("slug", slugZnacky)
+        .maybeSingle();
+      if (chybaHledani) throw chybaHledani;
+
+      let znackaId = existujiciZnacka?.id;
+      if (!znackaId) {
+        const { data, error } = await supabase
+          .from("znacky")
+          .insert({ sekce: novaSekce, slug: slugZnacky, nazev: novaZnacka.trim(), poradi: 99 })
+          .select("id")
+          .single();
+        if (error) throw error;
+        znackaId = data.id;
+      }
+
+      const { data: novaKat, error: chybaKat } = await supabase
+        .from("kategorie")
+        .insert({
+          slug: `${novaSekce}-${slugZnacky}-${naSlug(novyNazev)}`,
+          nazev: novyNazev.trim(),
+          sekce: novaSekce,
+          znacka: slugZnacky,
+          znacka_id: znackaId,
+          poradi: 99,
+        })
+        .select("id, nazev, sekce, znacka")
+        .single();
+      if (chybaKat) throw chybaKat;
+
+      const doplneno = [...nase, { id: novaKat.id, nazev: novaKat.nazev, sekce: novaKat.sekce, znacka: novaKat.znacka }];
+      const m = { ...mapovani, [cestaFeedu]: novaKat.id };
+      setNase(doplneno);
+      setMapovani(m);
+      prepocitej(m);
+      setZaklada(null);
+      qc.invalidateQueries({ queryKey: ["admin-kategorie"] });
+      qc.invalidateQueries({ queryKey: ["katalog"] });
+      toast.success(`Kategorie „${novaKat.nazev}" založena`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Kategorii se nepodařilo založit");
+    } finally {
+      setUklada(false);
     }
   };
 
@@ -223,13 +326,109 @@ function ImportFeedu() {
               </p>
               <div className="mt-3 grid gap-2">
                 {nezarazene.map((k) => (
-                  <div key={k.nazev} className="grid items-center gap-2 sm:grid-cols-[1fr_1fr]">
+                  <div key={k.nazev} className="grid gap-2">
+                    <div className="grid items-center gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                      <span className="text-sm">
+                        <span className="font-semibold">{k.nazev || "(bez kategorie)"}</span>{" "}
+                        <span className="text-muted-foreground">— {k.pocet} kol</span>
+                      </span>
+                      <select
+                        className="h-10 rounded-md border bg-background px-3 text-sm"
+                        value={mapovani[k.nazev] ?? ""}
+                        onChange={(e) => {
+                          const m = { ...mapovani, [k.nazev]: e.target.value };
+                          setMapovani(m);
+                          prepocitej(m);
+                        }}
+                      >
+                        <option value="">— neimportovat —</option>
+                        {nase.map((x) => (
+                          <option key={x.id} value={x.id}>
+                            {popisSekce(x.sekce)} · {x.znacka ?? "—"} · {x.nazev}
+                          </option>
+                        ))}
+                      </select>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const navrh = rozeberCestu(k.nazev);
+                          setZaklada(zaklada === k.nazev ? null : k.nazev);
+                          setNovaSekce(navrh.sekce);
+                          setNovaZnacka(navrh.znacka);
+                          setNovyNazev(navrh.nazev);
+                        }}
+                      >
+                        Založit novou
+                      </Button>
+                    </div>
+
+                    {zaklada === k.nazev && (
+                      <div className="grid gap-3 rounded-md border bg-surface p-4 sm:grid-cols-3">
+                        <div className="grid gap-1.5">
+                          <Label htmlFor={`sekce-${k.nazev}`}>Kam patří</Label>
+                          <select
+                            id={`sekce-${k.nazev}`}
+                            className="h-10 rounded-md border bg-background px-3 text-sm"
+                            value={novaSekce}
+                            onChange={(e) => setNovaSekce(e.target.value)}
+                          >
+                            <option value="kola">Kola</option>
+                            <option value="elektrokola">Elektrokola</option>
+                            <option value="bazar">Bazar</option>
+                          </select>
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label htmlFor={`znacka-${k.nazev}`}>Značka</Label>
+                          <Input
+                            id={`znacka-${k.nazev}`}
+                            value={novaZnacka}
+                            placeholder="Crussis"
+                            onChange={(e) => setNovaZnacka(e.target.value)}
+                          />
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label htmlFor={`nazev-${k.nazev}`}>Název kategorie</Label>
+                          <Input
+                            id={`nazev-${k.nazev}`}
+                            value={novyNazev}
+                            onChange={(e) => setNovyNazev(e.target.value)}
+                          />
+                        </div>
+                        <div className="sm:col-span-3">
+                          <Button size="sm" disabled={uklada} onClick={() => void zalozKategorii(k.nazev)}>
+                            {uklada ? "Zakládám…" : "Založit a zařadit sem"}
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => setZaklada(null)}>
+                            Zrušit
+                          </Button>
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            Značka se založí taky, pokud ještě není. Předvyplnili jsme to podle toho,
+                            jak kategorii pojmenoval dodavatel.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {rozbaleno && (
+            <div className="grid gap-2 rounded-md border p-4">
+              <p className="text-xs text-muted-foreground">
+                Když něco sedí špatně, přepište to tady — vaše volba má přednost a zapamatujeme si ji.
+              </p>
+              <div className="max-h-72 overflow-auto">
+                {kategorieFeedu.map((k) => (
+                  <div key={k.nazev} className="grid items-center gap-2 py-1 sm:grid-cols-[1fr_1fr]">
                     <span className="text-sm">
-                      <span className="font-semibold">{k.nazev || "(bez kategorie)"}</span>{" "}
+                      {k.nazev || "(bez kategorie)"}{" "}
                       <span className="text-muted-foreground">— {k.pocet} kol</span>
                     </span>
                     <select
-                      className="h-10 rounded-md border bg-background px-3 text-sm"
+                      className="h-9 rounded-md border bg-background px-2 text-sm"
                       value={mapovani[k.nazev] ?? ""}
                       onChange={(e) => {
                         const m = { ...mapovani, [k.nazev]: e.target.value };
@@ -247,26 +446,6 @@ function ImportFeedu() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {rozbaleno && (
-            <div className="max-h-72 overflow-auto rounded-md border">
-              <table className="w-full text-sm">
-                <tbody className="divide-y">
-                  {kategorieFeedu.map((k) => (
-                    <tr key={k.nazev}>
-                      <td className="px-3 py-2">{k.nazev || "(bez kategorie)"}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{k.pocet} kol</td>
-                      <td className="px-3 py-2">
-                        {mapovani[k.nazev]
-                          ? nase.find((x) => x.id === mapovani[k.nazev])?.nazev
-                          : "nenaimportuje se"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           )}
 
