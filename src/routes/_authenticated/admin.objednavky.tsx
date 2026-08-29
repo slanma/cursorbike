@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { STAVY_OBJEDNAVKY, stavLabel, type DbObjednavka, type DbObjednavkaPolozka } from "@/lib/eshop";
+import { nactiPlatbu, STAVY_OBJEDNAVKY, stavLabel, type DbObjednavka, type DbObjednavkaPolozka } from "@/lib/eshop";
+import { QrPlatba } from "@/components/QrPlatba";
 import { formatCena } from "@/lib/produkty";
 
 export const Route = createFileRoute("/_authenticated/admin/objednavky")({
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/admin/objednavky")({
 function SpravaObjednavek() {
   const qc = useQueryClient();
 
+  const platba = useQuery({ queryKey: ["platba"], queryFn: nactiPlatbu });
   const { data } = useQuery({
     queryKey: ["admin-objednavky"],
     queryFn: async () => {
@@ -55,7 +57,10 @@ function SpravaObjednavek() {
             <article key={o.id} className="rounded-lg border bg-card p-6 shadow-card">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-bold">{o.jmeno}</h3>
+                  <h3 className="text-lg font-bold">
+                    {o.jmeno}{" "}
+                    <span className="font-normal text-muted-foreground">— objednávka č. {o.cislo}</span>
+                  </h3>
                   <p className="text-sm text-muted-foreground">
                     {new Date(o.created_at).toLocaleString("cs-CZ")} · {o.email}
                     {o.telefon ? ` · ${o.telefon}` : ""}
@@ -89,6 +94,17 @@ function SpravaObjednavek() {
               </ul>
 
               {o.poznamka && <p className="mt-3 rounded bg-surface p-3 text-sm text-muted-foreground">{o.poznamka}</p>}
+
+              {platba.data?.iban && o.stav !== "dokoncena" && o.stav !== "zrusena" && (
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+                    Ukázat QR kód k zaplacení
+                  </summary>
+                  <div className="mt-3">
+                    <QrPlatba platba={platba.data} castka={o.celkem} cisloObjednavky={o.cislo} />
+                  </div>
+                </details>
+              )}
             </article>
           );
         })

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -10,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useKosik } from "@/lib/kosik";
 import { formatCena } from "@/lib/produkty";
+import { nactiPlatbu } from "@/lib/eshop";
+import { QrPlatba } from "@/components/QrPlatba";
 
 const objednavkaSchema = z.object({
   jmeno: z.string().trim().min(2, { message: "Vyplňte jméno" }).max(100),
@@ -32,6 +35,8 @@ export const Route = createFileRoute("/kosik")({
 
 function KosikPage() {
   const { radky, celkem, zmenit, odebrat, vyprazdnit } = useKosik();
+  const [odeslano, setOdeslano] = useState<{ cislo: number; celkem: number } | null>(null);
+  const platba = useQuery({ queryKey: ["platba"], queryFn: nactiPlatbu });
   const [jmeno, setJmeno] = useState("");
   const [email, setEmail] = useState("");
   const [telefon, setTelefon] = useState("");
@@ -56,7 +61,7 @@ function KosikPage() {
           poznamka: parsed.data.poznamka || null,
           celkem,
         })
-        .select("id")
+        .select("id, cislo")
         .single();
       if (error) throw error;
 
@@ -72,12 +77,14 @@ function KosikPage() {
       );
       if (chybaPolozek) throw chybaPolozek;
 
+      // Částku i číslo si zapamatujeme dřív, než se košík vyprázdní.
+      setOdeslano({ cislo: data.cislo, celkem });
       vyprazdnit();
       setJmeno("");
       setEmail("");
       setTelefon("");
       setPoznamka("");
-      toast.success("Objednávka odeslána", { description: "Ozveme se vám s potvrzením dostupnosti." });
+      toast.success("Objednávka odeslána");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Objednávku se nepodařilo odeslat");
     } finally {
@@ -88,9 +95,37 @@ function KosikPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 md:px-6">
-      <h1 className="section-title text-4xl">Košík</h1>
+      <h1 className="section-title text-4xl">{odeslano ? "Děkujeme za objednávku" : "Košík"}</h1>
 
-      {radky.length === 0 ? (
+      {odeslano ? (
+        <div className="mt-8 grid gap-6">
+          <div className="rounded-lg border bg-card p-6 shadow-card">
+            <p className="text-lg font-bold">Objednávka č. {odeslano.cislo} je u nás.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Ozveme se vám s potvrzením dostupnosti. Kolo si můžete vyzvednout na prodejně
+              v Kravařích, kde vám ho seřídíme a nastavíme posed.
+            </p>
+          </div>
+
+          {platba.data?.iban && (
+            <div>
+              <h2 className="section-title text-2xl">Zaplatit převodem</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Platit můžete rovnou, nebo až po našem potvrzení — jak vám to vyhovuje.
+              </p>
+              <div className="mt-4">
+                <QrPlatba platba={platba.data} castka={odeslano.celkem} cisloObjednavky={odeslano.cislo} />
+              </div>
+            </div>
+          )}
+
+          <div>
+            <Button asChild variant="outline">
+              <Link to="/kola">Zpět na kola</Link>
+            </Button>
+          </div>
+        </div>
+      ) : radky.length === 0 ? (
         <div className="mt-8 rounded-lg border bg-card p-10 text-center shadow-card">
           <p className="text-muted-foreground">Košík je zatím prázdný.</p>
           <Button asChild className="mt-6">

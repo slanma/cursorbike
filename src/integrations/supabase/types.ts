@@ -159,6 +159,7 @@ export type Database = {
       objednavky: {
         Row: {
           celkem: number
+          cislo: number
           created_at: string
           email: string
           id: string
@@ -170,6 +171,7 @@ export type Database = {
         }
         Insert: {
           celkem?: number
+          cislo?: number
           created_at?: string
           email: string
           id?: string
@@ -181,6 +183,7 @@ export type Database = {
         }
         Update: {
           celkem?: number
+          cislo?: number
           created_at?: string
           email?: string
           id?: string

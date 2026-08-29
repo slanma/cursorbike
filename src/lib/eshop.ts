@@ -66,6 +66,7 @@ export type DbObjednavka = {
   email: string;
   telefon: string | null;
   poznamka: string | null;
+  cislo: number;
   celkem: number;
   stav: string;
   created_at: string;
@@ -157,6 +158,26 @@ export async function nactiNastaveni(): Promise<NastaveniEshopu> {
     .maybeSingle();
   if (error) throw error;
   return { ...VYCHOZI_NASTAVENI, ...((data?.hodnota ?? {}) as Partial<NastaveniEshopu>) };
+}
+
+/** Načte údaje pro platbu (číslo účtu atd.). */
+export async function nactiPlatbu(): Promise<import("@/lib/platba").UdajePlatby> {
+  const { VYCHOZI_PLATBA } = await import("@/lib/platba");
+  const { data, error } = await supabase
+    .from("nastaveni")
+    .select("hodnota")
+    .eq("klic", "platba")
+    .maybeSingle();
+  if (error) throw error;
+  return { ...VYCHOZI_PLATBA, ...((data?.hodnota ?? {}) as object) };
+}
+
+/** Uloží údaje pro platbu (jen administrace). */
+export async function ulozPlatbu(hodnota: import("@/lib/platba").UdajePlatby): Promise<void> {
+  const { error } = await supabase
+    .from("nastaveni")
+    .upsert({ klic: "platba", hodnota }, { onConflict: "klic" });
+  if (error) throw error;
 }
 
 /** Načte uložené přiřazení kategorií z feedu na naše kategorie. */
