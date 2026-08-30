@@ -2,7 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useState } from "react";
-import { nactiNastaveni, nactiPlatbu, ulozNastaveni, ulozPlatbu, type NastaveniEshopu } from "@/lib/eshop";
+import {
+  nactiEmail,
+  nactiNastaveni,
+  nactiPravni,
+  ulozPravni,
+  nactiPlatbu,
+  ulozEmail,
+  ulozNastaveni,
+  ulozPlatbu,
+  type NastaveniEmailu,
+  type NastaveniEshopu,
+  type PravniUdaje,
+} from "@/lib/eshop";
 import { formatIban, naIban, type UdajePlatby } from "@/lib/platba";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -18,6 +30,33 @@ function Nastaveni() {
   const { data, isLoading } = useQuery({ queryKey: ["nastaveni"], queryFn: nactiNastaveni });
   const platba = useQuery({ queryKey: ["platba"], queryFn: nactiPlatbu });
   const [form, setForm] = useState<UdajePlatby | null>(null);
+  const email = useQuery({ queryKey: ["email"], queryFn: nactiEmail });
+  const [formEmail, setFormEmail] = useState<NastaveniEmailu | null>(null);
+  const aktualniEmail = formEmail ?? email.data ?? null;
+
+  const pravni = useQuery({ queryKey: ["pravni"], queryFn: nactiPravni });
+  const [formPravni, setFormPravni] = useState<PravniUdaje | null>(null);
+  const aktualniPravni = formPravni ?? pravni.data ?? null;
+
+  const ulozitPravni = useMutation({
+    mutationFn: (u: PravniUdaje) => ulozPravni(u),
+    onSuccess: () => {
+      toast.success("Údaje uloženy");
+      qc.invalidateQueries({ queryKey: ["pravni"] });
+      setFormPravni(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const ulozitEmail = useMutation({
+    mutationFn: (u: NastaveniEmailu) => ulozEmail(u),
+    onSuccess: () => {
+      toast.success("Nastavení e-mailů uloženo");
+      qc.invalidateQueries({ queryKey: ["email"] });
+      setFormEmail(null);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const aktualni = form ?? platba.data ?? null;
   // IBAN se dopočítá z čísla účtu — obchodník ho zpravidla nezná zpaměti.
@@ -147,6 +186,130 @@ function Nastaveni() {
                 onClick={() => form && ulozitPlatbu.mutate(form)}
               >
                 {ulozitPlatbu.isPending ? "Ukládám…" : "Uložit platební údaje"}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* E-MAILY */}
+      <div className="grid gap-4 rounded-lg border bg-card p-6 shadow-card">
+        <div>
+          <h3 className="text-base font-bold">E-maily</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kam chodí upozornění na nové objednávky, servisní poptávky a zprávy z webu.
+          </p>
+        </div>
+
+        {aktualniEmail && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="prijemce">Vaše adresa</Label>
+                <Input
+                  id="prijemce"
+                  type="email"
+                  value={aktualniEmail.prijemce}
+                  onChange={(e) => setFormEmail({ ...aktualniEmail, prijemce: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">Sem chodí všechna upozornění z webu.</p>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="odesilatel">Odesílatel</Label>
+                <Input
+                  id="odesilatel"
+                  value={aktualniEmail.odesilatel}
+                  onChange={(e) => setFormEmail({ ...aktualniEmail, odesilatel: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Adresa, ze které e-maily odcházejí. Měňte, jen když víte proč.
+                </p>
+              </div>
+            </div>
+
+            <label className="flex items-start justify-between gap-6">
+              <span>
+                <span className="font-bold">Posílat zákazníkovi potvrzení</span>
+                <span className="mt-1 block text-sm text-muted-foreground">
+                  Po objednávce mu přijde e-mail s číslem objednávky a shrnutím.
+                </span>
+              </span>
+              <Switch
+                checked={aktualniEmail.potvrzeni_zakaznikovi}
+                onCheckedChange={(v) =>
+                  setFormEmail({ ...aktualniEmail, potvrzeni_zakaznikovi: v })
+                }
+              />
+            </label>
+
+            <div>
+              <Button
+                disabled={ulozitEmail.isPending || !formEmail}
+                onClick={() => formEmail && ulozitEmail.mutate(formEmail)}
+              >
+                {ulozitEmail.isPending ? "Ukládám…" : "Uložit nastavení e-mailů"}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* PRÁVNÍ ÚDAJE */}
+      <div className="grid gap-4 rounded-lg border bg-card p-6 shadow-card">
+        <div>
+          <h3 className="text-base font-bold">Údaje do obchodních podmínek</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tohle musí být vyplněné, než e-shop spustíte naostro — je to zákonná náležitost.
+            Prázdné řádky se v podmínkách nezobrazují.
+          </p>
+        </div>
+
+        {aktualniPravni && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-2">
+                <Label htmlFor="jednatel">Jednatel</Label>
+                <Input
+                  id="jednatel"
+                  placeholder="Jan Novák"
+                  value={aktualniPravni.jednatel}
+                  onChange={(e) => setFormPravni({ ...aktualniPravni, jednatel: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="schranka">ID datové schránky</Label>
+                <Input
+                  id="schranka"
+                  placeholder="abc4de5"
+                  value={aktualniPravni.datova_schranka}
+                  onChange={(e) =>
+                    setFormPravni({ ...aktualniPravni, datova_schranka: e.target.value })
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Každá s.r.o. ji má ze zákona. Najdete ji na mojedatovaschranka.cz.
+                </p>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="ucinnost">Podmínky účinné od</Label>
+                <Input
+                  id="ucinnost"
+                  placeholder="1. 9. 2026"
+                  value={aktualniPravni.ucinnost_od}
+                  onChange={(e) => setFormPravni({ ...aktualniPravni, ucinnost_od: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Datum, kdy e-shop spustíte. Nechte prázdné a použije se výchozí.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <Button
+                disabled={ulozitPravni.isPending || !formPravni}
+                onClick={() => formPravni && ulozitPravni.mutate(formPravni)}
+              >
+                {ulozitPravni.isPending ? "Ukládám…" : "Uložit údaje"}
               </Button>
             </div>
           </>

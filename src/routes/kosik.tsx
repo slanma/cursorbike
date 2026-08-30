@@ -13,6 +13,7 @@ import { useKosik } from "@/lib/kosik";
 import { formatCena } from "@/lib/produkty";
 import { nactiPlatbu } from "@/lib/eshop";
 import { QrPlatba } from "@/components/QrPlatba";
+import { posliObjednavku } from "@/lib/email.functions";
 
 const objednavkaSchema = z.object({
   jmeno: z.string().trim().min(2, { message: "Vyplňte jméno" }).max(100),
@@ -76,6 +77,10 @@ function KosikPage() {
         })),
       );
       if (chybaPolozek) throw chybaPolozek;
+
+      // E-mail posíláme až po uložení a schválně na něj nečekáme — kdyby
+      // odesílání zlobilo, objednávka je pořád v pořádku uložená.
+      void posliObjednavku({ data: { id: data.id } });
 
       // Částku i číslo si zapamatujeme dřív, než se košík vyprázdní.
       setOdeslano({ cislo: data.cislo, celkem });

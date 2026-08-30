@@ -24,6 +24,13 @@ const odkazy = [
 
 function AdminLayout() {
   const navigate = useNavigate();
+  // Kdo je vlastně přihlášený — hodí se, když má prodejna dva účty.
+  const prihlaseny = useQuery({
+    queryKey: ["prihlaseny-uzivatel"],
+    queryFn: async () => (await supabase.auth.getUser()).data.user?.email ?? null,
+    staleTime: 5 * 60_000,
+  });
+  const prihlasenyEmail = prihlaseny.data;
   const overit = useServerFn(zjistiSpravce);
   const { data, isLoading } = useQuery({ queryKey: ["je-spravce"], queryFn: () => overit({}) });
 
@@ -60,7 +67,12 @@ function AdminLayout() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="section-title text-3xl">Správa prodejny</h1>
+        <div>
+          <h1 className="section-title text-3xl">Správa prodejny</h1>
+          {prihlasenyEmail && (
+            <p className="mt-1 text-sm text-muted-foreground">Přihlášeni jako {prihlasenyEmail}</p>
+          )}
+        </div>
         <Button
           variant="outline"
           onClick={async () => {

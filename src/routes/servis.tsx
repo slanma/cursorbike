@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { kontakt } from "@/lib/kontakt";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { posliPoptavku } from "@/lib/email.functions";
 import { drobkyLd, jsonLdScript, kanonicka, servisLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/servis")({
@@ -96,15 +97,21 @@ function ServisPage() {
             }
             setOdesila(true);
             try {
-              const { error } = await supabase.from("servis_poptavky").insert({
-                jmeno: parsed.data.jmeno,
-                email: parsed.data.email,
-                telefon: parsed.data.telefon || null,
-                termin: parsed.data.termin || null,
-                popis: parsed.data.popis || null,
-                typ_sluzby: typSluzby,
-              });
+              const { data, error } = await supabase
+                .from("servis_poptavky")
+                .insert({
+                  jmeno: parsed.data.jmeno,
+                  email: parsed.data.email,
+                  telefon: parsed.data.telefon || null,
+                  termin: parsed.data.termin || null,
+                  popis: parsed.data.popis || null,
+                  typ_sluzby: typSluzby,
+                })
+                .select("id")
+                .single();
               if (error) throw error;
+              // Na e-mail nečekáme — poptávka je uložená, i kdyby odesílání zlobilo.
+              void posliPoptavku({ data: { id: data.id, druh: "servis" } });
               setOdeslano(true);
               setJmeno("");
               setEmail("");

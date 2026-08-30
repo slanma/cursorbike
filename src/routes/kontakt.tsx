@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { posliPoptavku } from "@/lib/email.functions";
 import { kontakt } from "@/lib/kontakt";
 import { drobkyLd, jsonLdScript, kanonicka } from "@/lib/seo";
 
@@ -50,13 +51,18 @@ function KontaktPage() {
     }
     setOdesila(true);
     try {
-      const { error } = await supabase.from("zpravy").insert({
-        jmeno: parsed.data.jmeno,
-        email: parsed.data.email,
-        telefon: parsed.data.telefon || null,
-        zprava: parsed.data.zprava,
-      });
+      const { data, error } = await supabase
+        .from("zpravy")
+        .insert({
+          jmeno: parsed.data.jmeno,
+          email: parsed.data.email,
+          telefon: parsed.data.telefon || null,
+          zprava: parsed.data.zprava,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      void posliPoptavku({ data: { id: data.id, druh: "zprava" } });
       setJmeno("");
       setEmail("");
       setTelefon("");

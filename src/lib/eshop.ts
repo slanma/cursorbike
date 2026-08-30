@@ -180,6 +180,65 @@ export async function ulozPlatbu(hodnota: import("@/lib/platba").UdajePlatby): P
   if (error) throw error;
 }
 
+export type PravniUdaje = {
+  jednatel: string;
+  datova_schranka: string;
+  /** Datum účinnosti obchodních podmínek, např. „1. 9. 2026". */
+  ucinnost_od: string;
+};
+
+export const VYCHOZI_PRAVNI: PravniUdaje = { jednatel: "", datova_schranka: "", ucinnost_od: "" };
+
+/** Načte právní údaje doplněné obchodníkem. */
+export async function nactiPravni(): Promise<PravniUdaje> {
+  const { data, error } = await supabase
+    .from("nastaveni")
+    .select("hodnota")
+    .eq("klic", "pravni")
+    .maybeSingle();
+  if (error) throw error;
+  return { ...VYCHOZI_PRAVNI, ...((data?.hodnota ?? {}) as Partial<PravniUdaje>) };
+}
+
+/** Uloží právní údaje (jen administrace). */
+export async function ulozPravni(hodnota: PravniUdaje): Promise<void> {
+  const { error } = await supabase
+    .from("nastaveni")
+    .upsert({ klic: "pravni", hodnota }, { onConflict: "klic" });
+  if (error) throw error;
+}
+
+export type NastaveniEmailu = {
+  prijemce: string;
+  odesilatel: string;
+  potvrzeni_zakaznikovi: boolean;
+};
+
+export const VYCHOZI_EMAIL: NastaveniEmailu = {
+  prijemce: "cursorbike@seznam.cz",
+  odesilatel: "Cursorbike <onboarding@resend.dev>",
+  potvrzeni_zakaznikovi: true,
+};
+
+/** Načte nastavení e-mailů. */
+export async function nactiEmail(): Promise<NastaveniEmailu> {
+  const { data, error } = await supabase
+    .from("nastaveni")
+    .select("hodnota")
+    .eq("klic", "email")
+    .maybeSingle();
+  if (error) throw error;
+  return { ...VYCHOZI_EMAIL, ...((data?.hodnota ?? {}) as Partial<NastaveniEmailu>) };
+}
+
+/** Uloží nastavení e-mailů (jen administrace). */
+export async function ulozEmail(hodnota: NastaveniEmailu): Promise<void> {
+  const { error } = await supabase
+    .from("nastaveni")
+    .upsert({ klic: "email", hodnota }, { onConflict: "klic" });
+  if (error) throw error;
+}
+
 /** Načte uložené přiřazení kategorií z feedu na naše kategorie. */
 export async function nactiMapovani(): Promise<Record<string, string>> {
   const { data, error } = await supabase

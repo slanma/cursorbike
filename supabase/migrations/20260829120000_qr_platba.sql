@@ -29,3 +29,21 @@ GRANT USAGE, SELECT ON SEQUENCE public.objednavky_cislo_seq TO anon, authenticat
 INSERT INTO public.nastaveni (klic, hodnota)
 VALUES ('platba', '{"ucet":"","banka":"","iban":"","splatnost_dni":7,"jmeno_prijemce":""}'::jsonb)
 ON CONFLICT (klic) DO NOTHING;
+
+-- ---------------------------------------------------------------------
+-- E-MAILY
+-- Kam chodí upozornění na objednávky, servisní poptávky a zprávy.
+-- ---------------------------------------------------------------------
+INSERT INTO public.nastaveni (klic, hodnota)
+VALUES ('email', '{"prijemce":"cursorbike@seznam.cz","odesilatel":"Cursorbike <onboarding@resend.dev>","potvrzeni_zakaznikovi":true}'::jsonb)
+ON CONFLICT (klic) DO NOTHING;
+
+-- ---------------------------------------------------------------------
+-- PRÁVNÍ ÚDAJE
+-- Jednatel, datová schránka a datum účinnosti podmínek byly natvrdo
+-- v kódu jako `null`. Obchodník je teď doplní sám v Nastavení, bez
+-- zásahu do webu.
+-- ---------------------------------------------------------------------
+INSERT INTO public.nastaveni (klic, hodnota)
+VALUES ('pravni', '{"jednatel":"","datova_schranka":"","ucinnost_od":""}'::jsonb)
+ON CONFLICT (klic) DO NOTHING;

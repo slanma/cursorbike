@@ -70,6 +70,7 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /auth
+Disallow: /sprava
 Disallow: /kosik
 
 Sitemap: https://cursorbike.cz/sitemap.xml

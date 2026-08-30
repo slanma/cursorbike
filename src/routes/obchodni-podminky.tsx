@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { prodavajici } from "@/lib/pravni";
+import { nactiPravni } from "@/lib/eshop";
 import { kanonicka } from "@/lib/seo";
 
 export const Route = createFileRoute("/obchodni-podminky")({
@@ -39,11 +41,18 @@ function UL({ children }: { children: React.ReactNode }) {
 }
 
 function ObchodniPodminky() {
+  // Jednatele, datovou schránku a datum účinnosti doplňuje obchodník
+  // v Nastavení — dřív byly natvrdo v kódu a chyběly.
+  const { data: pravni } = useQuery({ queryKey: ["pravni"], queryFn: nactiPravni });
+  const jednatel = pravni?.jednatel || prodavajici.jednatel;
+  const datovaSchranka = pravni?.datova_schranka || prodavajici.datovaSchranka;
+  const ucinnostOd = pravni?.ucinnost_od || prodavajici.ucinnostOd;
+
   return (
     <article className="mx-auto max-w-3xl px-4 py-12 md:px-6 md:py-16">
       <h1 className="section-title text-3xl md:text-4xl">Všeobecné obchodní podmínky</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        internetového obchodu cursorbike.cz · účinné od {prodavajici.ucinnostOd}
+        internetového obchodu cursorbike.cz · účinné od {ucinnostOd}
       </p>
 
       <H2>1. Úvodní ustanovení</H2>
@@ -63,13 +72,13 @@ function ObchodniPodminky() {
               <tr><td className="bg-muted/40 px-4 py-2 font-medium">DIČ</td><td className="px-4 py-2">{prodavajici.dic}</td></tr>
             )}
             <tr><td className="bg-muted/40 px-4 py-2 font-medium">Zapsán</td><td className="px-4 py-2">{prodavajici.zapis}</td></tr>
-            {prodavajici.jednatel && (
-              <tr><td className="bg-muted/40 px-4 py-2 font-medium">Zastoupen</td><td className="px-4 py-2">{prodavajici.jednatel}, jednatel</td></tr>
+            {jednatel && (
+              <tr><td className="bg-muted/40 px-4 py-2 font-medium">Zastoupen</td><td className="px-4 py-2">{jednatel}, jednatel</td></tr>
             )}
             <tr><td className="bg-muted/40 px-4 py-2 font-medium">E-mail</td><td className="px-4 py-2"><a className="text-primary hover:underline" href={prodavajici.emailHref}>{prodavajici.email}</a></td></tr>
             <tr><td className="bg-muted/40 px-4 py-2 font-medium">Telefon</td><td className="px-4 py-2"><a className="text-primary hover:underline" href={prodavajici.telefonHref}>{prodavajici.telefon}</a></td></tr>
-            {prodavajici.datovaSchranka && (
-              <tr><td className="bg-muted/40 px-4 py-2 font-medium">ID datové schránky</td><td className="px-4 py-2">{prodavajici.datovaSchranka}</td></tr>
+            {datovaSchranka && (
+              <tr><td className="bg-muted/40 px-4 py-2 font-medium">ID datové schránky</td><td className="px-4 py-2">{datovaSchranka}</td></tr>
             )}
             <tr><td className="bg-muted/40 px-4 py-2 font-medium">Adresa pro vracení zboží a reklamace</td><td className="px-4 py-2">{prodavajici.adresaProVraceni}</td></tr>
           </tbody>
@@ -425,9 +434,9 @@ function ObchodniPodminky() {
         10.2 Zpráva je doručena okamžikem jejího přijetí na server příchozí pošty. Za doručenou se považuje i zpráva,
         jejíž přijetí adresát odmítl nebo jejíž doručení zmařil.
       </P>
-      {prodavajici.datovaSchranka && (
+      {datovaSchranka && (
         <P>
-          10.3 Kupující může prodávajícímu doručovat rovněž do datové schránky ID {prodavajici.datovaSchranka}.
+          10.3 Kupující může prodávajícímu doručovat rovněž do datové schránky ID {datovaSchranka}.
         </P>
       )}
 
@@ -511,7 +520,7 @@ function ObchodniPodminky() {
         bydliště, od nichž se nelze smluvně odchýlit.
       </P>
       <P>
-        14.4 Tyto obchodní podmínky nabývají platnosti a účinnosti dne {prodavajici.ucinnostOd}
+        14.4 Tyto obchodní podmínky nabývají platnosti a účinnosti dne {ucinnostOd}
         {prodavajici.predchoziUcinnostOd
           ? ` a nahrazují předchozí znění účinné od ${prodavajici.predchoziUcinnostOd}.`
           : "."}
