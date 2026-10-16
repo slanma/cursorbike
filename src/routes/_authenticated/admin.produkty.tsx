@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Bike, Eye, EyeOff, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { nactiDbProdukty, nactiKategorie, nahrajFotku, type DbProdukt } from "@/lib/eshop";
 import { formatCena, type ParametrSkupina } from "@/lib/produkty";
@@ -104,6 +104,8 @@ function SpravaProduktu() {
   const [vybrane, setVybrane] = useState<Set<string>>(new Set());
   const [hledani, setHledani] = useState("");
   const [filtrKategorie, setFiltrKategorie] = useState("");
+  const [rychlyFiltr, setRychlyFiltr] = useState<"vse" | "web" | "skryte" | "bezfotky" | "elektrokola" | "kola">("vse");
+  const [ukazat, setUkazat] = useState(30);
   const [hromadnaKategorie, setHromadnaKategorie] = useState("");
   const [stahovaniPrubeh, setStahovaniPrubeh] = useState<string | null>(null);
 
@@ -150,7 +152,19 @@ function SpravaProduktu() {
   const nazevKategorie = (id: string | null) =>
     kategorie.data?.find((k) => k.id === id)?.nazev ?? "—";
 
+  const kategorieKola = (id: string | null) => kategorie.data?.find((k) => k.id === id);
+  const sekceKola = (id: string | null) => kategorieKola(id)?.sekce ?? "kola";
+
+  const vyhovuje = (p: DbProdukt, f: typeof rychlyFiltr) =>
+    f === "vse" ||
+    (f === "web" && p.aktivni) ||
+    (f === "skryte" && !p.aktivni) ||
+    (f === "bezfotky" && !p.obrazek_url) ||
+    (f === "elektrokola" && sekceKola(p.kategorie_id) === "elektrokola") ||
+    (f === "kola" && sekceKola(p.kategorie_id) === "kola");
+
   const seznam = (produkty.data ?? []).filter((p) => {
+    if (!vyhovuje(p, rychlyFiltr)) return false;
     if (filtrKategorie && p.kategorie_id !== filtrKategorie) return false;
     if (!hledani.trim()) return true;
     return p.nazev.toLowerCase().includes(hledani.trim().toLowerCase());
@@ -283,9 +297,9 @@ function SpravaProduktu() {
   return (
     <div className="grid gap-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="section-title text-2xl">Produkty</h2>
-        <Button onClick={() => setForm({ ...prazdny })}>
-          <Plus className="mr-2 h-4 w-4" /> Přidat produkt
+        <h2 className="section-title text-3xl md:text-4xl">Kola</h2>
+        <Button size="lg" className="min-h-14 px-6 text-lg" onClick={() => setForm({ ...prazdny })}>
+          <Plus className="mr-2 h-5 w-5" /> Přidat kolo ručně
         </Button>
       </div>
 
@@ -508,36 +522,65 @@ function SpravaProduktu() {
         </form>
       )}
 
-      <div className="grid gap-3 rounded-lg border bg-card p-4 shadow-card sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-        <div className="grid gap-2">
-          <Label htmlFor="hledani">Najít kolo podle názvu</Label>
-          <Input
+      {/* HLEDÁNÍ A RYCHLÉ FILTRY */}
+      <div className="grid gap-4">
+        <label className="relative block">
+          <span className="sr-only">Najít kolo podle názvu</span>
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
+          <input
             id="hledani"
-            placeholder="například: Solution"
             value={hledani}
-            onChange={(e) => setHledani(e.target.value)}
+            onChange={(e) => {
+              setHledani(e.target.value);
+              setUkazat(30);
+            }}
+            placeholder="Najít kolo — napište kus názvu, třeba Liberty"
+            className="min-h-14 w-full rounded-xl border-2 bg-card pl-14 pr-4 text-xl"
           />
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              ["vse", "Všechna"],
+              ["web", "Na webu"],
+              ["skryte", "Skrytá"],
+              ["bezfotky", "Bez fotky"],
+              ["elektrokola", "Elektrokola"],
+              ["kola", "Kola"],
+            ] as const
+          ).map(([klic, text]) => {
+            const pocet = (produkty.data ?? []).filter((p) => vyhovuje(p, klic)).length;
+            return (
+              <button
+                key={klic}
+                type="button"
+                onClick={() => {
+                  setRychlyFiltr(klic);
+                  setUkazat(30);
+                }}
+                className={`min-h-12 rounded-full border-2 px-5 text-lg font-semibold ${rychlyFiltr === klic ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:border-primary"}`}
+              >
+                {text} <span className="opacity-70">{pocet}</span>
+              </button>
+            );
+          })}
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="filtr">Zobrazit jen kategorii</Label>
+        <details className="text-base">
+          <summary className="cursor-pointer text-muted-foreground">Hledat podle kategorie</summary>
           <select
             id="filtr"
-            className="h-10 rounded-md border bg-background px-3 text-sm"
+            className="mt-2 min-h-12 w-full rounded-lg border-2 bg-background px-3 text-lg"
             value={filtrKategorie}
             onChange={(e) => setFiltrKategorie(e.target.value)}
           >
             <option value="">všechny kategorie</option>
             {(kategorie.data ?? []).map((k) => (
               <option key={k.id} value={k.id}>
-                {k.sekce === "elektrokola" ? "Elektrokola" : k.sekce === "bazar" ? "Bazar" : "Kola"} ·{" "}
-                {k.znacka ?? "—"} · {k.nazev}
+                {k.sekce === "elektrokola" ? "Elektrokola" : k.sekce === "bazar" ? "Bazar" : "Kola"} · {k.znacka ?? "—"} · {k.nazev}
               </option>
             ))}
           </select>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {seznam.length} z {(produkty.data ?? []).length} kol
-        </p>
+        </details>
       </div>
 
       {vybrane.size > 0 && (
@@ -604,75 +647,117 @@ function SpravaProduktu() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-lg border bg-card shadow-card">
-        <table className="w-full text-sm">
-          <thead className="bg-surface text-left">
-            <tr>
-              <th className="w-10 px-4 py-3">
-                <input
-                  type="checkbox"
-                  aria-label="Vybrat všechna zobrazená kola"
-                  className="h-4 w-4"
-                  checked={vsechnyVybrane}
-                  onChange={() =>
-                    setVybrane(vsechnyVybrane ? new Set() : new Set(seznam.map((p) => p.id)))
-                  }
-                />
-              </th>
-              <th className="px-4 py-3">Produkt</th>
-              <th className="px-4 py-3">Kategorie</th>
-              <th className="px-4 py-3">Cena</th>
-              <th className="px-4 py-3">Skladem</th>
-              <th className="px-4 py-3">Na webu</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {seznam.map((p) => (
-              <tr key={p.id} className={vybrane.has(p.id) ? "bg-surface" : ""}>
-                <td className="px-4 py-3">
-                  <input
-                    type="checkbox"
-                    aria-label={`Vybrat ${p.nazev}`}
-                    className="h-4 w-4"
-                    checked={vybrane.has(p.id)}
-                    onChange={() => prepnout(p.id)}
-                  />
-                </td>
-                <td className="px-4 py-3 font-semibold">{p.nazev}</td>
-                <td className="px-4 py-3 text-muted-foreground">{nazevKategorie(p.kategorie_id)}</td>
-                <td className="px-4 py-3">{formatCena(p.cena)}</td>
-                <td className="px-4 py-3">{p.skladem ?? 0} ks</td>
-                <td className="px-4 py-3">{p.aktivni ? "Ano" : "Skryto"}</td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => upravit(p)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (confirm(`Opravdu smazat „${p.nazev}"?`)) smazat.mutate(p.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {seznam.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                  {(produkty.data ?? []).length === 0
-                    ? "Zatím tu nejsou žádné produkty. Přidejte první tlačítkem nahoře."
-                    : "Žádné kolo neodpovídá hledání."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      {/* SEZNAM KOL */}
+      <div className="grid gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-lg text-muted-foreground">
+            {seznam.length === (produkty.data ?? []).length ? `${seznam.length} kol` : `${seznam.length} z ${(produkty.data ?? []).length} kol`}
+          </p>
+          {seznam.length > 0 && (
+            <label className="flex min-h-12 cursor-pointer items-center gap-3 text-lg">
+              <input
+                type="checkbox"
+                className="h-6 w-6 accent-[var(--primary)]"
+                checked={vsechnyVybrane}
+                onChange={() => setVybrane(vsechnyVybrane ? new Set() : new Set(seznam.map((p) => p.id)))}
+              />
+              Vybrat všechna zobrazená
+            </label>
+          )}
+        </div>
+
+        {seznam.slice(0, ukazat).map((p) => {
+          const k = kategorieKola(p.kategorie_id);
+          const zarazeni = k
+            ? `${k.sekce === "elektrokola" ? "Elektrokola" : k.sekce === "bazar" ? "Bazar" : "Kola"} · ${k.znacka ?? ""} · ${k.nazev}`
+            : "Bez kategorie";
+          return (
+            <div
+              key={p.id}
+              className={`flex flex-wrap items-center gap-4 rounded-xl border-2 bg-card p-3 md:p-4 ${vybrane.has(p.id) ? "border-primary" : ""}`}
+            >
+              <input
+                type="checkbox"
+                aria-label={`Vybrat ${p.nazev}`}
+                className="h-6 w-6 shrink-0 accent-[var(--primary)]"
+                checked={vybrane.has(p.id)}
+                onChange={() => prepnout(p.id)}
+              />
+              <div className="flex h-20 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface">
+                {p.obrazek_url ? (
+                  <img src={p.obrazek_url} alt="" loading="lazy" className="h-full w-full object-contain" />
+                ) : (
+                  <span className="grid justify-items-center text-xs text-muted-foreground">
+                    <Bike className="h-8 w-8" />
+                    bez fotky
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0 flex-[1_1_260px]">
+                <p className="text-xl font-bold leading-tight">{p.nazev}</p>
+                <p className="mt-1 truncate text-muted-foreground">{zarazeni}</p>
+                <p className="mt-1 flex flex-wrap items-center gap-3">
+                  <span className="text-2xl font-bold">{formatCena(p.cena)}</span>
+                  <span
+                    className={`rounded-full px-3 py-0.5 text-sm font-bold ${p.aktivni ? "bg-accent text-accent-foreground" : "bg-surface text-muted-foreground"}`}
+                  >
+                    {p.aktivni ? "Na webu" : "Skryté"}
+                  </span>
+                  {(p.skladem ?? 0) > 0 && <span className="text-sm text-muted-foreground">skladem {p.skladem} ks</span>}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button size="lg" className="min-h-12 px-5 text-lg" onClick={() => upravit(p)}>
+                  <Pencil className="mr-2 h-5 w-5" /> Upravit
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="min-h-12 px-4 text-lg"
+                  onClick={async () => {
+                    const { error } = await supabase.from("produkty").update({ aktivni: !p.aktivni }).eq("id", p.id);
+                    if (error) return void toast.error(error.message);
+                    toast.success(p.aktivni ? "Kolo je skryté." : "Kolo je na webu.");
+                    qc.invalidateQueries({ queryKey: ["admin-produkty"] });
+                    qc.invalidateQueries({ queryKey: ["verejne-produkty"] });
+                  }}
+                >
+                  {p.aktivni ? <EyeOff className="mr-2 h-5 w-5" /> : <Eye className="mr-2 h-5 w-5" />}
+                  {p.aktivni ? "Skrýt" : "Zveřejnit"}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  className="min-h-12 px-3"
+                  aria-label={`Smazat ${p.nazev}`}
+                  onClick={() => {
+                    if (confirm(`Opravdu smazat „${p.nazev}"? Tohle už nejde vzít zpět.`)) smazat.mutate(p.id);
+                  }}
+                >
+                  <Trash2 className="h-5 w-5 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+
+        {seznam.length > ukazat && (
+          <button
+            type="button"
+            onClick={() => setUkazat(ukazat + 30)}
+            className="min-h-14 rounded-xl border-2 bg-card text-lg font-semibold hover:border-primary"
+          >
+            Ukázat dalších {Math.min(30, seznam.length - ukazat)} kol
+          </button>
+        )}
+
+        {seznam.length === 0 && (
+          <p className="rounded-xl border bg-card p-8 text-center text-lg text-muted-foreground">
+            {(produkty.data ?? []).length === 0
+              ? "Zatím tu nejsou žádná kola. Přidejte je tlačítkem nahoře, nebo v Od dodavatelů."
+              : "Žádné kolo neodpovídá hledání."}
+          </p>
+        )}
       </div>
     </div>
   );

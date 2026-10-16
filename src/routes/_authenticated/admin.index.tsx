@@ -244,8 +244,8 @@ const NAVODY: { otazka: string; kroky: string[] }[] = [
     otazka: "Jak dám kolo do akce?",
     kroky: [
       "Nahoře klikněte na Zboží.",
-      "Do políčka Najít kolo podle názvu napište, jak se kolo jmenuje.",
-      "U kola klikněte vpravo na tužku.",
+      "Do políčka Najít kolo napište kus názvu kola.",
+      "U kola klikněte na Upravit.",
       "Do políčka Původní cena napište cenu, za kterou se prodávalo dosud.",
       "Do políčka Cena napište novou akční cenu.",
       "Dole klikněte na Uložit. Na webu bude stará cena přeškrtnutá.",
@@ -255,7 +255,7 @@ const NAVODY: { otazka: string; kroky: string[] }[] = [
     otazka: "Jak přidám kolo, které mám v prodejně?",
     kroky: [
       "Nahoře klikněte na Zboží.",
-      "Klikněte na Přidat produkt.",
+      "Klikněte na Přidat kolo ručně.",
       "Napište název, cenu a vyberte kategorii.",
       "Nahrajte fotku — stačí z mobilu.",
       "Zapněte přepínač Zobrazit na webu a klikněte na Uložit.",

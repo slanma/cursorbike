@@ -175,6 +175,7 @@ export function NovyDodavatel({
   // Za kolik prodávat — nastaví se rovnou tady, ať se kola stáhnou už s cenou.
   const [procento, setProcento] = useState<number | null>(0);
   const [na990, setNa990] = useState(true);
+  const [vlastni, setVlastni] = useState("");
   const [ukladam, setUkladam] = useState(false);
   const cenaPrikladu = nahled?.produkty.flatMap((p) => p.varianty.map((v) => v.cena)).find((c) => c > 0) ?? 0;
 
@@ -365,8 +366,12 @@ export function NovyDodavatel({
         <div className="grid gap-3 rounded-lg border-2 border-primary p-4 md:p-5">
           <div>
             <p className="text-xl font-bold">Za kolik je chcete prodávat?</p>
-            <p className="text-sm text-muted-foreground">Kola se stáhnou rovnou s touhle cenou. Změnit ji jde kdykoli v Cenách.</p>
           </div>
+          <p className="rounded-md bg-amber-50 p-3 text-base text-amber-950">
+            Sleva, kterou tu zadáte, platí pro <b>všechna kola od tohoto dodavatele</b> — i pro ta, která přibudou
+            příště. Změnit ji můžete kdykoli v Cenách. Když chcete jedno kolo dát do akce zvlášť, uděláte to v Cenách
+            u Ceny jednoho kola.
+          </p>
           <div className="flex flex-wrap gap-2">
             {[
               { p: 0, t: "Za cenu dodavatele" },
@@ -377,7 +382,10 @@ export function NovyDodavatel({
               <button
                 key={v.p}
                 type="button"
-                onClick={() => setProcento(v.p)}
+                onClick={() => {
+                  setProcento(v.p);
+                  setVlastni("");
+                }}
                 className={`min-h-14 rounded-lg border-2 px-5 text-lg font-bold ${procento === v.p ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:border-primary"}`}
               >
                 {v.t}
@@ -385,12 +393,39 @@ export function NovyDodavatel({
             ))}
             <button
               type="button"
-              onClick={() => setProcento(null)}
+              onClick={() => {
+                setProcento(null);
+                setVlastni("");
+              }}
               className={`min-h-14 rounded-lg border-2 px-5 text-lg font-bold ${procento === null ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:border-primary"}`}
             >
               Nastavím později
             </button>
           </div>
+          <label
+            className={`flex flex-wrap items-center gap-3 rounded-lg p-3 ${
+              vlastni !== "" ? "border-2 border-primary bg-accent" : "border-2 border-dashed"
+            }`}
+          >
+            <span className="text-lg font-bold">Nebo si zadejte vlastní slevu:</span>
+            <span className="inline-flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                max={90}
+                inputMode="numeric"
+                placeholder="např. 7"
+                value={vlastni}
+                onChange={(e) => {
+                  const t = e.target.value;
+                  setVlastni(t);
+                  if (t !== "") setProcento(-Math.min(90, Math.max(0, Number(t) || 0)));
+                }}
+                className="min-h-12 w-28 rounded-lg border-2 bg-background px-3 text-xl font-bold"
+              />
+              <span className="text-lg font-bold">% levněji</span>
+            </span>
+          </label>
           {procento !== null && (
             <label className="flex min-h-12 cursor-pointer items-center gap-3 text-lg">
               <input
