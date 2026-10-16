@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,7 +34,6 @@ function bezpecnyCil(next?: string) {
 function AuthPage() {
   const navigate = useNavigate();
   const { next } = useSearch({ from: "/auth" });
-  const [rezim, setRezim] = useState<"prihlaseni" | "registrace">("prihlaseni");
   const [email, setEmail] = useState("");
   const [heslo, setHeslo] = useState("");
   const [odesila, setOdesila] = useState(false);
@@ -55,33 +53,16 @@ function AuthPage() {
     }
     setOdesila(true);
     try {
-      if (rezim === "prihlaseni") {
-        const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.heslo });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email: parsed.data.email,
-          password: parsed.data.heslo,
-          options: { emailRedirectTo: `${window.location.origin}/admin` },
-        });
-        if (error) throw error;
-      }
+      // Registrace na webu není. Účty zakládá jen stávající správce
+      // v sekci Správci, stejně jako na vlachfitting.cz.
+      const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.heslo });
+      if (error) throw new Error("Špatný e-mail nebo heslo.");
       navigate({ to: bezpecnyCil(next) });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Přihlášení se nezdařilo");
     } finally {
       setOdesila(false);
     }
-  };
-
-  const google = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) {
-      toast.error("Přihlášení přes Google se nezdařilo");
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: bezpecnyCil(next) });
   };
 
   return (
@@ -101,25 +82,18 @@ function AuthPage() {
           <Input
             id="heslo"
             type="password"
-            autoComplete={rezim === "prihlaseni" ? "current-password" : "new-password"}
+            autoComplete="current-password"
             value={heslo}
             onChange={(e) => setHeslo(e.target.value)}
             required
           />
         </div>
         <Button type="submit" size="lg" disabled={odesila}>
-          {rezim === "prihlaseni" ? "Přihlásit se" : "Vytvořit účet"}
+          Přihlásit se
         </Button>
-        <Button type="button" variant="outline" size="lg" onClick={google}>
-          Přihlásit se přes Google
-        </Button>
-        <button
-          type="button"
-          className="text-sm text-muted-foreground underline-offset-2 hover:text-primary hover:underline"
-          onClick={() => setRezim(rezim === "prihlaseni" ? "registrace" : "prihlaseni")}
-        >
-          {rezim === "prihlaseni" ? "Nemáte účet? Zaregistrovat se" : "Máte účet? Přihlásit se"}
-        </button>
+        <p className="text-center text-xs text-muted-foreground">
+          Přístup do správy zakládá správce prodejny.
+        </p>
       </form>
     </div>
   );

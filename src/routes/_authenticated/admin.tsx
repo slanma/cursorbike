@@ -44,7 +44,7 @@ function AdminLayout() {
         <h1 className="section-title text-3xl">Nemáte přístup do správy</h1>
         <p className="mt-3 text-muted-foreground">
           Tento účet nemá oprávnění správce. Do správy se dostanou jen účty, kterým roli výslovně
-          přidělil stávající správce — samotná registrace na webu nestačí.
+          přidělil stávající správce.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
           Pokud jste roli právě dostali, odhlaste se a přihlaste znovu — oprávnění se načítá

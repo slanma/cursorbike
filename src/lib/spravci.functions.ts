@@ -34,7 +34,10 @@ export const seznamSpravcu = createServerFn({ method: "POST" })
 
 export const pridejSpravce = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { email: string }) => ({ email: String(input.email).trim().toLowerCase() }))
+  .inputValidator((input: { email: string; heslo?: string }) => ({
+    email: String(input.email).trim().toLowerCase(),
+    heslo: input.heslo ? String(input.heslo) : "",
+  }))
   .handler(async ({ data, context }) => {
     await overSpravce(context.supabase, context.userId);
     if (!data.email || !data.email.includes("@")) throw new Error("Zadejte platný e-mail.");
@@ -50,9 +53,19 @@ export const pridejSpravce = createServerFn({ method: "POST" })
     }
 
     const { data: users } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
-    const user = (users?.users ?? []).find((u) => (u.email ?? "").toLowerCase() === data.email);
+    let user = (users?.users ?? []).find((u) => (u.email ?? "").toLowerCase() === data.email);
     if (!user) {
-      throw new Error("Uživatel s tímto e-mailem zatím nemá účet. Nejprve ať se zaregistruje na stránce přihlášení.");
+      // Registrace na webu je vypnutá, účet proto zakládá správce sám.
+      if (data.heslo.length < 10) {
+        throw new Error("Tento e-mail ještě nemá účet. Zadejte mu heslo (aspoň 10 znaků) a účet se založí.");
+      }
+      const { data: novy, error: chyba } = await supabaseAdmin.auth.admin.createUser({
+        email: data.email,
+        password: data.heslo,
+        email_confirm: true,
+      });
+      if (chyba || !novy.user) throw chyba ?? new Error("Účet se nepodařilo založit.");
+      user = novy.user;
     }
 
     const { data: existuje } = await supabaseAdmin

@@ -19,14 +19,16 @@ function Spravci() {
   const pridej = useServerFn(pridejSpravce);
   const odeber = useServerFn(odeberSpravce);
   const [email, setEmail] = useState("");
+  const [heslo, setHeslo] = useState("");
 
   const { data, isLoading } = useQuery({ queryKey: ["spravci"], queryFn: () => nacti({}) });
 
   const mPridej = useMutation({
-    mutationFn: (e: string) => pridej({ data: { email: e } }),
+    mutationFn: (e: string) => pridej({ data: { email: e, heslo } }),
     onSuccess: () => {
       toast.success("Správce přidán.");
       setEmail("");
+      setHeslo("");
       qc.invalidateQueries({ queryKey: ["spravci"] });
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Nepodařilo se přidat správce."),
@@ -48,8 +50,8 @@ function Spravci() {
       <section className="rounded-lg border bg-card p-6 shadow-card">
         <h2 className="section-title text-xl">Správci prodejny</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Do administrace mohou mít přístup nejvýše dva lidé. Druhý správce se musí nejdřív zaregistrovat
-          e-mailem a heslem na přihlašovací stránce, potom ho tady přidáte podle jeho e-mailu.
+          Do administrace mohou mít přístup nejvýše dva lidé. Registrace na webu
+          není, druhého správce založíte tady: zadáte jeho e-mail a heslo, které mu pak předáte.
         </p>
 
         {isLoading ? (
@@ -103,6 +105,20 @@ function Spravci() {
                 placeholder="kolega@cursorbike.cz"
                 required
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="heslo-spravce">Heslo pro nového správce</Label>
+              <Input
+                id="heslo-spravce"
+                type="text"
+                autoComplete="off"
+                value={heslo}
+                onChange={(e) => setHeslo(e.target.value)}
+                placeholder="aspoň 10 znaků"
+              />
+              <p className="text-xs text-muted-foreground">
+                Když už účet má, heslo nechte prázdné.
+              </p>
             </div>
             <Button type="submit" disabled={mPridej.isPending}>
               Přidat správce

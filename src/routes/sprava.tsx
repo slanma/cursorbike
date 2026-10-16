@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
  * ukázalo, že účet nemá oprávnění.
  *
  * Přístup mají jen účty, kterým správce roli výslovně přidělil. Nově
- * zaregistrovaný účet ji nedostane sám od sebe.
+ * Registrace na webu není, účty zakládá správce v sekci Správci.
  */
 export const Route = createFileRoute("/sprava")({
   head: () => ({
