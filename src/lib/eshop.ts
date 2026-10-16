@@ -258,6 +258,25 @@ export async function ulozMapovani(mapovani: Record<string, string>): Promise<vo
   if (error) throw error;
 }
 
+/** Profily dodavatelů pro univerzální import (jak číst jejich feed). */
+export async function nactiProfily(): Promise<import("@/lib/feed-univerzalni").ProfilDodavatele[]> {
+  const { data, error } = await supabase
+    .from("nastaveni")
+    .select("hodnota")
+    .eq("klic", "feed-profily")
+    .maybeSingle();
+  if (error) throw error;
+  const h = data?.hodnota as { profily?: unknown } | null;
+  return Array.isArray(h?.profily) ? (h!.profily as import("@/lib/feed-univerzalni").ProfilDodavatele[]) : [];
+}
+
+export async function ulozProfily(profily: import("@/lib/feed-univerzalni").ProfilDodavatele[]): Promise<void> {
+  const { error } = await supabase
+    .from("nastaveni")
+    .upsert({ klic: "feed-profily", hodnota: { profily } as never }, { onConflict: "klic" });
+  if (error) throw error;
+}
+
 /** Uloží nastavení e-shopu (jen administrace). */
 export async function ulozNastaveni(hodnota: NastaveniEshopu): Promise<void> {
   const { error } = await supabase

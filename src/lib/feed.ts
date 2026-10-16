@@ -12,7 +12,11 @@
  *  - ceny se ukládají jako „cena od dodavatele" a na web se samy nepropíšou
  */
 
-export type Dodavatel = "crussis" | "author" | "cursorbike";
+/**
+ * Kdo produkt poslal. Ručně psané čtečky mají pevná jména (crussis, author,
+ * cursorbike), dodavatelé přidaní v administraci mají jméno svého profilu.
+ */
+export type Dodavatel = string;
 
 export type FeedVarianta = {
   velikost: string | null;
@@ -37,7 +41,14 @@ export type FeedProdukt = {
   /** Fotky, u kterých feed uvádí jen název souboru (Author) — zatím nepoužitelné. */
   obrazkySoubory: string[];
   varianty: FeedVarianta[];
+  /** Značka podle dodavatele — jen pro předvyplnění nové kategorie. */
+  znacka?: string | null;
+  /** Technické parametry. Zapisují se jen k nově založeným produktům. */
+  parametry?: import("@/lib/produkty").ParametrSkupina[];
 };
+
+/** Soubor, který žádná z ručně psaných čteček nezná — přebírá ho univerzální import. */
+export class NeznamyFormat extends Error {}
 
 export type Upozorneni = { druh: string; produkt: string; detail: string };
 
@@ -49,19 +60,19 @@ export type FeedVysledek = {
   polozekVeFeedu: number;
 };
 
+/* Fotky Authora: viz AUTHOR_FOTKA níž. */
+
 /**
- * Fotky Authora zatím neumíme poskládat.
+ * Kde Author (Universe Agency) fotky opravdu má — podle jejich dokumentace
+ * „XML3 UA – Popis": hlavní fotka `foto.uniag.biz/foto/full/{Image}`,
+ * další soubory `foto.uniag.biz/foto/d_vsem/{AddFileLink}`.
  *
- * Feed uvádí jen název souboru (`42966402_solution_b.jpg`). Adresa
- * `cz.author.eu/data/x_produkty/14067/main/ua<soubor>`, kterou jsme znali
- * z dřívějšího importu do PrestaShopu, platí jen pro model Espirit — číslo
- * složky je u každého modelu jiné a ověřený odkaz na jiný model vede na
- * Authorovu mapu webu, ne na obrázek.
- *
- * Proto se u Authora ukládají jen názvy souborů. Dokud dodavatel nedodá
- * adresu nebo pravidlo, bereme fotky odjinud (starý web, vlastní nahrání) —
- * lepší žádná fotka než odkaz, který nikam nevede.
+ * Author výslovně žádá, ať se na jejich soubory neodkazuje napřímo. Proto se
+ * po importu fotky stáhnou k nám (Zboží → Stáhnout fotky k nám) a web pak
+ * ukazuje už jen naše kopie.
  */
+export const AUTHOR_FOTKA = "https://foto.uniag.biz/foto/full/";
+export const AUTHOR_SOUBOR = "https://foto.uniag.biz/foto/d_vsem/";
 
 /** Cena, u které dodavatel značí „cenu zatím neurčujeme". */
 const CENA_NEURCENA = 99999;
@@ -277,12 +288,17 @@ export function nactiAuthorXml(xml: string): FeedVysledek {
       if (!kod) continue;
       const barva = textTagu(ci, "ColorFull") || null;
 
-      const soubory = [textTagu(ci, "Image")].filter(Boolean);
+      const hlavni = textTagu(ci, "Image");
+      const soubory = [hlavni].filter(Boolean);
+      const adresy = hlavni ? [AUTHOR_FOTKA + encodeURI(hlavni)] : [];
       for (const af of ci.getElementsByTagName("AddFile")) {
         if (textTagu(af, "AddFileType").toLowerCase() !== "jpg") continue;
         const nazevSouboru = textTagu(af, "AddFileLink");
         // Rozměrové tabulky nejsou fotky kola, do galerie nepatří.
-        if (nazevSouboru && !/size|tabulka|geometri/i.test(nazevSouboru)) soubory.push(nazevSouboru);
+        if (nazevSouboru && !/size|tabulka|geometri/i.test(nazevSouboru)) {
+          soubory.push(nazevSouboru);
+          adresy.push(AUTHOR_SOUBOR + encodeURI(nazevSouboru));
+        }
       }
 
       const varianty: FeedVarianta[] = [];
@@ -319,7 +335,7 @@ export function nactiAuthorXml(xml: string): FeedVysledek {
         kategorieFeed,
         kratky: popis.slice(0, 190),
         popis,
-        obrazky: [],
+        obrazky: [...new Set(adresy)],
         obrazkySoubory: [...new Set(soubory)],
         varianty,
       });
@@ -327,14 +343,8 @@ export function nactiAuthorXml(xml: string): FeedVysledek {
   }
 
   for (const p of produkty) {
-    if (!p.obrazkySoubory.length) {
+    if (!p.obrazky.length) {
       upozorneni.push({ druh: "bez-fotky", produkt: p.nazev, detail: "Feed neuvádí žádnou fotku." });
-    } else {
-      upozorneni.push({
-        druh: "fotka-bez-adresy",
-        produkt: p.nazev,
-        detail: "Author posílá jen název souboru, ne adresu — fotku doplňte odjinud.",
-      });
     }
   }
 
@@ -489,10 +499,11 @@ export function nactiCursorbikeExport(text: string): FeedVysledek {
 
 export function nactiFeed(nazevSouboru: string, obsah: string): FeedVysledek {
   const zacatek = obsah.slice(0, 400);
-  if (zacatek.trimStart().startsWith("<?xml") || zacatek.includes("<SHOP")) return nactiAuthorXml(obsah);
+  // Author: XML s <ShopItems>/<ShopItem>. Jiné XML (Heureka, Leader Fox…) sem nepatří.
+  if (obsah.includes("<ShopItem")) return nactiAuthorXml(obsah);
   if (/Product ID|Cena \(s DPH\)/.test(zacatek)) return nactiCursorbikeExport(obsah);
   if (/Reference\s*;|Name\s*;|;\s*EAN13/.test(zacatek)) return nactiCrussisCsv(obsah);
-  throw new Error(
+  throw new NeznamyFormat(
     `Soubor „${nazevSouboru}" se nepodařilo rozpoznat. Podporujeme XML feed od Authora, CSV export z PrestaShopu a CSV export z administrace starého webu.`,
   );
 }

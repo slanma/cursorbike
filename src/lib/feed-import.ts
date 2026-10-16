@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { FeedProdukt, FeedVysledek } from "@/lib/feed";
+import { cenaPodlePravidla, nactiPravidla, pravidloPro } from "@/lib/ceny";
 
 export type Mapovani = Record<string, string>;
 
@@ -137,7 +138,7 @@ const naSlug = (text: string) =>
 
 /** Název, pod kterým produkt pojede na webu. Barva je součástí názvu. */
 export const nazevProWeb = (p: FeedProdukt) =>
-  p.barva ? `${p.nazev} — ${p.barva}` : p.nazev;
+  p.barva && !p.nazev.toLowerCase().includes(p.barva.toLowerCase()) ? `${p.nazev} — ${p.barva}` : p.nazev;
 
 /** Nejnižší cena mezi velikostmi. U kol bývají všechny stejné. */
 export const cenaProduktu = (p: FeedProdukt) => {
@@ -247,6 +248,8 @@ export async function provedImport(
     return s;
   };
 
+  // Nová kola dostanou cenu podle pravidla dodavatele (o kolik % a zaokrouhlení).
+  const pravidla = await nactiPravidla().catch(() => []);
   const nove = plan.radky.filter((r) => r.akce === "novy");
   const upravy = plan.radky.filter((r) => r.akce === "aktualizace");
 
@@ -259,7 +262,7 @@ export async function provedImport(
         slug: unikatniSlug(nazevProWeb(p)),
         nazev: nazevProWeb(p),
         kategorie_id: r.kategorieId ?? null,
-        cena: r.cena,
+        cena: cenaPodlePravidla(r.cena, pravidloPro(pravidla, p.dodavatel)) || r.cena,
         cena_feed: r.cena,
         kratky: p.kratky.slice(0, 200),
         popis: p.popis,
@@ -273,6 +276,7 @@ export async function provedImport(
         dodavatel: p.dodavatel,
         dodavatel_kod: p.kod,
         varianty: p.varianty,
+        ...(p.parametry?.length ? { parametry: p.parametry } : {}),
         importovano_at: new Date().toISOString(),
         // Záměrně skryté — obchodník je zveřejní, až je zkontroluje.
         aktivni: false,
