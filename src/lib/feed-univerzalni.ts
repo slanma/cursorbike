@@ -20,6 +20,7 @@
 
 import type { FeedProdukt, FeedVarianta, FeedVysledek, Upozorneni } from "@/lib/feed";
 import { nactiFeed, rozdelCsv } from "@/lib/feed";
+import { vyfiltruj } from "@/lib/vyber-zbozi";
 import type { ParametrSkupina } from "@/lib/produkty";
 
 export type Hodnota = string | string[];
@@ -79,6 +80,11 @@ export type ProfilDodavatele = {
    * webu). Nic se u něj nepřiřazuje, čte se rovnou.
    */
   znamyFormat?: boolean;
+  /**
+   * Které skupiny zboží od dodavatele brát (klíče ze `shrnSkupiny`, třeba
+   * „elektrokola"). Když chybí, bere se všechno.
+   */
+  brat?: string[];
 };
 
 /** Zkusí hotovou čtečku. Vrátí null, když feed nezná. */
@@ -92,8 +98,8 @@ export function zkusZnamyFormat(nazev: string, text: string): FeedVysledek | nul
 
 /** Přečte feed dodavatele podle jeho uloženého profilu. */
 export function zpracujProfil(text: string, profil: ProfilDodavatele): FeedVysledek {
-  if (profil.znamyFormat) return nactiFeed(profil.nazev, text);
-  return sestavProdukty(nactiZdroj(text, profil.prvek), profil);
+  const vse = profil.znamyFormat ? nactiFeed(profil.nazev, text) : sestavProdukty(nactiZdroj(text, profil.prvek), profil);
+  return vyfiltruj(vse, profil.brat);
 }
 
 /** Popisky pro obrazovku mapování — v pořadí, jak se zobrazují. */
@@ -314,6 +320,11 @@ function shrnPole(polozky: Polozka[]): { pole: PoleFeedu[]; skupinyParametru: st
 /** Přečte feed v libovolném formátu. */
 export function nactiZdroj(text: string, prvek?: string): ZdrojFeedu {
   const zacatek = text.trimStart().slice(0, 200);
+  if (/^<!doctype html|^<html|<head[\s>]/i.test(zacatek)) {
+    throw new Error(
+      "Tohle je webová stránka, ne feed — nejspíš přihlašovací. Zkontrolujte odkaz, má končit třeba na .xml nebo .csv.",
+    );
+  }
   if (zacatek.startsWith("<")) return nactiXml(text, prvek);
   if (zacatek.startsWith("{") || zacatek.startsWith("[")) {
     throw new Error("Feed ve formátu JSON (třeba ze Shopify) zatím neumíme. Pošlete ho Marťasovi.");

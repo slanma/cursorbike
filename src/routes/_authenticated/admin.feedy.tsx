@@ -7,6 +7,7 @@ import { nactiKategorie, nactiMapovani, nactiProfily, ulozMapovani, ulozProfily 
 import { NeznamyFormat, nactiFeed, shrnUpozorneni, type FeedVysledek } from "@/lib/feed";
 import { dekoduj, zpracujProfil, type ProfilDodavatele } from "@/lib/feed-univerzalni";
 import { NovyDodavatel, useNactiZOdkazu } from "@/components/admin/NovyDodavatel";
+import { zaradAutomaticky } from "@/lib/vyber-zbozi";
 import {
   navrhniMapovani,
   nactiProPorovnani,
@@ -168,7 +169,28 @@ function ImportFeedu() {
         [...new Set(vysledek.produkty.map((p) => p.kategorieFeed))],
         seznamKategorii,
       );
-      const vysledneMapovani = { ...navrh, ...(ulozene ?? {}) };
+      let vysledneMapovani: Mapovani = { ...navrh, ...(ulozene ?? {}) };
+
+      // Co zůstalo nezařazené, zařadíme sami — u kol a elektrokol stačí
+      // založit kategorii podle dodavatele, obchodník ji pak může přejmenovat.
+      const profil = profily.find((p) => p.id === vysledek.dodavatel);
+      const { mapovani: doplnene, nove } = await zaradAutomaticky(
+        vysledek.produkty,
+        vysledneMapovani,
+        seznamKategorii,
+        profil?.nazev ?? "",
+      );
+      if (nove.length) {
+        vysledneMapovani = doplnene;
+        seznamKategorii.push(...nove);
+        await ulozMapovani(vysledneMapovani);
+        qc.invalidateQueries({ queryKey: ["admin-kategorie"] });
+        toast.success(
+          `Založili jsme ${nove.length} ${nove.length === 1 ? "novou kategorii" : nove.length < 5 ? "nové kategorie" : "nových kategorií"}. Názvy můžete kdykoli upravit v Kategoriích.`,
+        );
+      } else {
+        vysledneMapovani = doplnene;
+      }
 
       setFeed(vysledek);
       setNase(seznamKategorii);

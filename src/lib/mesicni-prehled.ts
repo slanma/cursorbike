@@ -22,6 +22,8 @@ import {
 } from "@/lib/feed-import";
 import { zpracujProfil } from "@/lib/feed-univerzalni";
 import { cenaPodlePravidla, nactiPravidla, pravidloPro } from "@/lib/ceny";
+import { zaradAutomaticky } from "@/lib/vyber-zbozi";
+import { ulozMapovani } from "@/lib/eshop";
 
 export type NoveKolo = {
   klic: string;
@@ -124,7 +126,14 @@ export async function pripravPrehled(
     }
     vysledek.dodavatele.push(profil.nazev);
 
-    const mapovani = { ...navrhniMapovani([...new Set(produkty.map((p) => p.kategorieFeed))], nase), ...ulozene };
+    const zakladni = { ...navrhniMapovani([...new Set(produkty.map((p) => p.kategorieFeed))], nase), ...ulozene };
+    // Nové kategorie u dodavatele se zařadí samy, ať se na ně obchodník nemusí ptát.
+    const { mapovani, nove } = await zaradAutomaticky(produkty, zakladni, nase, profil.nazev);
+    if (nove.length) {
+      nase.push(...nove);
+      Object.assign(ulozene, mapovani);
+      await ulozMapovani(ulozene);
+    }
     const plan = sestavPlan({ dodavatel: profil.id, produkty, upozorneni: [], polozekVeFeedu: produkty.length }, existujici, mapovani);
     const pravidlo = pravidloPro(pravidla, profil.id);
 

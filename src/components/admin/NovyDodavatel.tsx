@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Link2, Upload } from "lucide-react";
 import type { FeedVysledek } from "@/lib/feed";
 import { KdeNajduFeed } from "@/components/admin/KdeNajduFeed";
+import { shrnSkupiny, vychoziVyber, vyfiltruj } from "@/lib/vyber-zbozi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,12 @@ import {
 } from "@/lib/feed-univerzalni";
 
 const VYBER = "h-10 w-full rounded-md border bg-background px-3 text-sm";
+
+const DRUHY = [
+  { druh: "elektrokola", nazev: "Elektrokola" },
+  { druh: "kola", nazev: "Kola" },
+  { druh: "ostatni", nazev: "Díly, doplňky a ostatní" },
+] as const;
 
 /** Stáhne feed z odkazu přes server a vrátí text ve správném kódování. */
 export function useNactiZOdkazu() {
@@ -139,7 +146,8 @@ export function NovyDodavatel({
     setProfil(navrhniProfil(nazev, z, url || undefined));
   };
 
-  const nahled = useMemo(() => {
+  /** Všechno, co ve feedu je — i díly a merch. */
+  const vse = useMemo(() => {
     if (znamy) return znamy;
     if (!zdroj || !profil) return null;
     try {
@@ -149,6 +157,26 @@ export function NovyDodavatel({
     }
   }, [zdroj, profil, nazev, znamy]);
 
+  const skupiny = useMemo(() => (vse ? shrnSkupiny(vse.produkty) : []), [vse]);
+  const [brat, setBrat] = useState<string[] | null>(puvodni?.brat ?? null);
+  // Při prvním načtení se zaškrtnou kola a elektrokola, ostatní ne.
+  useEffect(() => {
+    if (brat === null && skupiny.length) setBrat(vychoziVyber(skupiny));
+  }, [brat, skupiny]);
+
+  /** Jen to, co obchodník chce brát. */
+  const nahled = useMemo(() => (vse ? vyfiltruj(vse, brat ?? undefined) : null), [vse, brat]);
+  const nastavDruh = (klice: string[], zapnout: boolean) =>
+    setBrat((b) => {
+      const bez = (b ?? []).filter((x) => !klice.includes(x));
+      return zapnout ? [...bez, ...klice] : bez;
+    });
+  const prepniSkupinu = (klic: string) =>
+    setBrat((b) => {
+      const ted = b ?? [];
+      return ted.includes(klic) ? ted.filter((x) => x !== klic) : [...ted, klic];
+    });
+
   const nastavPole = (pole: CilovePole, klic: string) =>
     setProfil((p) => (p ? { ...p, pole: { ...p.pole, [pole]: klic || undefined } } : p));
 
@@ -156,6 +184,10 @@ export function NovyDodavatel({
     if (!profil || !nahled || (!zdroj && !znamy)) return;
     if (!nazev.trim()) {
       toast.error("Napište, jak se dodavatel jmenuje");
+      return;
+    }
+    if (brat && brat.length === 0) {
+      toast.error("Zaškrtněte aspoň jednu skupinu zboží, kterou chcete brát");
       return;
     }
     const chybi = chybiPovinne(profil);
@@ -169,9 +201,10 @@ export function NovyDodavatel({
       nazev: nazev.trim(),
       ...(url.trim() ? { url: url.trim() } : {}),
       ...(zdroj?.prvek ? { prvek: zdroj.prvek } : {}),
+      ...(brat ? { brat } : {}),
       upraveno: new Date().toISOString(),
     };
-    await onUlozit(finalni, znamy ?? sestavProdukty(zdroj!, finalni));
+    await onUlozit(finalni, vyfiltruj(znamy ?? sestavProdukty(zdroj!, finalni), brat ?? undefined));
   };
 
   const ukazka = (klic?: string) => {
@@ -237,11 +270,73 @@ export function NovyDodavatel({
 
       <KdeNajduFeed />
 
-      {znamy && nahled && (
+      {znamy && (
         <p className="rounded-md border-2 border-primary bg-accent p-4 text-accent-foreground">
-          Tenhle feed známe — <b>není potřeba nic nastavovat.</b> Našli jsme v něm {nahled.produkty.length} produktů.
-          Stačí kliknout na Uložit dodavatele a pokračovat.
+          Tenhle feed známe — <b>není potřeba nic nastavovat.</b> Jen níž zaškrtněte, co chcete brát.
         </p>
+      )}
+
+      {/* CO BRÁT */}
+      {vse && skupiny.length > 0 && (
+        <div className="grid gap-3 rounded-lg border-2 border-primary p-4 md:p-5">
+          <div>
+            <p className="text-xl font-bold">Co chcete od dodavatele brát?</p>
+            <p className="text-sm text-muted-foreground">
+              Kola a elektrokola jsme zaškrtli za vás. Co nezaškrtnete, na web nepůjde.
+            </p>
+          </div>
+          {DRUHY.map((d) => {
+            const vDruhu = skupiny.filter((s) => s.druh === d.druh);
+            if (!vDruhu.length) return null;
+            const vybrano = vDruhu.filter((s) => (brat ?? []).includes(s.klic));
+            const vse = vybrano.length === vDruhu.length;
+            const nic = vybrano.length === 0;
+            const kusu = vDruhu.reduce((n, s) => n + s.pocet, 0);
+            return (
+              <div key={d.druh} className={`rounded-lg border-2 ${nic ? "bg-card" : "border-primary bg-accent"}`}>
+                <label className="flex min-h-16 cursor-pointer items-center gap-4 px-4">
+                  <input
+                    type="checkbox"
+                    checked={!nic}
+                    ref={(el) => {
+                      if (el) el.indeterminate = !nic && !vse;
+                    }}
+                    onChange={() => nastavDruh(vDruhu.map((s) => s.klic), nic)}
+                    className="h-7 w-7 accent-[var(--primary)]"
+                  />
+                  <span className="flex-1 text-xl font-bold">{d.nazev}</span>
+                  <span className="text-muted-foreground">{kusu} ks</span>
+                </label>
+                {vDruhu.length > 1 && (
+                  <details className="px-4 pb-3">
+                    <summary className="cursor-pointer text-sm text-muted-foreground">
+                      Vybrat podrobněji ({vybrano.length} z {vDruhu.length} skupin)
+                    </summary>
+                    <div className="mt-2 grid gap-1 sm:grid-cols-2">
+                      {vDruhu.map((s) => (
+                        <label key={s.klic} className="flex min-h-11 cursor-pointer items-center gap-3 rounded px-2 hover:bg-card">
+                          <input
+                            type="checkbox"
+                            checked={(brat ?? []).includes(s.klic)}
+                            onChange={() => prepniSkupinu(s.klic)}
+                            className="h-5 w-5 accent-[var(--primary)]"
+                          />
+                          <span className="flex-1">{s.nazev}</span>
+                          <span className="text-sm text-muted-foreground">{s.pocet}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </div>
+            );
+          })}
+          {nahled && (
+            <p className="text-lg">
+              Budete brát <b>{nahled.produkty.length}</b> z {vse.produkty.length} produktů.
+            </p>
+          )}
+        </div>
       )}
 
       {/* 2. CO JE CO */}
@@ -249,17 +344,20 @@ export function NovyDodavatel({
         <>
           <p className="rounded-md bg-surface p-3 text-sm">
             Ve feedu je <span className="font-bold">{zdroj.polozky.length}</span> položek
-            {nahled && (
+            {vse && (
               <>
-                , to dělá <span className="font-bold">{nahled.produkty.length}</span> produktů
-                {nahled.produkty.length < zdroj.polozky.length && " (velikosti jsme spojili)"}
+                , to dělá <span className="font-bold">{vse.produkty.length}</span> produktů
+                {vse.produkty.length < zdroj.polozky.length && " (velikosti jsme spojili)"}
               </>
             )}
             .
           </p>
 
-          <div className="grid gap-3">
-            <p className="font-semibold">Co je co</p>
+          <details className="rounded-md border p-4">
+            <summary className="cursor-pointer font-semibold">
+              Zkontrolovat, co je co <span className="font-normal text-muted-foreground">(většinou není potřeba)</span>
+            </summary>
+          <div className="mt-4 grid gap-3">
             {CILOVA_POLE.map((c) => {
               const vybrano = profil.pole[c.pole] ?? "";
               const moznosti =
@@ -295,6 +393,7 @@ export function NovyDodavatel({
               );
             })}
           </div>
+          </details>
 
           {/* CENY */}
           <div className="grid gap-3 rounded-md border p-4">
