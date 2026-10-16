@@ -1,0 +1,37 @@
+# Databáze nespí.
+#
+# Supabase zdarma uspí databázi, když na ni týden nikdo nesáhne. Pak web
+# hlásí „Failed to fetch" a nejdou objednávky ani správa. Tahle úloha
+# jednou denně zaklepe na web (adresa /api/zije udělá malý dotaz do
+# databáze), takže databáze nikdy neusne. Běží zdarma na GitHubu.
+#
+# Po přestěhování webu nebo přepnutí domény stačí změnit WEB níže.
+
+name: Databáze nespí
+
+on:
+  schedule:
+    - cron: "17 6 * * *" # každý den kolem 8:17 našeho času
+  workflow_dispatch: {} # tlačítko Run workflow pro ruční spuštění
+
+env:
+  WEB: https://cursorbike-e8ob.vercel.app
+
+jobs:
+  zaklepat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Zaklepat na databázi
+        run: |
+          for pokus in 1 2 3; do
+            if curl --fail --silent --show-error --max-time 60 "$WEB/api/zije"; then
+              echo ""
+              echo "Databáze je vzhůru."
+              exit 0
+            fi
+            echo "Pokus $pokus nevyšel, zkusím to za minutu znovu."
+            sleep 60
+          done
+          echo "Databáze neodpovídá ani po třech pokusech."
+          exit 1
