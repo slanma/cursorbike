@@ -124,11 +124,15 @@ export async function zaradAutomaticky(
 
   for (const [cesta, p] of chybi) {
     const druh = druhCesty(cesta);
-    const sekce = druh === "elektrokola" ? "elektrokola" : "kola";
+    const sekce = druh === "elektrokola" ? "elektrokola" : druh === "kola" ? "kola" : "doplnky";
     const znacka = hezky(p.znacka || zalozniZnacka || "Ostatní");
     const slugZnacky = naSlug(znacka);
     // Kola → značka → typ kola. Velikosti jsou uvnitř produktu jako varianty.
-    const nazev = typKola(`${casti(cesta).join(" ")} ${p.nazev}`);
+    // Doplňky: poslední smysluplná část cesty, třeba „Pláště" nebo „Přilby".
+    const nazev =
+      sekce === "doplnky"
+        ? hezky(casti(cesta).filter((c) => !/^n[aá]hradn[ií] d[ií]ly( a merch)?$|^d[ií]ly$|^dopl[nň]ky$/i.test(c)).pop() ?? "Ostatní")
+        : typKola(`${casti(cesta).join(" ")} ${p.nazev}`);
 
     const shoda = vsechny.find(
       (k) => k.sekce === sekce && (k.znacka ?? "") === slugZnacky && naSlug(k.nazev) === naSlug(nazev),

@@ -22,8 +22,8 @@ const skupiny = [
     icon: Bike,
     cesty: ["/admin/produkty", "/admin/kategorie", "/admin/feedy", "/admin/prehled"],
     pod: [
-      { to: "/admin/produkty", label: "Kola" },
-      { to: "/admin/feedy", label: "Od dodavatelů" },
+      { to: "/admin/produkty", label: "Seznam zboží" },
+      { to: "/admin/feedy", label: "Stáhnout od dodavatele" },
       { to: "/admin/prehled", label: "Měsíční přehled" },
       { to: "/admin/kategorie", label: "Kategorie" },
     ],

@@ -118,8 +118,8 @@ function Dnes() {
       ukoly.push({
         klic: "kontrola",
         ikona: Eye,
-        titulek: `${sklonuj(data.cekaNaKontrolu, "kolo čeká", "kola čekají", "kol čeká")} na kontrolu`,
-        popis: "Přišla od dodavatele a zatím jsou skrytá. Projděte je a zveřejněte.",
+        titulek: `${sklonuj(data.cekaNaKontrolu, "produkt čeká", "produkty čekají", "produktů čeká")} na kontrolu`,
+        popis: "Přišly od dodavatele a zatím jsou skryté. Projděte je a zveřejněte.",
         tlacitko: "Zkontrolovat",
         to: "/admin/produkty",
       });
@@ -128,8 +128,8 @@ function Dnes() {
       ukoly.push({
         klic: "fotky",
         ikona: Camera,
-        titulek: `${sklonuj(data.bezFotky, "kolo nemá", "kola nemají", "kol nemá")} fotku`,
-        popis: "Bez fotky se kolo zákazníkům špatně prodává. Vyfoťte ho mobilem a nahrajte.",
+        titulek: `${sklonuj(data.bezFotky, "produkt nemá", "produkty nemají", "produktů nemá")} fotku`,
+        popis: "Bez fotky se zboží špatně prodává. Vyfoťte ho mobilem a nahrajte.",
         tlacitko: "Doplnit fotky",
         to: "/admin/produkty",
         upozorneni: true,
@@ -138,7 +138,7 @@ function Dnes() {
   }
 
   const akce: { to: string; ikona: ComponentType<{ className?: string }>; nazev: string; popis: string }[] = [
-    { to: "/admin/feedy", ikona: Bike, nazev: "Přidat kola", popis: "Od dodavatele nebo ručně" },
+    { to: "/admin/feedy", ikona: Bike, nazev: "Přidat zboží", popis: "Od dodavatele nebo ručně" },
     { to: "/admin/ceny", ikona: Tag, nazev: "Změnit ceny", popis: "Akce, slevy, celé značky" },
     { to: "/admin/objednavky", ikona: ClipboardList, nazev: "Objednávky a servis", popis: "Kdo co chce a co je hotové" },
     { to: "/admin/nastaveni", ikona: Settings, nazev: "Nastavení", popis: "Údaje o obchodě, účet, lidé" },
@@ -214,7 +214,7 @@ function Dnes() {
         <section aria-labelledby="stav-nadpis" className="grid gap-3">
           <h3 id="stav-nadpis" className="section-title text-3xl">Jak na tom jsme</h3>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Cislo popis="Kol na webu" hodnota={String(data.naWebu)} />
+            <Cislo popis="Produktů na webu" hodnota={String(data.naWebu)} />
             <Cislo popis="Objednávek tento měsíc" hodnota={String(data.objednavekMesic)} />
             <Cislo
               popis="Poslední přehled od dodavatelů"
@@ -241,21 +241,21 @@ function Cislo({ popis, hodnota }: { popis: string; hodnota: string }) {
 /** Pevní průvodci — nic nestojí a vždycky ukážou stejný postup. */
 const NAVODY: { otazka: string; kroky: string[] }[] = [
   {
-    otazka: "Jak dám kolo do akce?",
+    otazka: "Jak dám produkt do akce?",
     kroky: [
       "Nahoře klikněte na Zboží.",
-      "Do políčka Najít kolo napište kus názvu kola.",
-      "U kola klikněte na Upravit.",
+      "Do políčka Najít produkt napište kus názvu.",
+      "U produktu klikněte na Upravit.",
       "Do políčka Původní cena napište cenu, za kterou se prodávalo dosud.",
       "Do políčka Cena napište novou akční cenu.",
       "Dole klikněte na Uložit. Na webu bude stará cena přeškrtnutá.",
     ],
   },
   {
-    otazka: "Jak přidám kolo, které mám v prodejně?",
+    otazka: "Jak přidám zboží, které mám v prodejně?",
     kroky: [
       "Nahoře klikněte na Zboží.",
-      "Klikněte na Přidat kolo ručně.",
+      "Klikněte na Přidat produkt ručně.",
       "Napište název, cenu a vyberte kategorii.",
       "Nahrajte fotku — stačí z mobilu.",
       "Zapněte přepínač Zobrazit na webu a klikněte na Uložit.",
@@ -267,13 +267,13 @@ const NAVODY: { otazka: string; kroky: string[] }[] = [
       "Na této stránce klikněte na Vyřídit objednávky (nebo nahoře na Objednávky).",
       "Zkontrolujte, co si zákazník objednal a jestli to máte.",
       "Když platí převodem, klikněte na Ukázat QR kód k zaplacení a pošlete mu ho.",
-      "Stav objednávky přepněte na Vyřizuje se. Až si kolo vyzvedne, přepněte na Dokončená.",
+      "Stav objednávky přepněte na Vyřizuje se. Až si zboží vyzvedne, přepněte na Dokončená.",
     ],
   },
   {
     otazka: "Jak přidám nového dodavatele?",
     kroky: [
-      "Nahoře klikněte na Zboží a pak na Od dodavatelů.",
+      "Nahoře klikněte na Zboží a pak na Stáhnout zboží od dodavatele.",
       "Klikněte na Přidat dodavatele.",
       "Napište jeho jméno a vložte odkaz na feed, který vám poslal. Klikněte na Načíst.",
       "Web sám navrhne, co je název, cena a fotky. Podívejte se na ukázku dole.",
@@ -281,7 +281,7 @@ const NAVODY: { otazka: string; kroky: string[] }[] = [
     ],
   },
   {
-    otazka: "Jak změním ceny u všech kol od jednoho dodavatele?",
+    otazka: "Jak změním ceny u všeho zboží od jednoho dodavatele?",
     kroky: [
       "Nahoře klikněte na Ceny.",
       "Vyberte dodavatele.",

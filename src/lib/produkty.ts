@@ -2,7 +2,8 @@ import eletroCity from "@/assets/kolo-elektro-city.jpg";
 import mtb from "@/assets/kolo-mtb.jpg";
 import trekking from "@/assets/kolo-trekking.jpg";
 
-export type Kategorie = "kola" | "elektrokola" | "bazar";
+/** Sekce webu. „doplnky" = díly, oblečení a další zboží mimo kola. */
+export type Kategorie = "kola" | "elektrokola" | "bazar" | "doplnky";
 
 export type ParametrSkupina = {
   skupina: string;

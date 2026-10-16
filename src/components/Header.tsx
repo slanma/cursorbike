@@ -3,10 +3,12 @@ import { Menu, Phone, ShoppingCart, X } from "lucide-react";
 import { useState } from "react";
 import { useKosik } from "@/lib/kosik";
 import { kontakt } from "@/lib/kontakt";
+import { useVsechnyProdukty } from "@/lib/produkty-hook";
 
-const odkazy = [
+const vsechnyOdkazy = [
   { to: "/kola", label: "Kola" },
   { to: "/elektrokola", label: "Elektrokola" },
+  { to: "/doplnky", label: "Doplňky" },
   { to: "/bazar", label: "Bazar" },
   { to: "/servis", label: "Servis" },
   { to: "/o-mne", label: "O mně" },
@@ -15,6 +17,10 @@ const odkazy = [
 
 export function Header() {
   const { pocetKusu } = useKosik();
+  // Doplňky se v menu ukážou, až v nich něco bude — dokud obchod prodává jen kola, menu se nemění.
+  const { produkty } = useVsechnyProdukty();
+  const maDoplnky = produkty.some((p) => p.kategorie === "doplnky");
+  const odkazy = vsechnyOdkazy.filter((o) => o.to !== "/doplnky" || maDoplnky);
   const [open, setOpen] = useState(false);
 
   return (

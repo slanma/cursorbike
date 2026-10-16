@@ -6,6 +6,7 @@ import type { FeedVysledek } from "@/lib/feed";
 import { KdeNajduFeed } from "@/components/admin/KdeNajduFeed";
 import { shrnSkupiny, vychoziVyber, vyfiltruj } from "@/lib/vyber-zbozi";
 import { cenaPodlePravidla, type Zaokrouhleni } from "@/lib/ceny";
+import { sklonuj } from "@/lib/cestina";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +33,7 @@ const VYBER = "h-10 w-full rounded-md border bg-background px-3 text-sm";
 const DRUHY = [
   { druh: "elektrokola", nazev: "Elektrokola" },
   { druh: "kola", nazev: "Kola" },
-  { druh: "ostatni", nazev: "Díly, doplňky a ostatní" },
+  { druh: "ostatni", nazev: "Díly a doplňky" },
 ] as const;
 
 /** Stáhne feed z odkazu přes server a vrátí text ve správném kódování. */
@@ -304,7 +305,7 @@ export function NovyDodavatel({
           <div>
             <p className="text-xl font-bold">Co chcete od dodavatele brát?</p>
             <p className="text-sm text-muted-foreground">
-              Kola a elektrokola jsme zaškrtli za vás. Co nezaškrtnete, na web nepůjde.
+              Zaškrtněte, co chcete prodávat. Kola a elektrokola jsme zaškrtli za vás, díly a doplňky můžete přidat taky — na webu budou v sekci Doplňky. Co nezaškrtnete, na web nepůjde.
             </p>
           </div>
           {DRUHY.map((d) => {
@@ -368,9 +369,9 @@ export function NovyDodavatel({
             <p className="text-xl font-bold">Za kolik je chcete prodávat?</p>
           </div>
           <p className="rounded-md bg-amber-50 p-3 text-base text-amber-950">
-            Sleva, kterou tu zadáte, platí pro <b>všechna kola od tohoto dodavatele</b> — i pro ta, která přibudou
-            příště. Změnit ji můžete kdykoli v Cenách. Když chcete jedno kolo dát do akce zvlášť, uděláte to v Cenách
-            u Ceny jednoho kola.
+            Sleva, kterou tu zadáte, platí pro <b>všechno zboží od tohoto dodavatele</b> — i pro to, které přibude
+            příště. Změnit ji můžete kdykoli v Cenách. Když chcete jeden produkt dát do akce zvlášť, uděláte to v Cenách
+            u Ceny jednoho produktu.
           </p>
           <div className="flex flex-wrap gap-2">
             {[
@@ -444,7 +445,7 @@ export function NovyDodavatel({
             </p>
           )}
           {procento === null && (
-            <p className="text-muted-foreground">Kola se stáhnou s cenou dodavatele a upravíte ji potom v Cenách.</p>
+            <p className="text-muted-foreground">Zboží se stáhne s cenou dodavatele a upravíte ji potom v Cenách.</p>
           )}
         </div>
       )}
@@ -589,7 +590,7 @@ export function NovyDodavatel({
       <div className="flex flex-wrap gap-2">
         {(zdroj || znamy) && profil && (
           <Button size="lg" className="min-h-14 px-8 text-lg" disabled={ukladam} onClick={() => void ulozit()}>
-            {ukladam ? "Stahuji kola…" : `Stáhnout ${nahled ? nahled.produkty.length : ""} kol na web`}
+            {ukladam ? "Stahuji…" : `Stáhnout ${nahled ? sklonuj(nahled.produkty.length, "produkt", "produkty", "produktů") : "zboží"} na web`}
           </Button>
         )}
         <Button variant="ghost" size="lg" onClick={onZrusit}>
@@ -598,7 +599,7 @@ export function NovyDodavatel({
       </div>
       {(zdroj || znamy) && profil && (
         <p className="-mt-2 text-sm text-muted-foreground">
-          Kola se stáhnou jako skrytá. Na konci je jedním kliknutím zveřejníte, nebo si je nejdřív projdete.
+          Zboží se stáhne jako skryté. Na konci ho jedním kliknutím zveřejníte, nebo si ho nejdřív projdete.
         </p>
       )}
     </div>

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, HelpCircle } from "lucide-react";
 import { formatCena, type Kategorie } from "@/lib/produkty";
+import { SEKCE } from "@/lib/sekce";
 import { useVsechnyProdukty } from "@/lib/produkty-hook";
 import { useKatalog } from "@/lib/katalog-hook";
 import { Drobky } from "@/components/Drobky";
@@ -45,7 +46,7 @@ export function ZnackyPrehled({
           return (
             <Link
               key={znacka.slug}
-              to={kategorie === "kola" ? "/kola/$znacka" : "/elektrokola/$znacka"}
+              to={`${SEKCE[kategorie].cesta}/$znacka` as "/kola/$znacka"}
               params={{ znacka: znacka.slug }}
               className="group flex flex-col overflow-hidden rounded-lg border bg-card shadow-card transition-shadow hover:shadow-lg"
             >

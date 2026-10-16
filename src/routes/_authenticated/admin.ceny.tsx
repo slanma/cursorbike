@@ -17,6 +17,7 @@ import {
   type Zaokrouhleni,
 } from "@/lib/ceny";
 import { formatCena } from "@/lib/produkty";
+import { sklonuj } from "@/lib/cestina";
 
 export const Route = createFileRoute("/_authenticated/admin/ceny")({
   component: Ceny,
@@ -144,20 +145,20 @@ function Ceny() {
   return (
     <div className="mx-auto grid max-w-4xl gap-8 text-lg">
       <div>
-        <h2 className="section-title text-4xl md:text-5xl">Za kolik chcete kola prodávat?</h2>
+        <h2 className="section-title text-4xl md:text-5xl">Za kolik chcete zboží prodávat?</h2>
         <p className="mt-2 text-xl text-muted-foreground">
-          Nastavíte to jednou větou. Platí to pro všechna kola od dodavatele, i pro ta, která přibudou.
+          Nastavíte to jednou větou. Platí to pro všechno zboží od dodavatele, i pro to, které přibude.
         </p>
       </div>
 
       {dodavatele.length === 0 ? (
         <p className="rounded-xl border bg-card p-6">
-          Zatím nemáte žádná kola od dodavatelů. Nejdřív je přidejte v Zboží → Od dodavatelů.
+          Zatím nemáte žádné zboží od dodavatelů. Nejdřív je stáhněte v Zboží → Stáhnout od dodavatele.
         </p>
       ) : (
         <section className="grid gap-6 rounded-xl border-2 border-primary bg-card p-6 md:p-8">
           <div className="flex flex-wrap items-center gap-3 text-2xl">
-            <span>Kola od</span>
+            <span>Zboží od</span>
             <label className="sr-only" htmlFor="dodavatel">
               Dodavatel
             </label>
@@ -232,7 +233,7 @@ function Ceny() {
               <span className="flex-[1_1_260px]">
                 Uloženo: {nazevDodavatele} {popisPravidla({ procento, zaokrouhleni })}.{" "}
                 {posledniZmeny.length
-                  ? `Cena se změnila u ${posledniZmeny.length} kol.`
+                  ? `Cena se změnila u ${sklonuj(posledniZmeny.length, "produktu", "produktů", "produktů")}.`
                   : "Žádná cena se nemusela měnit."}
               </span>
               {posledniZmeny.length > 0 && (
@@ -248,7 +249,7 @@ function Ceny() {
           )}
 
           <p className="text-base text-muted-foreground">
-            Kola, u kterých jste cenu napsali ručně, pravidlo nezmění.
+            Zboží, u kterého jste cenu napsali ručně, pravidlo nezmění.
           </p>
         </section>
       )}
@@ -282,14 +283,14 @@ function JednoKolo() {
   return (
     <section className="grid gap-5 rounded-xl border bg-card p-6 md:p-8">
       <div>
-        <h3 className="section-title text-3xl">Cena jednoho kola</h3>
+        <h3 className="section-title text-3xl">Cena jednoho produktu</h3>
         <p className="mt-1 text-muted-foreground">
           Když cenu napíšete ručně, má vždycky přednost. Pravidlo ani měsíční přehled ji nepřepíšou.
         </p>
       </div>
       <div className="grid gap-2">
         <label htmlFor="hledat-kolo" className="text-xl font-bold">
-          Které kolo?
+          Který produkt?
         </label>
         <input
           id="hledat-kolo"
@@ -308,7 +309,7 @@ function JednoKolo() {
         />
       ))}
       {hledani.trim().length >= 2 && nalezena.length === 0 && (
-        <p className="text-muted-foreground">Žádné kolo s takovým názvem jsme nenašli.</p>
+        <p className="text-muted-foreground">Nic s takovým názvem jsme nenašli.</p>
       )}
     </section>
   );
@@ -359,7 +360,7 @@ function KoloCena({
     }
     setCena(String(podlePravidla));
     setAkce("");
-    toast.success("Kolo se zase řídí pravidlem.");
+    toast.success("Produkt se zase řídí pravidlem.");
     onUlozeno();
   };
 

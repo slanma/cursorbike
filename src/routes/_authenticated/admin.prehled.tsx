@@ -106,7 +106,7 @@ function MesicniPrehledStranka() {
         <div>
           <h2 className="section-title text-4xl md:text-5xl">Měsíční přehled od dodavatelů</h2>
           <p className="mt-2 text-xl text-muted-foreground">
-            Stáhneme nabídky dodavatelů a zeptáme se vás na tři věci: nová kola, kola, která už nemají, a změny cen.
+            Stáhneme nabídky dodavatelů a zeptáme se vás na tři věci: nové zboží, zboží, které už nemají, a změny cen.
             Zabere to pár minut.
           </p>
         </div>
@@ -142,7 +142,7 @@ function MesicniPrehledStranka() {
     );
   }
 
-  const otazky = ["Nová kola", "Kola, která dodavatel nemá", "Změny cen"];
+  const otazky = ["Nové zboží", "Co dodavatel už nemá", "Změny cen"];
 
   return (
     <div className="mx-auto grid max-w-3xl gap-6 text-lg">
@@ -176,9 +176,9 @@ function MesicniPrehledStranka() {
         <section className="grid gap-4">
           <div>
             <h2 className="section-title text-4xl">
-              Dodavatelé mají {sklonuj(prehled.nova.length, "nové kolo", "nová kola", "nových kol")}. Chcete je na web?
+              Dodavatelé mají {sklonuj(prehled.nova.length, "nový produkt", "nové produkty", "nových produktů")}. Chcete je na web?
             </h2>
-            <p className="mt-1 text-xl text-muted-foreground">Přidaná kola budou nejdřív skrytá. Zveřejníte je, až je zkontrolujete.</p>
+            <p className="mt-1 text-xl text-muted-foreground">Přidané zboží bude nejdřív skryté. Zveřejníte ho, až ho zkontrolujete.</p>
           </div>
           {prehled.nova.map((n) => (
             <div key={n.klic} className="flex flex-wrap items-center gap-4 rounded-xl border bg-card p-4">
@@ -199,7 +199,7 @@ function MesicniPrehledStranka() {
                 </p>
                 {n.uzNaWebu && (
                   <p className="mt-1 rounded bg-amber-50 px-2 py-1 text-base text-amber-950">
-                    Podobné kolo už na webu máte: {n.uzNaWebu}. Proto je nastaveno Nechci, ať ho nemáte dvakrát.
+                    Podobný produkt už na webu máte: {n.uzNaWebu}. Proto je nastaveno Nechci, ať ho nemáte dvakrát.
                   </p>
                 )}
               </div>
@@ -216,7 +216,7 @@ function MesicniPrehledStranka() {
           {prehled.novaBezKategorie > 0 && (
             <p className="rounded-lg bg-surface p-4">
               Dalších {prehled.novaBezKategorie} kusů je z kategorií, které jste zatím nepřiřadili (třeba díly). Ty tu
-              neukazujeme. Když je chcete, přiřaďte kategorii v Zboží → Od dodavatelů.
+              neukazujeme. Když je chcete, zaškrtněte je u dodavatele v Zboží → Stáhnout od dodavatele → Upravit.
             </p>
           )}
         </section>
@@ -226,10 +226,10 @@ function MesicniPrehledStranka() {
         <section className="grid gap-4">
           <div>
             <h2 className="section-title text-4xl">
-              {sklonuj(prehled.zmizela.length, "kolo už dodavatel nemá", "kola už dodavatel nemá", "kol už dodavatel nemá")}. Skrýt z webu?
+              {sklonuj(prehled.zmizela.length, "produkt už dodavatel nemá", "produkty už dodavatel nemá", "produktů už dodavatel nemá")}. Skrýt z webu?
             </h2>
             <p className="mt-1 text-xl text-muted-foreground">
-              Jestli je máte v prodejně, nechte je na webu. Jinak je skryjte, ať si je nikdo neobjedná.
+              Jestli ho máte v prodejně, nechte ho na webu. Jinak je skryjte, ať si je nikdo neobjedná.
             </p>
           </div>
           {prehled.zmizela.map((z) => {
@@ -258,7 +258,7 @@ function MesicniPrehledStranka() {
         <section className="grid gap-4">
           <div>
             <h2 className="section-title text-4xl">
-              U {sklonuj(prehled.ceny.length, "kola", "kol", "kol")} se změnila cena. Převzít nové ceny?
+              U {sklonuj(prehled.ceny.length, "produktu", "produktů", "produktů")} se změnila cena. Převzít nové ceny?
             </h2>
             <p className="mt-1 text-xl text-muted-foreground">
               Vlevo je cena, kterou máte teď na webu. Vpravo nová podle vašeho pravidla v Cenách.
@@ -292,10 +292,10 @@ function MesicniPrehledStranka() {
         <section className="grid gap-3 rounded-xl border-2 border-primary bg-card p-6">
           <h2 className="section-title text-4xl">Shrnutí</h2>
           <ul className="grid gap-1 text-xl">
-            <li>Přidá se {sklonuj(prehled.nova.filter((n) => volbaNoveho(n) === "ano").length, "nové kolo", "nová kola", "nových kol")} (skrytá ke kontrole).</li>
-            <li>Skryje se {sklonuj(prehled.zmizela.filter((z) => volba(`z:${z.id}`) === "ano").length, "kolo", "kola", "kol")}.</li>
-            <li>Nová cena u {sklonuj(prehled.ceny.filter((c) => volba(`c:${c.id}`) === "ano").length, "kola", "kol", "kol")}.</li>
-            <li>U ostatních kol se doplní sklad a čárové kódy.</li>
+            <li>Přidá se {sklonuj(prehled.nova.filter((n) => volbaNoveho(n) === "ano").length, "nový produkt", "nové produkty", "nových produktů")} (skryté ke kontrole).</li>
+            <li>Skryje se {sklonuj(prehled.zmizela.filter((z) => volba(`z:${z.id}`) === "ano").length, "produkt", "produkty", "produktů")}.</li>
+            <li>Nová cena u {sklonuj(prehled.ceny.filter((c) => volba(`c:${c.id}`) === "ano").length, "produktu", "produktů", "produktů")}.</li>
+            <li>U ostatního zboží se doplní sklad a čárové kódy.</li>
           </ul>
         </section>
       )}
@@ -307,8 +307,8 @@ function MesicniPrehledStranka() {
           </div>
           <h2 className="section-title text-4xl">Hotovo, máte klid do dalšího měsíce</h2>
           <p className="text-xl text-muted-foreground">
-            Přidáno {sklonuj(vysledek.pridano, "kolo", "kola", "kol")}, skryto {vysledek.skryto}, nová cena u {vysledek.cen}.
-            {vysledek.pridano > 0 && " Nová kola najdete v Zboží jako skrytá."}
+            Přidáno {sklonuj(vysledek.pridano, "produkt", "produkty", "produktů")}, skryto {vysledek.skryto}, nová cena u {vysledek.cen}.
+            {vysledek.pridano > 0 && " Nové zboží najdete v Zboží jako skryté."}
           </p>
           <Link to="/admin" className="inline-flex min-h-14 items-center rounded-lg bg-primary px-8 text-xl font-bold text-primary-foreground">
             Zpět na Dnes

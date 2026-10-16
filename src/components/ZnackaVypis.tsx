@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
 import { Drobky } from "@/components/Drobky";
 import { type Kategorie, type Znacka } from "@/lib/produkty";
+import { SEKCE } from "@/lib/sekce";
 import { useVsechnyProdukty } from "@/lib/produkty-hook";
 
 export function ZnackaVypis({ kategorie, znacka }: { kategorie: Kategorie; znacka: Znacka }) {
@@ -10,8 +11,8 @@ export function ZnackaVypis({ kategorie, znacka }: { kategorie: Kategorie; znack
   const { produkty } = useVsechnyProdukty();
   const vse = produkty.filter((p) => p.kategorie === kategorie && p.znacka === znacka.slug);
   const seznam = podkategorie ? vse.filter((p) => p.podkategorie === podkategorie) : vse;
-  const nadrazena = kategorie === "kola" ? "/kola" : "/elektrokola";
-  const nadrazenyNazev = kategorie === "kola" ? "Kola" : "Elektrokola";
+  const nadrazena = SEKCE[kategorie].cesta;
+  const nadrazenyNazev = SEKCE[kategorie].nazev;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">

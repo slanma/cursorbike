@@ -8,6 +8,7 @@ import { NeznamyFormat, nactiFeed, shrnUpozorneni, type FeedVysledek } from "@/l
 import { dekoduj, zpracujProfil, type ProfilDodavatele } from "@/lib/feed-univerzalni";
 import { NovyDodavatel, useNactiZOdkazu } from "@/components/admin/NovyDodavatel";
 import { zaradAutomaticky } from "@/lib/vyber-zbozi";
+import { sklonuj } from "@/lib/cestina";
 import { nactiPravidla, ulozPravidla, type Zaokrouhleni } from "@/lib/ceny";
 import {
   navrhniMapovani,
@@ -39,7 +40,7 @@ async function precti(soubor: File): Promise<string> {
 }
 
 const popisSekce = (s: string) =>
-  s === "elektrokola" ? "Elektrokola" : s === "bazar" ? "Bazar" : "Kola";
+  s === "elektrokola" ? "Elektrokola" : s === "bazar" ? "Bazar" : s === "doplnky" ? "Doplňky" : "Kola";
 
 const naSlug = (text: string) =>
   text
@@ -231,7 +232,7 @@ function ImportFeedu() {
   /** Profil uložený, feed přečtený — rovnou na náhled importu. */
   const pouzijProfil = async (profil: ProfilDodavatele, vysledek: FeedVysledek, rovnou = false) => {
     zacniZnovu();
-    setPrubeh(rovnou ? `Stahuji kola od ${profil.nazev}…` : `Připravuji produkty od ${profil.nazev}…`);
+    setPrubeh(rovnou ? `Stahuji zboží od ${profil.nazev}…` : `Připravuji produkty od ${profil.nazev}…`);
     try {
       await zpracuj(vysledek, rovnou);
     } catch (e) {
@@ -381,11 +382,43 @@ function ImportFeedu() {
   return (
     <div className="mx-auto grid max-w-3xl gap-6">
       <div>
-        <h2 className="section-title text-2xl">Import od dodavatelů</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Vyberte dodavatele nebo nahrajte soubor. Uvidíte, co se stane, a teprve pak potvrdíte.
+        <h2 className="section-title text-3xl md:text-4xl">Zboží od dodavatelů</h2>
+        <p className="mt-2 text-lg text-muted-foreground">
+          Zboží nemusíte zadávat ručně. Web si ho stáhne od dodavatele i s fotkami, popisy a velikostmi.
         </p>
       </div>
+
+      {/* JAK TO FUNGUJE */}
+      {!editor && !hotovo && (
+        <div className="grid gap-4 rounded-xl border-2 border-primary bg-card p-6">
+          <p className="text-xl font-bold">Jak to funguje</p>
+          <ol className="grid gap-3 sm:grid-cols-3">
+            {[
+              ["Vložíte odkaz", "Odkaz na nabídku (feed) vám dá dodavatel. Kde ho najdete, vám poradíme."],
+              ["Zaškrtnete, co chcete", "Třeba jen kola a elektrokola, nebo i díly a doplňky."],
+              ["Zvolíte cenu", "Třeba o 5 % levněji. Zboží se stáhne rovnou s vaší cenou."],
+            ].map(([nadpis, text], i) => (
+              <li key={nadpis} className="flex gap-3 rounded-lg bg-surface p-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">
+                  {i + 1}
+                </span>
+                <span>
+                  <span className="block text-lg font-bold">{nadpis}</span>
+                  <span className="text-muted-foreground">{text}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <div>
+            <Button size="lg" className="min-h-16 px-8 text-xl" onClick={() => setEditor({})}>
+              <Plus className="mr-2 h-6 w-6" /> Přidat dodavatele
+            </Button>
+          </div>
+          <p className="text-muted-foreground">
+            Máte od dodavatele soubor místo odkazu? Klikněte na Přidat dodavatele a dole zvolte Vybrat soubor.
+          </p>
+        </div>
+      )}
 
       {/* PŘIDÁNÍ / ÚPRAVA DODAVATELE */}
       {editor && (
@@ -403,14 +436,11 @@ function ImportFeedu() {
       {!editor && !hotovo && (
         <div className="grid gap-3 rounded-lg border bg-card p-6 shadow-card">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-lg font-bold">Dodavatelé</p>
-            <Button size="sm" onClick={() => setEditor({})}>
-              <Plus className="mr-2 h-4 w-4" /> Přidat dodavatele
-            </Button>
+            <p className="text-xl font-bold">Vaši dodavatelé</p>
           </div>
           {profily.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Zatím žádný. Klikněte na Přidat dodavatele a vložte odkaz na jeho feed — co je co, navrhneme sami.
+            <p className="text-lg text-muted-foreground">
+              Zatím žádný. Prvního přidáte velkým zeleným tlačítkem nahoře.
             </p>
           ) : (
             <ul className="divide-y">
@@ -457,9 +487,13 @@ function ImportFeedu() {
         </div>
       )}
 
-      {/* VÝBĚR SOUBORU — Author, Crussis a export starého webu */}
+      {/* VÝBĚR SOUBORU — Author, Crussis a export starého webu (starý způsob, schovaný) */}
       {!editor && !hotovo && (
-        <div className="rounded-lg border-2 border-dashed bg-card p-8 text-center shadow-card">
+        <details className="rounded-lg border bg-card p-4">
+          <summary className="cursor-pointer text-muted-foreground">
+            Starý způsob: nahrát soubor bez uložení dodavatele (export starého webu)
+          </summary>
+        <div className="mt-4 rounded-lg border-2 border-dashed p-6 text-center">
           <p className="text-lg font-bold">Vyberte soubor</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Můžete jich vybrat i víc najednou — podržte Cmd a klikejte.
@@ -478,6 +512,11 @@ function ImportFeedu() {
           />
           {prubeh && <p className="mt-3 text-sm text-muted-foreground">{prubeh}</p>}
         </div>
+        </details>
+      )}
+
+      {prubeh && !editor && (
+        <p className="rounded-lg bg-accent p-4 text-lg font-semibold text-accent-foreground">{prubeh}</p>
       )}
 
       {/* CO SE STANE */}
@@ -577,6 +616,7 @@ function ImportFeedu() {
                             <option value="kola">Kola</option>
                             <option value="elektrokola">Elektrokola</option>
                             <option value="bazar">Bazar</option>
+                            <option value="doplnky">Doplňky</option>
                           </select>
                         </div>
                         <div className="grid gap-1.5">
@@ -709,13 +749,13 @@ function ImportFeedu() {
             <CheckCircle2 className="h-6 w-6 text-primary" /> Hotovo
           </h3>
           <p className="mt-2">
-            Přibylo {hotovo.novych} kol
+            Přibylo {sklonuj(hotovo.novych, "nový produkt", "nové produkty", "nových produktů")}
             {hotovo.aktualizovano > 0 && <>, u {hotovo.aktualizovano} se doplnil sklad</>}.
           </p>
           {hotovo.novych > 0 && (
             <>
               <p className="mt-3 text-lg">
-                Nová kola jsou zatím <span className="font-semibold">skrytá</span>, zákazníci je ještě nevidí.
+                Nové zboží je zatím <span className="font-semibold">skryté</span>, zákazníci ho ještě nevidí.
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 {hotovo.dodavatel && hotovo.od && (
@@ -736,13 +776,13 @@ function ImportFeedu() {
                         toast.error(error.message);
                         return;
                       }
-                      toast.success("Nová kola jsou na webu.");
+                      toast.success("Nové zboží je na webu.");
                       qc.invalidateQueries({ queryKey: ["admin-produkty"] });
                       qc.invalidateQueries({ queryKey: ["admin-dnes"] });
                       setHotovo({ ...hotovo, dodavatel: undefined });
                     }}
                   >
-                    {zverejnuje ? "Zveřejňuji…" : "Zveřejnit je hned"}
+                    {zverejnuje ? "Zveřejňuji…" : "Zveřejnit hned"}
                   </Button>
                 )}
                 <Link

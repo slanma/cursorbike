@@ -32,6 +32,7 @@ const SEKCE = [
   { hodnota: "kola", popisek: "Kola" },
   { hodnota: "elektrokola", popisek: "Elektrokola" },
   { hodnota: "bazar", popisek: "Bazar" },
+  { hodnota: "doplnky", popisek: "Doplňky a díly" },
 ] as const;
 
 function SpravaKategorii() {

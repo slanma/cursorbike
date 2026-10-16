@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BazarRouteImport } from './routes/bazar'
+import { Route as DoplnkyRouteImport } from './routes/doplnky'
 import { Route as ElektrokolaRouteImport } from './routes/elektrokola'
 import { Route as KolaRouteImport } from './routes/kola'
 import { Route as KontaktRouteImport } from './routes/kontakt'
@@ -25,6 +26,8 @@ import { Route as ServisRouteImport } from './routes/servis'
 import { Route as SpravaRouteImport } from './routes/sprava'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiZijeRouteImport } from './routes/api.zije'
+import { Route as DoplnkyIndexRouteImport } from './routes/doplnky.index'
+import { Route as DoplnkyZnackaRouteImport } from './routes/doplnky.$znacka'
 import { Route as ElektrokolaIndexRouteImport } from './routes/elektrokola.index'
 import { Route as ElektrokolaZnackaRouteImport } from './routes/elektrokola.$znacka'
 import { Route as KolaIndexRouteImport } from './routes/kola.index'
@@ -59,6 +62,11 @@ const AuthRoute = AuthRouteImport.update({
 const BazarRoute = BazarRouteImport.update({
   id: '/bazar',
   path: '/bazar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DoplnkyRoute = DoplnkyRouteImport.update({
+  id: '/doplnky',
+  path: '/doplnky',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ElektrokolaRoute = ElektrokolaRouteImport.update({
@@ -120,6 +128,16 @@ const ApiZijeRoute = ApiZijeRouteImport.update({
   id: '/api/zije',
   path: '/api/zije',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DoplnkyIndexRoute = DoplnkyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DoplnkyRoute,
+} as any)
+const DoplnkyZnackaRoute = DoplnkyZnackaRouteImport.update({
+  id: '/$znacka',
+  path: '/$znacka',
+  getParentRoute: () => DoplnkyRoute,
 } as any)
 const ElektrokolaIndexRoute = ElektrokolaIndexRouteImport.update({
   id: '/',
@@ -214,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bazar': typeof BazarRoute
+  '/doplnky': typeof DoplnkyRouteWithChildren
   '/elektrokola': typeof ElektrokolaRouteWithChildren
   '/kola': typeof KolaRouteWithChildren
   '/kontakt': typeof KontaktRoute
@@ -226,9 +245,11 @@ export interface FileRoutesByFullPath {
   '/sprava': typeof SpravaRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/zije': typeof ApiZijeRoute
+  '/doplnky/$znacka': typeof DoplnkyZnackaRoute
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
+  '/doplnky/': typeof DoplnkyIndexRoute
   '/elektrokola/': typeof ElektrokolaIndexRoute
   '/kola/': typeof KolaIndexRoute
   '/admin/ceny': typeof AuthenticatedAdminCenyRoute
@@ -256,9 +277,11 @@ export interface FileRoutesByTo {
   '/servis': typeof ServisRoute
   '/sprava': typeof SpravaRoute
   '/api/zije': typeof ApiZijeRoute
+  '/doplnky/$znacka': typeof DoplnkyZnackaRoute
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
+  '/doplnky': typeof DoplnkyIndexRoute
   '/elektrokola': typeof ElektrokolaIndexRoute
   '/kola': typeof KolaIndexRoute
   '/admin/ceny': typeof AuthenticatedAdminCenyRoute
@@ -279,6 +302,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/bazar': typeof BazarRoute
+  '/doplnky': typeof DoplnkyRouteWithChildren
   '/elektrokola': typeof ElektrokolaRouteWithChildren
   '/kola': typeof KolaRouteWithChildren
   '/kontakt': typeof KontaktRoute
@@ -291,9 +315,11 @@ export interface FileRoutesById {
   '/sprava': typeof SpravaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/api/zije': typeof ApiZijeRoute
+  '/doplnky/$znacka': typeof DoplnkyZnackaRoute
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
+  '/doplnky/': typeof DoplnkyIndexRoute
   '/elektrokola/': typeof ElektrokolaIndexRoute
   '/kola/': typeof KolaIndexRoute
   '/_authenticated/admin/ceny': typeof AuthenticatedAdminCenyRoute
@@ -314,6 +340,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/bazar'
+    | '/doplnky'
     | '/elektrokola'
     | '/kola'
     | '/kontakt'
@@ -326,9 +353,11 @@ export interface FileRouteTypes {
     | '/sprava'
     | '/admin'
     | '/api/zije'
+    | '/doplnky/$znacka'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
     | '/kolo/$slug'
+    | '/doplnky/'
     | '/elektrokola/'
     | '/kola/'
     | '/admin/ceny'
@@ -356,9 +385,11 @@ export interface FileRouteTypes {
     | '/servis'
     | '/sprava'
     | '/api/zije'
+    | '/doplnky/$znacka'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
     | '/kolo/$slug'
+    | '/doplnky'
     | '/elektrokola'
     | '/kola'
     | '/admin/ceny'
@@ -378,6 +409,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/bazar'
+    | '/doplnky'
     | '/elektrokola'
     | '/kola'
     | '/kontakt'
@@ -390,9 +422,11 @@ export interface FileRouteTypes {
     | '/sprava'
     | '/_authenticated/admin'
     | '/api/zije'
+    | '/doplnky/$znacka'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
     | '/kolo/$slug'
+    | '/doplnky/'
     | '/elektrokola/'
     | '/kola/'
     | '/_authenticated/admin/ceny'
@@ -413,6 +447,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   BazarRoute: typeof BazarRoute
+  DoplnkyRoute: typeof DoplnkyRouteWithChildren
   ElektrokolaRoute: typeof ElektrokolaRouteWithChildren
   KolaRoute: typeof KolaRouteWithChildren
   KontaktRoute: typeof KontaktRoute
@@ -455,6 +490,13 @@ declare module '@tanstack/react-router' {
       path: '/bazar'
       fullPath: '/bazar'
       preLoaderRoute: typeof BazarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/doplnky': {
+      id: '/doplnky'
+      path: '/doplnky'
+      fullPath: '/doplnky'
+      preLoaderRoute: typeof DoplnkyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/elektrokola': {
@@ -540,6 +582,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/zije'
       preLoaderRoute: typeof ApiZijeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/doplnky/': {
+      id: '/doplnky/'
+      path: '/'
+      fullPath: '/doplnky/'
+      preLoaderRoute: typeof DoplnkyIndexRouteImport
+      parentRoute: typeof DoplnkyRoute
+    }
+    '/doplnky/$znacka': {
+      id: '/doplnky/$znacka'
+      path: '/$znacka'
+      fullPath: '/doplnky/$znacka'
+      preLoaderRoute: typeof DoplnkyZnackaRouteImport
+      parentRoute: typeof DoplnkyRoute
     }
     '/elektrokola/': {
       id: '/elektrokola/'
@@ -698,6 +754,19 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface DoplnkyRouteChildren {
+  DoplnkyZnackaRoute: typeof DoplnkyZnackaRoute
+  DoplnkyIndexRoute: typeof DoplnkyIndexRoute
+}
+
+const DoplnkyRouteChildren: DoplnkyRouteChildren = {
+  DoplnkyZnackaRoute: DoplnkyZnackaRoute,
+  DoplnkyIndexRoute: DoplnkyIndexRoute,
+}
+
+const DoplnkyRouteWithChildren =
+  DoplnkyRoute._addFileChildren(DoplnkyRouteChildren)
+
 interface ElektrokolaRouteChildren {
   ElektrokolaZnackaRoute: typeof ElektrokolaZnackaRoute
   ElektrokolaIndexRoute: typeof ElektrokolaIndexRoute
@@ -729,6 +798,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BazarRoute: BazarRoute,
+  DoplnkyRoute: DoplnkyRouteWithChildren,
   ElektrokolaRoute: ElektrokolaRouteWithChildren,
   KolaRoute: KolaRouteWithChildren,
   KontaktRoute: KontaktRoute,

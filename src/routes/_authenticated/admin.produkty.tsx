@@ -1,11 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Bike, Eye, EyeOff, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Bike, Download, Eye, EyeOff, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { nactiDbProdukty, nactiKategorie, nahrajFotku, type DbProdukt } from "@/lib/eshop";
 import { formatCena, type ParametrSkupina } from "@/lib/produkty";
+import { sklonuj } from "@/lib/cestina";
+import { nazevSekce } from "@/lib/sekce";
 import { stahniFotky } from "@/lib/fotky.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -104,7 +106,7 @@ function SpravaProduktu() {
   const [vybrane, setVybrane] = useState<Set<string>>(new Set());
   const [hledani, setHledani] = useState("");
   const [filtrKategorie, setFiltrKategorie] = useState("");
-  const [rychlyFiltr, setRychlyFiltr] = useState<"vse" | "web" | "skryte" | "bezfotky" | "elektrokola" | "kola">("vse");
+  const [rychlyFiltr, setRychlyFiltr] = useState<"vse" | "web" | "skryte" | "bezfotky" | "elektrokola" | "kola" | "doplnky">("vse");
   const [ukazat, setUkazat] = useState(30);
   const [hromadnaKategorie, setHromadnaKategorie] = useState("");
   const [stahovaniPrubeh, setStahovaniPrubeh] = useState<string | null>(null);
@@ -161,7 +163,8 @@ function SpravaProduktu() {
     (f === "skryte" && !p.aktivni) ||
     (f === "bezfotky" && !p.obrazek_url) ||
     (f === "elektrokola" && sekceKola(p.kategorie_id) === "elektrokola") ||
-    (f === "kola" && sekceKola(p.kategorie_id) === "kola");
+    (f === "kola" && sekceKola(p.kategorie_id) === "kola") ||
+    (f === "doplnky" && sekceKola(p.kategorie_id) === "doplnky");
 
   const seznam = (produkty.data ?? []).filter((p) => {
     if (!vyhovuje(p, rychlyFiltr)) return false;
@@ -297,10 +300,40 @@ function SpravaProduktu() {
   return (
     <div className="grid gap-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="section-title text-3xl md:text-4xl">Kola</h2>
-        <Button size="lg" className="min-h-14 px-6 text-lg" onClick={() => setForm({ ...prazdny })}>
-          <Plus className="mr-2 h-5 w-5" /> Přidat kolo ručně
-        </Button>
+        <h2 className="section-title text-3xl md:text-4xl">Zboží</h2>
+      </div>
+
+      {/* JAK PŘIDAT KOLA */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link
+          to="/admin/feedy"
+          className="flex flex-col gap-2 rounded-xl border-2 border-primary bg-card p-5 transition-colors hover:bg-primary/5"
+        >
+          <span className="flex items-center gap-3 text-2xl font-bold">
+            <Download className="h-7 w-7 text-primary" /> Stáhnout zboží od dodavatele
+          </span>
+          <span className="text-lg text-muted-foreground">
+            Doporučujeme. Vložíte odkaz od dodavatele a web stáhne zboží i s fotkami, velikostmi a cenami.
+          </span>
+          <span className="mt-1 inline-flex min-h-12 w-fit items-center rounded-lg bg-primary px-5 text-lg font-bold text-primary-foreground">
+            Začít
+          </span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setForm({ ...prazdny })}
+          className="flex flex-col gap-2 rounded-xl border-2 bg-card p-5 text-left transition-colors hover:border-primary"
+        >
+          <span className="flex items-center gap-3 text-2xl font-bold">
+            <Plus className="h-7 w-7 text-primary" /> Přidat produkt ručně
+          </span>
+          <span className="text-lg text-muted-foreground">
+            Jeden produkt, který máte v prodejně a dodavatel ho v nabídce nemá — třeba bazarové kolo.
+          </span>
+          <span className="mt-1 inline-flex min-h-12 w-fit items-center rounded-lg border-2 px-5 text-lg font-bold">
+            Přidat
+          </span>
+        </button>
       </div>
 
       {form && (
@@ -337,7 +370,7 @@ function SpravaProduktu() {
                 <option value="">— nezařazeno —</option>
                 {(kategorie.data ?? []).map((k) => (
                   <option key={k.id} value={k.id}>
-                    {k.sekce === "elektrokola" ? "Elektrokola" : k.sekce === "bazar" ? "Bazar" : "Kola"} · {k.znacka ?? "—"} · {k.nazev}
+                    {nazevSekce(k.sekce)} · {k.znacka ?? "—"} · {k.nazev}
                   </option>
                 ))}
               </select>
@@ -525,7 +558,7 @@ function SpravaProduktu() {
       {/* HLEDÁNÍ A RYCHLÉ FILTRY */}
       <div className="grid gap-4">
         <label className="relative block">
-          <span className="sr-only">Najít kolo podle názvu</span>
+          <span className="sr-only">Najít produkt podle názvu</span>
           <Search className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 text-muted-foreground" />
           <input
             id="hledani"
@@ -534,7 +567,7 @@ function SpravaProduktu() {
               setHledani(e.target.value);
               setUkazat(30);
             }}
-            placeholder="Najít kolo — napište kus názvu, třeba Liberty"
+            placeholder="Najít produkt — napište kus názvu, třeba Liberty"
             className="min-h-14 w-full rounded-xl border-2 bg-card pl-14 pr-4 text-xl"
           />
         </label>
@@ -547,9 +580,11 @@ function SpravaProduktu() {
               ["bezfotky", "Bez fotky"],
               ["elektrokola", "Elektrokola"],
               ["kola", "Kola"],
+              ["doplnky", "Doplňky"],
             ] as const
           ).map(([klic, text]) => {
             const pocet = (produkty.data ?? []).filter((p) => vyhovuje(p, klic)).length;
+            if (klic === "doplnky" && pocet === 0) return null;
             return (
               <button
                 key={klic}
@@ -576,7 +611,7 @@ function SpravaProduktu() {
             <option value="">všechny kategorie</option>
             {(kategorie.data ?? []).map((k) => (
               <option key={k.id} value={k.id}>
-                {k.sekce === "elektrokola" ? "Elektrokola" : k.sekce === "bazar" ? "Bazar" : "Kola"} · {k.znacka ?? "—"} · {k.nazev}
+                {nazevSekce(k.sekce)} · {k.znacka ?? "—"} · {k.nazev}
               </option>
             ))}
           </select>
@@ -629,7 +664,7 @@ function SpravaProduktu() {
                 <option value="">— vyberte kategorii —</option>
                 {(kategorie.data ?? []).map((k) => (
                   <option key={k.id} value={k.id}>
-                    {k.sekce === "elektrokola" ? "Elektrokola" : k.sekce === "bazar" ? "Bazar" : "Kola"} ·{" "}
+                    {nazevSekce(k.sekce)} ·{" "}
                     {k.znacka ?? "—"} · {k.nazev}
                   </option>
                 ))}
@@ -651,7 +686,7 @@ function SpravaProduktu() {
       <div className="grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-lg text-muted-foreground">
-            {seznam.length === (produkty.data ?? []).length ? `${seznam.length} kol` : `${seznam.length} z ${(produkty.data ?? []).length} kol`}
+            {seznam.length === (produkty.data ?? []).length ? sklonuj(seznam.length, "produkt", "produkty", "produktů") : `${seznam.length} z ${sklonuj((produkty.data ?? []).length, "produktu", "produktů", "produktů")}`}
           </p>
           {seznam.length > 0 && (
             <label className="flex min-h-12 cursor-pointer items-center gap-3 text-lg">
@@ -669,7 +704,7 @@ function SpravaProduktu() {
         {seznam.slice(0, ukazat).map((p) => {
           const k = kategorieKola(p.kategorie_id);
           const zarazeni = k
-            ? `${k.sekce === "elektrokola" ? "Elektrokola" : k.sekce === "bazar" ? "Bazar" : "Kola"} · ${k.znacka ?? ""} · ${k.nazev}`
+            ? `${nazevSekce(k.sekce)} · ${k.znacka ?? ""} · ${k.nazev}`
             : "Bez kategorie";
           return (
             <div
@@ -717,7 +752,7 @@ function SpravaProduktu() {
                   onClick={async () => {
                     const { error } = await supabase.from("produkty").update({ aktivni: !p.aktivni }).eq("id", p.id);
                     if (error) return void toast.error(error.message);
-                    toast.success(p.aktivni ? "Kolo je skryté." : "Kolo je na webu.");
+                    toast.success(p.aktivni ? "Skryto z webu." : "Je na webu.");
                     qc.invalidateQueries({ queryKey: ["admin-produkty"] });
                     qc.invalidateQueries({ queryKey: ["verejne-produkty"] });
                   }}
@@ -747,15 +782,15 @@ function SpravaProduktu() {
             onClick={() => setUkazat(ukazat + 30)}
             className="min-h-14 rounded-xl border-2 bg-card text-lg font-semibold hover:border-primary"
           >
-            Ukázat dalších {Math.min(30, seznam.length - ukazat)} kol
+            Ukázat další ({Math.min(30, seznam.length - ukazat)})
           </button>
         )}
 
         {seznam.length === 0 && (
           <p className="rounded-xl border bg-card p-8 text-center text-lg text-muted-foreground">
             {(produkty.data ?? []).length === 0
-              ? "Zatím tu nejsou žádná kola. Přidejte je tlačítkem nahoře, nebo v Od dodavatelů."
-              : "Žádné kolo neodpovídá hledání."}
+              ? "Zatím tu není žádné zboží. Stáhněte ho od dodavatele nebo přidejte ručně tlačítky nahoře."
+              : "Hledání nic nenašlo."}
           </p>
         )}
       </div>

@@ -298,7 +298,13 @@ export async function nactiDbProdukty(vseVcetneSkrytych = false): Promise<DbProd
 export function naProdukt(db: DbProdukt, kategorie: DbKategorie[]): Produkt {
   const k = kategorie.find((x) => x.id === db.kategorie_id);
   const sekce: Kategorie =
-    k?.sekce === "elektrokola" ? "elektrokola" : k?.sekce === "bazar" ? "bazar" : "kola";
+    k?.sekce === "elektrokola"
+      ? "elektrokola"
+      : k?.sekce === "bazar"
+        ? "bazar"
+        : k?.sekce === "doplnky"
+          ? "doplnky"
+          : "kola";
   return {
     slug: db.slug,
     nazev: db.nazev,
