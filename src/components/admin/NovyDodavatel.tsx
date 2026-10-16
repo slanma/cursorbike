@@ -5,6 +5,7 @@ import { Link2, Upload } from "lucide-react";
 import type { FeedVysledek } from "@/lib/feed";
 import { KdeNajduFeed } from "@/components/admin/KdeNajduFeed";
 import { shrnSkupiny, vychoziVyber, vyfiltruj } from "@/lib/vyber-zbozi";
+import { cenaPodlePravidla, type Zaokrouhleni } from "@/lib/ceny";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,7 +63,12 @@ export function NovyDodavatel({
   puvodni?: ProfilDodavatele | undefined;
   pocatecniText?: string | undefined;
   pocatecniNazev?: string | undefined;
-  onUlozit: (profil: ProfilDodavatele, vysledek: FeedVysledek) => void | Promise<void>;
+  /** pravidlo = null znamená „ceny nastavím později". */
+  onUlozit: (
+    profil: ProfilDodavatele,
+    vysledek: FeedVysledek,
+    pravidlo: { procento: number; zaokrouhleni: Zaokrouhleni } | null,
+  ) => void | Promise<void>;
   onZrusit: () => void;
 }) {
   const nactiZOdkazu = useNactiZOdkazu();
@@ -166,6 +172,12 @@ export function NovyDodavatel({
 
   /** Jen to, co obchodník chce brát. */
   const nahled = useMemo(() => (vse ? vyfiltruj(vse, brat ?? undefined) : null), [vse, brat]);
+  // Za kolik prodávat — nastaví se rovnou tady, ať se kola stáhnou už s cenou.
+  const [procento, setProcento] = useState<number | null>(0);
+  const [na990, setNa990] = useState(true);
+  const [ukladam, setUkladam] = useState(false);
+  const cenaPrikladu = nahled?.produkty.flatMap((p) => p.varianty.map((v) => v.cena)).find((c) => c > 0) ?? 0;
+
   const nastavDruh = (klice: string[], zapnout: boolean) =>
     setBrat((b) => {
       const bez = (b ?? []).filter((x) => !klice.includes(x));
@@ -204,7 +216,16 @@ export function NovyDodavatel({
       ...(brat ? { brat } : {}),
       upraveno: new Date().toISOString(),
     };
-    await onUlozit(finalni, vyfiltruj(znamy ?? sestavProdukty(zdroj!, finalni), brat ?? undefined));
+    setUkladam(true);
+    try {
+      await onUlozit(
+        finalni,
+        vyfiltruj(znamy ?? sestavProdukty(zdroj!, finalni), brat ?? undefined),
+        procento === null ? null : { procento, zaokrouhleni: na990 ? "990" : "zadne" },
+      );
+    } finally {
+      setUkladam(false);
+    }
   };
 
   const ukazka = (klic?: string) => {
@@ -339,6 +360,60 @@ export function NovyDodavatel({
         </div>
       )}
 
+      {/* ZA KOLIK */}
+      {vse && skupiny.length > 0 && (
+        <div className="grid gap-3 rounded-lg border-2 border-primary p-4 md:p-5">
+          <div>
+            <p className="text-xl font-bold">Za kolik je chcete prodávat?</p>
+            <p className="text-sm text-muted-foreground">Kola se stáhnou rovnou s touhle cenou. Změnit ji jde kdykoli v Cenách.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { p: 0, t: "Za cenu dodavatele" },
+              { p: -5, t: "O 5 % levněji" },
+              { p: -10, t: "O 10 % levněji" },
+              { p: 5, t: "O 5 % dráž" },
+            ].map((v) => (
+              <button
+                key={v.p}
+                type="button"
+                onClick={() => setProcento(v.p)}
+                className={`min-h-14 rounded-lg border-2 px-5 text-lg font-bold ${procento === v.p ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:border-primary"}`}
+              >
+                {v.t}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setProcento(null)}
+              className={`min-h-14 rounded-lg border-2 px-5 text-lg font-bold ${procento === null ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:border-primary"}`}
+            >
+              Nastavím později
+            </button>
+          </div>
+          {procento !== null && (
+            <label className="flex min-h-12 cursor-pointer items-center gap-3 text-lg">
+              <input
+                type="checkbox"
+                checked={na990}
+                onChange={(e) => setNa990(e.target.checked)}
+                className="h-6 w-6 accent-[var(--primary)]"
+              />
+              Zaokrouhlit na …990 Kč
+            </label>
+          )}
+          {procento !== null && cenaPrikladu > 0 && (
+            <p className="rounded-md bg-accent p-3 text-lg text-accent-foreground">
+              Příklad: dodavatel {formatCena(cenaPrikladu)} → u vás{" "}
+              <b>{formatCena(cenaPodlePravidla(cenaPrikladu, { procento, zaokrouhleni: na990 ? "990" : "zadne" }))}</b>
+            </p>
+          )}
+          {procento === null && (
+            <p className="text-muted-foreground">Kola se stáhnou s cenou dodavatele a upravíte ji potom v Cenách.</p>
+          )}
+        </div>
+      )}
+
       {/* 2. CO JE CO */}
       {zdroj && profil && !znamy && (
         <>
@@ -392,12 +467,6 @@ export function NovyDodavatel({
                 </div>
               );
             })}
-          </div>
-          </details>
-
-          {/* CENY */}
-          <div className="grid gap-3 rounded-md border p-4">
-            <p className="font-semibold">Ceny</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="grid gap-1.5">
                 <Label htmlFor="dph">Ceny ve feedu jsou</Label>
@@ -411,35 +480,24 @@ export function NovyDodavatel({
                   <option value="bez">bez DPH — přičteme 21 %</option>
                 </select>
               </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="uprava">Upravit cenu o (%)</Label>
-                <Input
-                  id="uprava"
-                  type="number"
-                  value={profil.upravaCeny}
-                  onChange={(e) => setProfil({ ...profil, upravaCeny: Number(e.target.value) || 0 })}
-                />
-              </div>
+              {profil.pole.skladem && (
+                <div className="grid gap-1.5">
+                  <Label htmlFor="sklad">Sklad ve feedu je</Label>
+                  <select
+                    id="sklad"
+                    className={VYBER}
+                    value={profil.sklad}
+                    onChange={(e) => setProfil({ ...profil, sklad: e.target.value as ProfilDodavatele["sklad"] })}
+                  >
+                    <option value="kusy">počet kusů</option>
+                    <option value="dodaci-doba">dodací doba (0 = skladem)</option>
+                    <option value="text">text („skladem", „ano"…)</option>
+                  </select>
+                </div>
+              )}
             </div>
-            {profil.pole.skladem && (
-              <div className="grid gap-1.5 sm:max-w-sm">
-                <Label htmlFor="sklad">Sklad ve feedu je</Label>
-                <select
-                  id="sklad"
-                  className={VYBER}
-                  value={profil.sklad}
-                  onChange={(e) => setProfil({ ...profil, sklad: e.target.value as ProfilDodavatele["sklad"] })}
-                >
-                  <option value="kusy">počet kusů</option>
-                  <option value="dodaci-doba">dodací doba (0 = skladem)</option>
-                  <option value="text">text („skladem", „ano"…)</option>
-                </select>
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Cena od dodavatele se na web sama nepropíše — uloží se stranou a převezmete ji kliknutím.
-            </p>
           </div>
+          </details>
 
           {/* NÁHLED */}
           {nahled && nahled.produkty.length > 0 && (
@@ -495,14 +553,19 @@ export function NovyDodavatel({
 
       <div className="flex flex-wrap gap-2">
         {(zdroj || znamy) && profil && (
-          <Button size="lg" onClick={() => void ulozit()}>
-            Uložit dodavatele a pokračovat
+          <Button size="lg" className="min-h-14 px-8 text-lg" disabled={ukladam} onClick={() => void ulozit()}>
+            {ukladam ? "Stahuji kola…" : `Stáhnout ${nahled ? nahled.produkty.length : ""} kol na web`}
           </Button>
         )}
         <Button variant="ghost" size="lg" onClick={onZrusit}>
           Zrušit
         </Button>
       </div>
+      {(zdroj || znamy) && profil && (
+        <p className="-mt-2 text-sm text-muted-foreground">
+          Kola se stáhnou jako skrytá. Na konci je jedním kliknutím zveřejníte, nebo si je nejdřív projdete.
+        </p>
+      )}
     </div>
   );
 }

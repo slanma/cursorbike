@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { NeznamyFormat, nactiFeed, shrnUpozorneni, type FeedVysledek } from "@/l
 import { dekoduj, zpracujProfil, type ProfilDodavatele } from "@/lib/feed-univerzalni";
 import { NovyDodavatel, useNactiZOdkazu } from "@/components/admin/NovyDodavatel";
 import { zaradAutomaticky } from "@/lib/vyber-zbozi";
+import { nactiPravidla, ulozPravidla, type Zaokrouhleni } from "@/lib/ceny";
 import {
   navrhniMapovani,
   nactiProPorovnani,
@@ -84,7 +85,13 @@ function ImportFeedu() {
   const [existujici, setExistujici] = useState<ExistujiciProdukt[]>([]);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [prubeh, setPrubeh] = useState<string | null>(null);
-  const [hotovo, setHotovo] = useState<{ novych: number; aktualizovano: number } | null>(null);
+  const [hotovo, setHotovo] = useState<{
+    novych: number;
+    aktualizovano: number;
+    dodavatel?: string | undefined;
+    od?: string | undefined;
+  } | null>(null);
+  const [zverejnuje, setZverejnuje] = useState(false);
   const [rozbaleno, setRozbaleno] = useState(false);
   const [zaklada, setZaklada] = useState<string | null>(null);
   const [novaSekce, setNovaSekce] = useState("kola");
@@ -150,7 +157,7 @@ function ImportFeedu() {
   };
 
   /** Společný krok pro všechny zdroje: kategorie, porovnání, náhled. */
-  const zpracuj = async (vysledek: FeedVysledek) => {
+  const zpracuj = async (vysledek: FeedVysledek, rovnou = false) => {
     {
       const [ulozene, produkty, kategorie] = await Promise.all([
         nactiMapovani(),
@@ -197,7 +204,20 @@ function ImportFeedu() {
       setExistujici(produkty);
       setMapovani(vysledneMapovani);
       // Náhled rovnou, ať se na něj nemusí klikat zvlášť.
-      setPlan(sestavPlan(vysledek, produkty, vysledneMapovani));
+      const novyPlan = sestavPlan(vysledek, produkty, vysledneMapovani);
+      setPlan(novyPlan);
+
+      // Trychtýř: obchodník už řekl, co chce a za kolik — stáhneme to rovnou.
+      if (rovnou) {
+        const od = new Date(Date.now() - 5000).toISOString();
+        await ulozMapovani(vysledneMapovani);
+        const v = await provedImport(novyPlan, produkty, setPrubeh);
+        setHotovo({ ...v, dodavatel: vysledek.dodavatel, od });
+        setFeed(null);
+        setPlan(null);
+        qc.invalidateQueries({ queryKey: ["admin-produkty"] });
+        qc.invalidateQueries({ queryKey: ["admin-dnes"] });
+      }
     }
   };
 
@@ -209,11 +229,11 @@ function ImportFeedu() {
   };
 
   /** Profil uložený, feed přečtený — rovnou na náhled importu. */
-  const pouzijProfil = async (profil: ProfilDodavatele, vysledek: FeedVysledek) => {
+  const pouzijProfil = async (profil: ProfilDodavatele, vysledek: FeedVysledek, rovnou = false) => {
     zacniZnovu();
-    setPrubeh(`Připravuji produkty od ${profil.nazev}…`);
+    setPrubeh(rovnou ? `Stahuji kola od ${profil.nazev}…` : `Připravuji produkty od ${profil.nazev}…`);
     try {
-      await zpracuj(vysledek);
+      await zpracuj(vysledek, rovnou);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Feed se nepodařilo zpracovat");
     } finally {
@@ -221,14 +241,23 @@ function ImportFeedu() {
     }
   };
 
-  const ulozProfil = async (profil: ProfilDodavatele, vysledek: FeedVysledek) => {
+  const ulozProfil = async (
+    profil: ProfilDodavatele,
+    vysledek: FeedVysledek,
+    pravidlo: { procento: number; zaokrouhleni: Zaokrouhleni } | null,
+  ) => {
     try {
+      if (pravidlo) {
+        const pravidla = await nactiPravidla();
+        await ulozPravidla([...pravidla.filter((p) => p.dodavatel !== profil.id), { dodavatel: profil.id, ...pravidlo }]);
+        qc.invalidateQueries({ queryKey: ["cenova-pravidla"] });
+      }
       const ostatni = profily.filter((p) => p.id !== profil.id);
       await ulozProfily([...ostatni, profil]);
       await qc.invalidateQueries({ queryKey: ["feed-profily"] });
       setEditor(null);
       toast.success(`Dodavatel ${profil.nazev} je uložený.`);
-      await pouzijProfil(profil, vysledek);
+      await pouzijProfil(profil, vysledek, true);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Dodavatele se nepodařilo uložit");
     }
@@ -683,12 +712,50 @@ function ImportFeedu() {
             Přibylo {hotovo.novych} kol
             {hotovo.aktualizovano > 0 && <>, u {hotovo.aktualizovano} se doplnil sklad</>}.
           </p>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Nová kola jsou zatím <span className="font-semibold">skrytá</span>. Najdete je v Produktech —
-            projděte je, stáhněte fotky a pak je hromadně zveřejněte.
-          </p>
-          <Button className="mt-4" variant="outline" onClick={() => setHotovo(null)}>
-            Naimportovat další soubor
+          {hotovo.novych > 0 && (
+            <>
+              <p className="mt-3 text-lg">
+                Nová kola jsou zatím <span className="font-semibold">skrytá</span>, zákazníci je ještě nevidí.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                {hotovo.dodavatel && hotovo.od && (
+                  <Button
+                    size="lg"
+                    className="min-h-14 px-7 text-lg"
+                    disabled={zverejnuje}
+                    onClick={async () => {
+                      setZverejnuje(true);
+                      const { error } = await supabase
+                        .from("produkty")
+                        .update({ aktivni: true })
+                        .eq("dodavatel", hotovo.dodavatel!)
+                        .eq("aktivni", false)
+                        .gte("created_at", hotovo.od!);
+                      setZverejnuje(false);
+                      if (error) {
+                        toast.error(error.message);
+                        return;
+                      }
+                      toast.success("Nová kola jsou na webu.");
+                      qc.invalidateQueries({ queryKey: ["admin-produkty"] });
+                      qc.invalidateQueries({ queryKey: ["admin-dnes"] });
+                      setHotovo({ ...hotovo, dodavatel: undefined });
+                    }}
+                  >
+                    {zverejnuje ? "Zveřejňuji…" : "Zveřejnit je hned"}
+                  </Button>
+                )}
+                <Link
+                  to="/admin/produkty"
+                  className="inline-flex min-h-14 items-center rounded-lg border-2 px-6 text-lg font-semibold hover:border-primary"
+                >
+                  Nejdřív je projdu
+                </Link>
+              </div>
+            </>
+          )}
+          <Button className="mt-4" variant="ghost" onClick={() => setHotovo(null)}>
+            Zpět na dodavatele
           </Button>
         </div>
       )}
