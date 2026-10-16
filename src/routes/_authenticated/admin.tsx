@@ -1,7 +1,7 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bike, ClipboardList, Download, LayoutGrid, LogOut, Mail, Settings, Users, Wrench } from "lucide-react";
+import { Bike, CircleHelp, ClipboardList, ExternalLink, House, LogOut, Settings, Tag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { zjistiSpravce } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
@@ -10,20 +10,55 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
 });
 
-const odkazy = [
-  { to: "/admin", label: "Přehled", icon: LayoutGrid, exact: true },
-  { to: "/admin/produkty", label: "Produkty", icon: Bike, exact: false },
-  { to: "/admin/kategorie", label: "Kategorie", icon: LayoutGrid, exact: false },
-  { to: "/admin/feedy", label: "Import", icon: Download, exact: false },
-  { to: "/admin/objednavky", label: "Objednávky", icon: ClipboardList, exact: false },
-  { to: "/admin/servis", label: "Servis", icon: Wrench, exact: false },
-  { to: "/admin/zpravy", label: "Zprávy", icon: Mail, exact: false },
-  { to: "/admin/spravci", label: "Správci", icon: Users, exact: false },
-  { to: "/admin/nastaveni", label: "Nastavení", icon: Settings, exact: false },
+/**
+ * Jen pět hlavních položek — víc si starší obchodník nezapamatuje.
+ * Méně časté stránky jsou schované v podmenu u své skupiny.
+ */
+const skupiny = [
+  { to: "/admin", label: "Dnes", icon: House, cesty: ["/admin"], pod: [] },
+  {
+    to: "/admin/produkty",
+    label: "Zboží",
+    icon: Bike,
+    cesty: ["/admin/produkty", "/admin/kategorie", "/admin/feedy", "/admin/prehled"],
+    pod: [
+      { to: "/admin/produkty", label: "Kola" },
+      { to: "/admin/feedy", label: "Od dodavatelů" },
+      { to: "/admin/prehled", label: "Měsíční přehled" },
+      { to: "/admin/kategorie", label: "Kategorie" },
+    ],
+  },
+  { to: "/admin/ceny", label: "Ceny", icon: Tag, cesty: ["/admin/ceny"], pod: [] },
+  {
+    to: "/admin/objednavky",
+    label: "Objednávky",
+    icon: ClipboardList,
+    cesty: ["/admin/objednavky", "/admin/servis", "/admin/zpravy"],
+    pod: [
+      { to: "/admin/objednavky", label: "Objednávky" },
+      { to: "/admin/servis", label: "Servis" },
+      { to: "/admin/zpravy", label: "Zprávy z webu" },
+    ],
+  },
+  {
+    to: "/admin/nastaveni",
+    label: "Nastavení",
+    icon: Settings,
+    cesty: ["/admin/nastaveni", "/admin/spravci"],
+    pod: [
+      { to: "/admin/nastaveni", label: "Údaje o obchodě" },
+      { to: "/admin/spravci", label: "Kdo má přístup" },
+    ],
+  },
 ] as const;
+
+const patriDo = (cesta: string, cesty: readonly string[]) =>
+  cesty.some((c) => (c === "/admin" ? cesta === "/admin" || cesta === "/admin/" : cesta.startsWith(c)));
 
 function AdminLayout() {
   const navigate = useNavigate();
+  const cesta = useRouterState({ select: (s) => s.location.pathname });
+  const aktivni = skupiny.find((s) => patriDo(cesta, s.cesty)) ?? skupiny[0];
   // Kdo je vlastně přihlášený — hodí se, když má prodejna dva účty.
   const prihlaseny = useQuery({
     queryKey: ["prihlaseny-uzivatel"],
@@ -65,39 +100,74 @@ function AdminLayout() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
+    <div className="mx-auto max-w-6xl px-4 py-8 text-lg md:px-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="section-title text-3xl">Správa prodejny</h1>
-          {prihlasenyEmail && (
-            <p className="mt-1 text-sm text-muted-foreground">Přihlášeni jako {prihlasenyEmail}</p>
-          )}
+          <h1 className="section-title text-3xl">Správa obchodu</h1>
+          {prihlasenyEmail && <p className="mt-1 text-base text-muted-foreground">Přihlášeni jako {prihlasenyEmail}</p>}
         </div>
-        <Button
-          variant="outline"
-          onClick={async () => {
-            await supabase.auth.signOut();
-            navigate({ to: "/" });
-          }}
-        >
-          <LogOut className="mr-2 h-4 w-4" /> Odhlásit se
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to="/admin"
+            hash="pomoc"
+            className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-amber-100 px-5 font-bold text-amber-950 hover:bg-amber-200"
+          >
+            <CircleHelp className="h-5 w-5" /> Nevím si rady
+          </Link>
+          <a
+            href="/"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-h-12 items-center gap-2 rounded-lg border-2 px-5 font-semibold hover:border-primary"
+          >
+            <ExternalLink className="h-5 w-5" /> Otevřít web
+          </a>
+          <Button
+            variant="outline"
+            className="min-h-12 px-5 text-base"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate({ to: "/" });
+            }}
+          >
+            <LogOut className="mr-2 h-5 w-5" /> Odhlásit se
+          </Button>
+        </div>
       </div>
 
-      <nav className="mt-6 flex flex-wrap gap-2">
-        {odkazy.map((o) => (
-          <Link
-            key={o.to}
-            to={o.to}
-            activeOptions={{ exact: o.exact }}
-            className="inline-flex items-center gap-2 rounded-md border-2 px-4 py-2.5 text-sm font-bold transition-colors hover:border-primary hover:bg-primary/5"
-            activeProps={{ className: "border-primary bg-primary text-primary-foreground hover:bg-primary" }}
-          >
-            <o.icon className="h-4 w-4" />
-            {o.label}
-          </Link>
-        ))}
+      <nav aria-label="Hlavní menu správy" className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {skupiny.map((s) => {
+          const je = s === aktivni;
+          return (
+            <Link
+              key={s.to}
+              to={s.to}
+              aria-current={je ? "page" : undefined}
+              className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-lg border-2 px-4 text-lg font-bold transition-colors ${
+                je ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary hover:bg-primary/5"
+              }`}
+            >
+              <s.icon className="h-5 w-5" />
+              {s.label}
+            </Link>
+          );
+        })}
       </nav>
+
+      {aktivni.pod.length > 0 && (
+        <nav aria-label={`Podmenu ${aktivni.label}`} className="mt-3 flex flex-wrap gap-2">
+          {aktivni.pod.map((p) => (
+            <Link
+              key={p.to}
+              to={p.to}
+              className="inline-flex min-h-11 items-center rounded-full border px-4 text-base font-semibold hover:border-primary"
+              activeProps={{ className: "border-primary bg-accent text-accent-foreground" }}
+            >
+              {p.label}
+            </Link>
+          ))}
+        </nav>
+      )}
 
       <div className="mt-8">
         <Outlet />

@@ -109,7 +109,7 @@ function DetailProduktu() {
         <div>
           <span className="text-xs font-semibold uppercase tracking-wide text-primary">{produkt.typ}</span>
           <h1 className="mt-2 text-3xl font-bold md:text-4xl">{produkt.nazev}</h1>
-          <p className="mt-4 text-muted-foreground">{produkt.popis}</p>
+          <p className="mt-4 whitespace-pre-line text-muted-foreground">{produkt.popis}</p>
 
           <div className="mt-6 flex items-end gap-3">
             {produkt.puvodniCena && (

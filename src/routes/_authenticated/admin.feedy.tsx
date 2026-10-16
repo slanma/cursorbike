@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, Upload } from "lucide-react";
-import { nactiKategorie, nactiMapovani, ulozMapovani } from "@/lib/eshop";
-import { nactiFeed, shrnUpozorneni, type FeedVysledek } from "@/lib/feed";
+import { AlertTriangle, CheckCircle2, Pencil, Plus, RefreshCw, Trash2, Upload } from "lucide-react";
+import { nactiKategorie, nactiMapovani, nactiProfily, ulozMapovani, ulozProfily } from "@/lib/eshop";
+import { NeznamyFormat, nactiFeed, shrnUpozorneni, type FeedVysledek } from "@/lib/feed";
+import { dekoduj, zpracujProfil, type ProfilDodavatele } from "@/lib/feed-univerzalni";
+import { NovyDodavatel, useNactiZOdkazu } from "@/components/admin/NovyDodavatel";
 import {
   navrhniMapovani,
   nactiProPorovnani,
@@ -31,10 +33,7 @@ type NaseKategorie = { id: string; nazev: string; sekce: string; znacka: string 
  * přečetli jako UTF-8, rozsypala by se všechna diakritika.
  */
 async function precti(soubor: File): Promise<string> {
-  const buffer = await soubor.arrayBuffer();
-  const zacatek = new TextDecoder("utf-8").decode(buffer.slice(0, 200));
-  const kodovani = /encoding=["']?windows-1250/i.test(zacatek) ? "windows-1250" : "utf-8";
-  return new TextDecoder(kodovani).decode(buffer);
+  return dekoduj(await soubor.arrayBuffer());
 }
 
 const popisSekce = (s: string) =>
@@ -53,18 +52,17 @@ const naSlug = (text: string) =>
  * odhadne sekci, značku a název. Slouží jen k předvyplnění formuláře —
  * poslední slovo má obsluha.
  */
-function rozeberCestu(cesta: string): { sekce: string; znacka: string; nazev: string } {
+const OBECNE_CASTI = /^(e-?shop|v[yý]prodej|akce|novinky?|sale|home|dom[uů])$/i;
+
+function rozeberCestu(cesta: string, znackaZFeedu?: string | null): { sekce: string; znacka: string; nazev: string } {
   const casti = cesta.split("|").map((x) => x.trim()).filter(Boolean);
-  const prvni = (casti[0] ?? "").toLowerCase();
-  const sekce = prvni.includes("elektro")
-    ? "elektrokola"
-    : prvni.includes("bazar")
-      ? "bazar"
-      : "kola";
-  const zbytek = casti.length > 1 ? casti.slice(1) : casti;
+  const vse = casti.join(" ").toLowerCase();
+  const sekce = vse.includes("elektro") || /\be-?bike/.test(vse) ? "elektrokola" : vse.includes("bazar") ? "bazar" : "kola";
+  const vecne = casti.filter((c) => !OBECNE_CASTI.test(c));
+  const zbytek = vecne.length > 1 ? vecne.slice(1) : vecne;
   return {
     sekce,
-    znacka: zbytek.length > 1 ? zbytek[0]! : "",
+    znacka: znackaZFeedu?.trim() || (zbytek.length > 1 ? zbytek[0]! : ""),
     nazev: zbytek[zbytek.length - 1] ?? cesta,
   };
 }
@@ -92,6 +90,10 @@ function ImportFeedu() {
   const [novaZnacka, setNovaZnacka] = useState("");
   const [novyNazev, setNovyNazev] = useState("");
   const [uklada, setUklada] = useState(false);
+  const [editor, setEditor] = useState<{ puvodni?: ProfilDodavatele; text?: string; nazev?: string } | null>(null);
+  const [aktualizuje, setAktualizuje] = useState<string | null>(null);
+  const nactiZOdkazu = useNactiZOdkazu();
+  const { data: profily = [] } = useQuery({ queryKey: ["feed-profily"], queryFn: nactiProfily });
 
   const kategorieFeedu = feed
     ? [...new Set(feed.produkty.map((p) => p.kategorieFeed))]
@@ -111,7 +113,19 @@ function ImportFeedu() {
     setRozbaleno(false);
     setPrubeh(soubory.length > 1 ? `Čtu ${soubory.length} souborů…` : "Čtu soubor…");
     try {
-      const casti = await Promise.all(soubory.map(async (f) => nactiFeed(f.name, await precti(f))));
+      const texty = await Promise.all(soubory.map(async (f) => ({ nazev: f.name, text: await precti(f) })));
+      let casti: FeedVysledek[];
+      try {
+        casti = texty.map((t) => nactiFeed(t.nazev, t.text));
+      } catch (e) {
+        // Neznámý soubor: místo chyby nabídneme přidat dodavatele.
+        if (e instanceof NeznamyFormat && texty.length === 1) {
+          setEditor({ text: texty[0]!.text, nazev: texty[0]!.nazev.replace(/\.[^.]+$/, "") });
+          toast.info("Tenhle feed zatím neznáme — řekněte nám jednou, co je co, a příště to půjde samo.");
+          return;
+        }
+        throw e;
+      }
       const videno = new Set<string>();
       const vysledek: FeedVysledek = {
         dodavatel: casti[0]!.dodavatel,
@@ -126,7 +140,17 @@ function ImportFeedu() {
         upozorneni: casti.flatMap((c) => c.upozorneni),
         polozekVeFeedu: casti.reduce((s, c) => s + c.polozekVeFeedu, 0),
       };
+      await zpracuj(vysledek);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Soubor se nepodařilo přečíst");
+    } finally {
+      setPrubeh(null);
+    }
+  };
 
+  /** Společný krok pro všechny zdroje: kategorie, porovnání, náhled. */
+  const zpracuj = async (vysledek: FeedVysledek) => {
+    {
       const [ulozene, produkty, kategorie] = await Promise.all([
         nactiMapovani(),
         nactiProPorovnani(),
@@ -152,11 +176,67 @@ function ImportFeedu() {
       setMapovani(vysledneMapovani);
       // Náhled rovnou, ať se na něj nemusí klikat zvlášť.
       setPlan(sestavPlan(vysledek, produkty, vysledneMapovani));
+    }
+  };
+
+  const zacniZnovu = () => {
+    setFeed(null);
+    setPlan(null);
+    setHotovo(null);
+    setRozbaleno(false);
+  };
+
+  /** Profil uložený, feed přečtený — rovnou na náhled importu. */
+  const pouzijProfil = async (profil: ProfilDodavatele, vysledek: FeedVysledek) => {
+    zacniZnovu();
+    setPrubeh(`Připravuji produkty od ${profil.nazev}…`);
+    try {
+      await zpracuj(vysledek);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Soubor se nepodařilo přečíst");
+      toast.error(e instanceof Error ? e.message : "Feed se nepodařilo zpracovat");
     } finally {
       setPrubeh(null);
     }
+  };
+
+  const ulozProfil = async (profil: ProfilDodavatele, vysledek: FeedVysledek) => {
+    try {
+      const ostatni = profily.filter((p) => p.id !== profil.id);
+      await ulozProfily([...ostatni, profil]);
+      await qc.invalidateQueries({ queryKey: ["feed-profily"] });
+      setEditor(null);
+      toast.success(`Dodavatel ${profil.nazev} je uložený.`);
+      await pouzijProfil(profil, vysledek);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Dodavatele se nepodařilo uložit");
+    }
+  };
+
+  const aktualizujZOdkazu = async (profil: ProfilDodavatele) => {
+    if (!profil.url) return;
+    setAktualizuje(profil.id);
+    try {
+      const text = await nactiZOdkazu(profil.url);
+      await pouzijProfil(profil, zpracujProfil(text, profil));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Feed se nepodařilo stáhnout");
+    } finally {
+      setAktualizuje(null);
+    }
+  };
+
+  const aktualizujZeSouboru = async (profil: ProfilDodavatele, soubor: File) => {
+    try {
+      await pouzijProfil(profil, zpracujProfil(await precti(soubor), profil));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Soubor se nepodařilo přečíst");
+    }
+  };
+
+  const smazProfil = async (profil: ProfilDodavatele) => {
+    if (!confirm(`Smazat dodavatele ${profil.nazev}? Produkty na webu zůstanou, jen se přestanou aktualizovat.`)) return;
+    await ulozProfily(profily.filter((p) => p.id !== profil.id));
+    await qc.invalidateQueries({ queryKey: ["feed-profily"] });
   };
 
   /**
@@ -252,12 +332,82 @@ function ImportFeedu() {
       <div>
         <h2 className="section-title text-2xl">Import od dodavatelů</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Vyberte soubor od dodavatele. Uvidíte, co se stane, a teprve pak potvrdíte.
+          Vyberte dodavatele nebo nahrajte soubor. Uvidíte, co se stane, a teprve pak potvrdíte.
         </p>
       </div>
 
-      {/* VÝBĚR SOUBORU */}
-      {!hotovo && (
+      {/* PŘIDÁNÍ / ÚPRAVA DODAVATELE */}
+      {editor && (
+        <NovyDodavatel
+          key={editor.puvodni?.id ?? editor.nazev ?? "novy"}
+          puvodni={editor.puvodni}
+          pocatecniText={editor.text}
+          pocatecniNazev={editor.nazev}
+          onUlozit={ulozProfil}
+          onZrusit={() => setEditor(null)}
+        />
+      )}
+
+      {/* ULOŽENÍ DODAVATELÉ */}
+      {!editor && !hotovo && (
+        <div className="grid gap-3 rounded-lg border bg-card p-6 shadow-card">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-lg font-bold">Dodavatelé</p>
+            <Button size="sm" onClick={() => setEditor({})}>
+              <Plus className="mr-2 h-4 w-4" /> Přidat dodavatele
+            </Button>
+          </div>
+          {profily.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Zatím žádný. Klikněte na Přidat dodavatele a vložte odkaz na jeho feed — co je co, navrhneme sami.
+            </p>
+          ) : (
+            <ul className="divide-y">
+              {profily.map((p) => (
+                <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold">{p.nazev}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {p.url ?? "nahrává se soubor"} · upraveno {new Date(p.upraveno).toLocaleDateString("cs-CZ")}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {p.url ? (
+                      <Button size="sm" disabled={aktualizuje === p.id} onClick={() => void aktualizujZOdkazu(p)}>
+                        <RefreshCw className={`mr-2 h-4 w-4 ${aktualizuje === p.id ? "animate-spin" : ""}`} />
+                        {aktualizuje === p.id ? "Stahuji…" : "Aktualizovat"}
+                      </Button>
+                    ) : (
+                      <label className="inline-flex h-9 cursor-pointer items-center rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground">
+                        <Upload className="mr-2 h-4 w-4" /> Nahrát soubor
+                        <input
+                          type="file"
+                          accept=".xml,.csv,.txt"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) void aktualizujZeSouboru(p, f);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                    )}
+                    <Button size="sm" variant="outline" onClick={() => setEditor({ puvodni: p })}>
+                      <Pencil className="mr-2 h-4 w-4" /> Upravit
+                    </Button>
+                    <Button size="sm" variant="ghost" aria-label={`Smazat ${p.nazev}`} onClick={() => void smazProfil(p)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* VÝBĚR SOUBORU — Author, Crussis a export starého webu */}
+      {!editor && !hotovo && (
         <div className="rounded-lg border-2 border-dashed bg-card p-8 text-center shadow-card">
           <p className="text-lg font-bold">Vyberte soubor</p>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -352,7 +502,7 @@ function ImportFeedu() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          const navrh = rozeberCestu(k.nazev);
+                          const navrh = rozeberCestu(k.nazev, feed?.produkty.find((p) => p.kategorieFeed === k.nazev)?.znacka);
                           setZaklada(zaklada === k.nazev ? null : k.nazev);
                           setNovaSekce(navrh.sekce);
                           setNovaZnacka(navrh.znacka);

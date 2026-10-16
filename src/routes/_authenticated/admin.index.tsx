@@ -1,91 +1,329 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Bike, Camera, CheckCircle2, ClipboardList, Eye, Mail, RefreshCw, Settings, Tag, Wrench } from "lucide-react";
+import type { ComponentType } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { formatCena } from "@/lib/produkty";
-import { stavLabel } from "@/lib/eshop";
+import { nactiProfily } from "@/lib/eshop";
+import { jeCasNaPrehled, nactiPosledniPrehled } from "@/lib/mesicni-prehled";
+import { sklonuj } from "@/lib/cestina";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
-  component: Prehled,
+  component: Dnes,
 });
 
-function Prehled() {
-  const { data } = useQuery({
-    queryKey: ["admin-prehled"],
+
+type Ukol = {
+  klic: string;
+  ikona: ComponentType<{ className?: string }>;
+  titulek: string;
+  popis: string;
+  tlacitko: string;
+  to: string;
+  hlavni?: boolean;
+  upozorneni?: boolean;
+};
+
+/**
+ * Úvodní obrazovka „Dnes".
+ *
+ * Neukazuje tabulky, ale lidsky napsaný seznam toho, co je dnes potřeba
+ * udělat — každá věc s jedním velkým tlačítkem. Když není co dělat, řekne
+ * to taky. Je postavená pro obchodníka, který s počítačem moc nepracuje.
+ */
+function Dnes() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-dnes"],
     queryFn: async () => {
-      const [produkty, objednavky, poptavky, novychObjednavek, novychPoptavek, novychZprav] = await Promise.all([
-        supabase.from("produkty").select("id", { count: "exact", head: true }),
-        supabase.from("objednavky").select("*").order("created_at", { ascending: false }).limit(5),
-        supabase.from("servis_poptavky").select("*").order("created_at", { ascending: false }).limit(5),
-        // Počty čteme samostatným count dotazem — dřív se „nové" počítaly jen
-        // z posledních 5 záznamů, takže se šesté a další nové objednávky nezobrazily.
-        supabase.from("objednavky").select("id", { count: "exact", head: true }).eq("stav", "nova"),
-        supabase.from("servis_poptavky").select("id", { count: "exact", head: true }).eq("stav", "nova"),
-        supabase.from("zpravy").select("id", { count: "exact", head: true }).eq("stav", "nova"),
-      ]);
+      const zacatekMesice = new Date();
+      zacatekMesice.setDate(1);
+      zacatekMesice.setHours(0, 0, 0, 0);
+      const [naWebu, cekaNaKontrolu, bezFotky, objednavky, poptavky, zpravy, mesic, profily, posledni] =
+        await Promise.all([
+          supabase.from("produkty").select("id", { count: "exact", head: true }).eq("aktivni", true),
+          supabase
+            .from("produkty")
+            .select("id", { count: "exact", head: true })
+            .eq("aktivni", false)
+            .not("dodavatel", "is", null),
+          supabase.from("produkty").select("id", { count: "exact", head: true }).is("obrazek_url", null),
+          supabase.from("objednavky").select("id", { count: "exact", head: true }).eq("stav", "nova"),
+          supabase.from("servis_poptavky").select("id", { count: "exact", head: true }).eq("stav", "nova"),
+          supabase.from("zpravy").select("id", { count: "exact", head: true }).eq("stav", "nova"),
+          supabase
+            .from("objednavky")
+            .select("id", { count: "exact", head: true })
+            .gte("created_at", zacatekMesice.toISOString())
+            .neq("stav", "zrusena"),
+          nactiProfily().catch(() => []),
+          nactiPosledniPrehled().catch(() => null),
+        ]);
       return {
-        pocetProduktu: produkty.count ?? 0,
-        objednavky: objednavky.data ?? [],
-        poptavky: poptavky.data ?? [],
-        novychObjednavek: novychObjednavek.count ?? 0,
-        novychPoptavek: novychPoptavek.count ?? 0,
-        novychZprav: novychZprav.count ?? 0,
+        naWebu: naWebu.count ?? 0,
+        cekaNaKontrolu: cekaNaKontrolu.count ?? 0,
+        bezFotky: bezFotky.count ?? 0,
+        noveObjednavky: objednavky.count ?? 0,
+        novePoptavky: poptavky.count ?? 0,
+        noveZpravy: zpravy.count ?? 0,
+        objednavekMesic: mesic.count ?? 0,
+        dodavateluSOdkazem: profily.filter((p) => p.url).length,
+        posledniPrehled: posledni,
       };
     },
   });
 
+  const ukoly: Ukol[] = [];
+  if (data) {
+    if (data.noveObjednavky > 0) {
+      ukoly.push({
+        klic: "objednavky",
+        ikona: ClipboardList,
+        titulek: `Přišl${data.noveObjednavky === 1 ? "a" : data.noveObjednavky < 5 ? "y" : "o"} ${sklonuj(data.noveObjednavky, "nová objednávka", "nové objednávky", "nových objednávek")}`,
+        popis: "Zákazníci čekají na potvrzení. Zkontrolujte je a pošlete výzvu k platbě.",
+        tlacitko: "Vyřídit objednávky",
+        to: "/admin/objednavky",
+        hlavni: true,
+      });
+    }
+    if (data.novePoptavky > 0) {
+      ukoly.push({
+        klic: "servis",
+        ikona: Wrench,
+        titulek: `${sklonuj(data.novePoptavky, "nová poptávka", "nové poptávky", "nových poptávek")} servisu`,
+        popis: "Někdo chce opravit kolo. Zavolejte mu a domluvte termín.",
+        tlacitko: "Podívat se",
+        to: "/admin/servis",
+      });
+    }
+    if (data.noveZpravy > 0) {
+      ukoly.push({
+        klic: "zpravy",
+        ikona: Mail,
+        titulek: `${sklonuj(data.noveZpravy, "nová zpráva", "nové zprávy", "nových zpráv")} z webu`,
+        popis: "Zákazník poslal dotaz přes kontaktní formulář.",
+        tlacitko: "Přečíst",
+        to: "/admin/zpravy",
+      });
+    }
+    if (data.dodavateluSOdkazem > 0 && jeCasNaPrehled(data.posledniPrehled)) {
+      ukoly.push({
+        klic: "prehled",
+        ikona: RefreshCw,
+        titulek: "Je čas na měsíční přehled od dodavatelů",
+        popis: "Podíváme se, co mají dodavatelé nového a jestli změnili ceny. Odpovíte na tři otázky.",
+        tlacitko: "Projít přehled",
+        to: "/admin/prehled",
+      });
+    }
+    if (data.cekaNaKontrolu > 0) {
+      ukoly.push({
+        klic: "kontrola",
+        ikona: Eye,
+        titulek: `${sklonuj(data.cekaNaKontrolu, "kolo čeká", "kola čekají", "kol čeká")} na kontrolu`,
+        popis: "Přišla od dodavatele a zatím jsou skrytá. Projděte je a zveřejněte.",
+        tlacitko: "Zkontrolovat",
+        to: "/admin/produkty",
+      });
+    }
+    if (data.bezFotky > 0) {
+      ukoly.push({
+        klic: "fotky",
+        ikona: Camera,
+        titulek: `${sklonuj(data.bezFotky, "kolo nemá", "kola nemají", "kol nemá")} fotku`,
+        popis: "Bez fotky se kolo zákazníkům špatně prodává. Vyfoťte ho mobilem a nahrajte.",
+        tlacitko: "Doplnit fotky",
+        to: "/admin/produkty",
+        upozorneni: true,
+      });
+    }
+  }
+
+  const akce: { to: string; ikona: ComponentType<{ className?: string }>; nazev: string; popis: string }[] = [
+    { to: "/admin/feedy", ikona: Bike, nazev: "Přidat kola", popis: "Od dodavatele nebo ručně" },
+    { to: "/admin/ceny", ikona: Tag, nazev: "Změnit ceny", popis: "Akce, slevy, celé značky" },
+    { to: "/admin/objednavky", ikona: ClipboardList, nazev: "Objednávky a servis", popis: "Kdo co chce a co je hotové" },
+    { to: "/admin/nastaveni", ikona: Settings, nazev: "Nastavení", popis: "Údaje o obchodě, účet, lidé" },
+  ];
+
   return (
-    <div className="grid gap-8">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Karta nazev="Produkty v e-shopu" hodnota={String(data?.pocetProduktu ?? 0)} to="/admin/produkty" />
-        <Karta nazev="Nové objednávky" hodnota={String(data?.novychObjednavek ?? 0)} to="/admin/objednavky" />
-        <Karta nazev="Nové poptávky servisu" hodnota={String(data?.novychPoptavek ?? 0)} to="/admin/servis" />
-        <Karta nazev="Nové zprávy" hodnota={String(data?.novychZprav ?? 0)} to="/admin/zpravy" />
-      </div>
-
-      <section className="rounded-lg border bg-card p-6 shadow-card">
-        <h2 className="section-title text-xl">Poslední objednávky</h2>
-        {(data?.objednavky ?? []).length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">Zatím žádné objednávky.</p>
-        ) : (
-          <ul className="mt-4 divide-y">
-            {data?.objednavky.map((o) => (
-              <li key={o.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
-                <span className="font-semibold">{o.jmeno}</span>
-                <span className="text-muted-foreground">{new Date(o.created_at).toLocaleDateString("cs-CZ")}</span>
-                <span className="font-bold">{formatCena(o.celkem)}</span>
-                <span className="text-muted-foreground">{stavLabel[o.stav] ?? o.stav}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+    <div className="grid gap-10 text-lg">
+      <section>
+        <h2 className="section-title text-4xl md:text-5xl">Dobrý den</h2>
+        <p className="mt-2 text-xl text-muted-foreground">
+          {isLoading
+            ? "Díváme se, co je nového…"
+            : ukoly.length === 0
+              ? "Dnes nemáte na webu nic na práci."
+              : `Dnes máte na webu ${sklonuj(ukoly.length, "jednu věc", "věci", "věcí")} na práci.`}
+        </p>
       </section>
 
-      <section className="rounded-lg border bg-card p-6 shadow-card">
-        <h2 className="section-title text-xl">Poslední poptávky servisu</h2>
-        {(data?.poptavky ?? []).length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">Zatím žádné poptávky.</p>
-        ) : (
-          <ul className="mt-4 divide-y">
-            {data?.poptavky.map((p) => (
-              <li key={p.id} className="flex flex-wrap justify-between gap-2 py-3 text-sm">
-                <span className="font-semibold">{p.jmeno}</span>
-                <span className="text-muted-foreground">{p.typ_sluzby ?? "—"}</span>
-                <span className="text-muted-foreground">{new Date(p.created_at).toLocaleDateString("cs-CZ")}</span>
-                <span className="text-muted-foreground">{stavLabel[p.stav] ?? p.stav}</span>
-              </li>
-            ))}
-          </ul>
+      <section aria-labelledby="dnes-nadpis" className="grid gap-3">
+        <h3 id="dnes-nadpis" className="section-title text-3xl">Co udělat dnes</h3>
+        {!isLoading && ukoly.length === 0 && (
+          <div className="flex items-center gap-4 rounded-xl border-2 border-primary bg-card p-6">
+            <CheckCircle2 className="h-10 w-10 shrink-0 text-primary" />
+            <p className="text-xl font-semibold">Všechno je hotové. Můžete si dát kafe.</p>
+          </div>
         )}
+        {ukoly.map((u) => (
+          <div
+            key={u.klic}
+            className={`flex flex-wrap items-center gap-5 rounded-xl bg-card p-5 md:p-6 ${u.hlavni ? "border-2 border-primary" : "border"}`}
+          >
+            <div
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ${u.upozorneni ? "bg-amber-100 text-amber-900" : "bg-accent text-accent-foreground"}`}
+            >
+              <u.ikona className="h-7 w-7" />
+            </div>
+            <div className="min-w-0 flex-[1_1_320px]">
+              <p className="text-2xl font-bold">{u.titulek}</p>
+              <p className="mt-0.5 text-muted-foreground">{u.popis}</p>
+            </div>
+            <Link
+              to={u.to}
+              className={`inline-flex min-h-14 items-center justify-center rounded-lg px-7 text-xl font-bold ${
+                u.hlavni || !u.upozorneni
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "border-2 border-primary text-primary hover:bg-primary/5"
+              }`}
+            >
+              {u.tlacitko}
+            </Link>
+          </div>
+        ))}
       </section>
+
+      <section aria-labelledby="akce-nadpis" className="grid gap-3">
+        <h3 id="akce-nadpis" className="section-title text-3xl">Co chcete udělat?</h3>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {akce.map((a) => (
+            <Link
+              key={a.to}
+              to={a.to}
+              className="flex min-h-44 flex-col gap-3 rounded-xl border bg-card p-6 transition-colors hover:border-primary"
+            >
+              <a.ikona className="h-11 w-11 text-primary" />
+              <span className="text-2xl font-bold leading-tight">{a.nazev}</span>
+              <span className="text-muted-foreground">{a.popis}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {data && (
+        <section aria-labelledby="stav-nadpis" className="grid gap-3">
+          <h3 id="stav-nadpis" className="section-title text-3xl">Jak na tom jsme</h3>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Cislo popis="Kol na webu" hodnota={String(data.naWebu)} />
+            <Cislo popis="Objednávek tento měsíc" hodnota={String(data.objednavekMesic)} />
+            <Cislo
+              popis="Poslední přehled od dodavatelů"
+              hodnota={data.posledniPrehled ? new Date(data.posledniPrehled).toLocaleDateString("cs-CZ") : "zatím nebyl"}
+            />
+          </div>
+        </section>
+      )}
+
+      <Pomoc />
     </div>
   );
 }
 
-function Karta({ nazev, hodnota, to }: { nazev: string; hodnota: string; to: string }) {
+function Cislo({ popis, hodnota }: { popis: string; hodnota: string }) {
   return (
-    <Link to={to} className="rounded-lg border bg-card p-6 shadow-card transition-shadow hover:shadow-lg">
-      <div className="text-sm text-muted-foreground">{nazev}</div>
-      <div className="mt-2 text-3xl font-bold">{hodnota}</div>
-    </Link>
+    <div className="rounded-xl border bg-card p-5">
+      <p className="text-muted-foreground">{popis}</p>
+      <p className="section-title mt-1 text-4xl">{hodnota}</p>
+    </div>
+  );
+}
+
+/** Pevní průvodci — nic nestojí a vždycky ukážou stejný postup. */
+const NAVODY: { otazka: string; kroky: string[] }[] = [
+  {
+    otazka: "Jak dám kolo do akce?",
+    kroky: [
+      "Nahoře klikněte na Zboží.",
+      "Do políčka Najít kolo podle názvu napište, jak se kolo jmenuje.",
+      "U kola klikněte vpravo na tužku.",
+      "Do políčka Původní cena napište cenu, za kterou se prodávalo dosud.",
+      "Do políčka Cena napište novou akční cenu.",
+      "Dole klikněte na Uložit. Na webu bude stará cena přeškrtnutá.",
+    ],
+  },
+  {
+    otazka: "Jak přidám kolo, které mám v prodejně?",
+    kroky: [
+      "Nahoře klikněte na Zboží.",
+      "Klikněte na Přidat produkt.",
+      "Napište název, cenu a vyberte kategorii.",
+      "Nahrajte fotku — stačí z mobilu.",
+      "Zapněte přepínač Zobrazit na webu a klikněte na Uložit.",
+    ],
+  },
+  {
+    otazka: "Jak vyřídím objednávku?",
+    kroky: [
+      "Na této stránce klikněte na Vyřídit objednávky (nebo nahoře na Objednávky).",
+      "Zkontrolujte, co si zákazník objednal a jestli to máte.",
+      "Když platí převodem, klikněte na Ukázat QR kód k zaplacení a pošlete mu ho.",
+      "Stav objednávky přepněte na Vyřizuje se. Až si kolo vyzvedne, přepněte na Dokončená.",
+    ],
+  },
+  {
+    otazka: "Jak přidám nového dodavatele?",
+    kroky: [
+      "Nahoře klikněte na Zboží a pak na Od dodavatelů.",
+      "Klikněte na Přidat dodavatele.",
+      "Napište jeho jméno a vložte odkaz na feed, který vám poslal. Klikněte na Načíst.",
+      "Web sám navrhne, co je název, cena a fotky. Podívejte se na ukázku dole.",
+      "Klikněte na Uložit dodavatele a pokračovat. Příště už stačí měsíční přehled.",
+    ],
+  },
+  {
+    otazka: "Jak změním ceny u všech kol od jednoho dodavatele?",
+    kroky: [
+      "Nahoře klikněte na Ceny.",
+      "Vyberte dodavatele.",
+      "Klikněte, o kolik má být cena nižší nebo vyšší, a jak ji zaokrouhlit. Hned uvidíte příklad.",
+      "Klikněte na Uložit pravidlo. Když se spletete, klikněte na Vrátit zpět.",
+    ],
+  },
+];
+
+function Pomoc() {
+  return (
+    <section id="pomoc" aria-labelledby="pomoc-nadpis" className="grid gap-4 rounded-xl bg-amber-50 p-6 md:p-8">
+      <div>
+        <h3 id="pomoc-nadpis" className="section-title text-3xl text-amber-950">
+          Nevíte si rady?
+        </h3>
+        <p className="mt-1 text-xl text-amber-950">
+          Klikněte na otázku a ukážeme vám postup krok za krokem. Nic nerozbijete — změny jdou vrátit.
+        </p>
+      </div>
+      <div className="grid gap-3">
+        {NAVODY.map((n) => (
+          <details key={n.otazka} className="group rounded-lg bg-card">
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 text-xl font-semibold">
+              {n.otazka}
+              <span className="text-primary group-open:rotate-180" aria-hidden="true">
+                ▾
+              </span>
+            </summary>
+            <ol className="grid gap-2 px-5 pb-5 text-lg">
+              {n.kroky.map((k, i) => (
+                <li key={k} className="flex gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-primary-foreground">
+                    {i + 1}
+                  </span>
+                  <span className="pt-0.5">{k}</span>
+                </li>
+              ))}
+            </ol>
+          </details>
+        ))}
+      </div>
+    </section>
   );
 }

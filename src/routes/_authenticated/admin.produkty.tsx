@@ -23,6 +23,8 @@ type Formular = {
   slug: string;
   kategorie_id: string;
   cena: string;
+  /** Cena při otevření formuláře — když ji obchodník změní, je to ruční cena. */
+  cenaPriOtevreni?: string;
   puvodni_cena: string;
   kratky: string;
   popis: string;
@@ -187,6 +189,8 @@ function SpravaProduktu() {
         pro_koho: f.pro_koho.split("\n").map((x) => x.trim()).filter(Boolean),
         neni_pro_koho: f.neni_pro_koho.trim() || null,
         parametry: textNaParametry(f.parametry),
+        // Ručně změněnou cenu už pravidlo ani měsíční přehled nepřepíšou.
+        ...(!f.id || f.cena !== f.cenaPriOtevreni ? { cena_rucne: true } : {}),
       };
       const { error } = f.id
         ? await supabase.from("produkty").update(zaznam).eq("id", f.id)
@@ -259,6 +263,7 @@ function SpravaProduktu() {
       slug: p.slug,
       kategorie_id: p.kategorie_id ?? "",
       cena: String(p.cena),
+      cenaPriOtevreni: String(p.cena),
       puvodni_cena: p.puvodni_cena ? String(p.puvodni_cena) : "",
       kratky: p.kratky,
       popis: p.popis,

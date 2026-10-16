@@ -201,6 +201,7 @@ export type Database = {
           barva: string | null
           cena: number
           cena_feed: number | null
+          cena_rucne: boolean
           created_at: string
           dodavatel: string | null
           dodavatel_kod: string | null
@@ -230,6 +231,7 @@ export type Database = {
           barva?: string | null
           cena?: number
           cena_feed?: number | null
+          cena_rucne?: boolean
           created_at?: string
           dodavatel?: string | null
           dodavatel_kod?: string | null
@@ -259,6 +261,7 @@ export type Database = {
           barva?: string | null
           cena?: number
           cena_feed?: number | null
+          cena_rucne?: boolean
           created_at?: string
           dodavatel?: string | null
           dodavatel_kod?: string | null

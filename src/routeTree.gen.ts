@@ -24,16 +24,19 @@ import { Route as OdstoupeniOdSmlouvyRouteImport } from './routes/odstoupeni-od-
 import { Route as ServisRouteImport } from './routes/servis'
 import { Route as SpravaRouteImport } from './routes/sprava'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiZijeRouteImport } from './routes/api.zije'
 import { Route as ElektrokolaIndexRouteImport } from './routes/elektrokola.index'
 import { Route as ElektrokolaZnackaRouteImport } from './routes/elektrokola.$znacka'
 import { Route as KolaIndexRouteImport } from './routes/kola.index'
 import { Route as KolaZnackaRouteImport } from './routes/kola.$znacka'
 import { Route as KoloSlugRouteImport } from './routes/kolo.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminCenyRouteImport } from './routes/_authenticated/admin.ceny'
 import { Route as AuthenticatedAdminFeedyRouteImport } from './routes/_authenticated/admin.feedy'
 import { Route as AuthenticatedAdminKategorieRouteImport } from './routes/_authenticated/admin.kategorie'
 import { Route as AuthenticatedAdminNastaveniRouteImport } from './routes/_authenticated/admin.nastaveni'
 import { Route as AuthenticatedAdminObjednavkyRouteImport } from './routes/_authenticated/admin.objednavky'
+import { Route as AuthenticatedAdminPrehledRouteImport } from './routes/_authenticated/admin.prehled'
 import { Route as AuthenticatedAdminProduktyRouteImport } from './routes/_authenticated/admin.produkty'
 import { Route as AuthenticatedAdminServisRouteImport } from './routes/_authenticated/admin.servis'
 import { Route as AuthenticatedAdminSpravciRouteImport } from './routes/_authenticated/admin.spravci'
@@ -113,6 +116,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiZijeRoute = ApiZijeRouteImport.update({
+  id: '/api/zije',
+  path: '/api/zije',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ElektrokolaIndexRoute = ElektrokolaIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -143,6 +151,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminCenyRoute = AuthenticatedAdminCenyRouteImport.update({
+  id: '/ceny',
+  path: '/ceny',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminFeedyRoute = AuthenticatedAdminFeedyRouteImport.update({
   id: '/feedy',
   path: '/feedy',
@@ -164,6 +177,12 @@ const AuthenticatedAdminObjednavkyRoute =
   AuthenticatedAdminObjednavkyRouteImport.update({
     id: '/objednavky',
     path: '/objednavky',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminPrehledRoute =
+  AuthenticatedAdminPrehledRouteImport.update({
+    id: '/prehled',
+    path: '/prehled',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminProduktyRoute =
@@ -206,15 +225,18 @@ export interface FileRoutesByFullPath {
   '/servis': typeof ServisRoute
   '/sprava': typeof SpravaRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/zije': typeof ApiZijeRoute
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
   '/elektrokola/': typeof ElektrokolaIndexRoute
   '/kola/': typeof KolaIndexRoute
+  '/admin/ceny': typeof AuthenticatedAdminCenyRoute
   '/admin/feedy': typeof AuthenticatedAdminFeedyRoute
   '/admin/kategorie': typeof AuthenticatedAdminKategorieRoute
   '/admin/nastaveni': typeof AuthenticatedAdminNastaveniRoute
   '/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
+  '/admin/prehled': typeof AuthenticatedAdminPrehledRoute
   '/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/admin/servis': typeof AuthenticatedAdminServisRoute
   '/admin/spravci': typeof AuthenticatedAdminSpravciRoute
@@ -233,15 +255,18 @@ export interface FileRoutesByTo {
   '/odstoupeni-od-smlouvy': typeof OdstoupeniOdSmlouvyRoute
   '/servis': typeof ServisRoute
   '/sprava': typeof SpravaRoute
+  '/api/zije': typeof ApiZijeRoute
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
   '/elektrokola': typeof ElektrokolaIndexRoute
   '/kola': typeof KolaIndexRoute
+  '/admin/ceny': typeof AuthenticatedAdminCenyRoute
   '/admin/feedy': typeof AuthenticatedAdminFeedyRoute
   '/admin/kategorie': typeof AuthenticatedAdminKategorieRoute
   '/admin/nastaveni': typeof AuthenticatedAdminNastaveniRoute
   '/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
+  '/admin/prehled': typeof AuthenticatedAdminPrehledRoute
   '/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/admin/servis': typeof AuthenticatedAdminServisRoute
   '/admin/spravci': typeof AuthenticatedAdminSpravciRoute
@@ -265,15 +290,18 @@ export interface FileRoutesById {
   '/servis': typeof ServisRoute
   '/sprava': typeof SpravaRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/api/zije': typeof ApiZijeRoute
   '/elektrokola/$znacka': typeof ElektrokolaZnackaRoute
   '/kola/$znacka': typeof KolaZnackaRoute
   '/kolo/$slug': typeof KoloSlugRoute
   '/elektrokola/': typeof ElektrokolaIndexRoute
   '/kola/': typeof KolaIndexRoute
+  '/_authenticated/admin/ceny': typeof AuthenticatedAdminCenyRoute
   '/_authenticated/admin/feedy': typeof AuthenticatedAdminFeedyRoute
   '/_authenticated/admin/kategorie': typeof AuthenticatedAdminKategorieRoute
   '/_authenticated/admin/nastaveni': typeof AuthenticatedAdminNastaveniRoute
   '/_authenticated/admin/objednavky': typeof AuthenticatedAdminObjednavkyRoute
+  '/_authenticated/admin/prehled': typeof AuthenticatedAdminPrehledRoute
   '/_authenticated/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/_authenticated/admin/servis': typeof AuthenticatedAdminServisRoute
   '/_authenticated/admin/spravci': typeof AuthenticatedAdminSpravciRoute
@@ -297,15 +325,18 @@ export interface FileRouteTypes {
     | '/servis'
     | '/sprava'
     | '/admin'
+    | '/api/zije'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
     | '/kolo/$slug'
     | '/elektrokola/'
     | '/kola/'
+    | '/admin/ceny'
     | '/admin/feedy'
     | '/admin/kategorie'
     | '/admin/nastaveni'
     | '/admin/objednavky'
+    | '/admin/prehled'
     | '/admin/produkty'
     | '/admin/servis'
     | '/admin/spravci'
@@ -324,15 +355,18 @@ export interface FileRouteTypes {
     | '/odstoupeni-od-smlouvy'
     | '/servis'
     | '/sprava'
+    | '/api/zije'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
     | '/kolo/$slug'
     | '/elektrokola'
     | '/kola'
+    | '/admin/ceny'
     | '/admin/feedy'
     | '/admin/kategorie'
     | '/admin/nastaveni'
     | '/admin/objednavky'
+    | '/admin/prehled'
     | '/admin/produkty'
     | '/admin/servis'
     | '/admin/spravci'
@@ -355,15 +389,18 @@ export interface FileRouteTypes {
     | '/servis'
     | '/sprava'
     | '/_authenticated/admin'
+    | '/api/zije'
     | '/elektrokola/$znacka'
     | '/kola/$znacka'
     | '/kolo/$slug'
     | '/elektrokola/'
     | '/kola/'
+    | '/_authenticated/admin/ceny'
     | '/_authenticated/admin/feedy'
     | '/_authenticated/admin/kategorie'
     | '/_authenticated/admin/nastaveni'
     | '/_authenticated/admin/objednavky'
+    | '/_authenticated/admin/prehled'
     | '/_authenticated/admin/produkty'
     | '/_authenticated/admin/servis'
     | '/_authenticated/admin/spravci'
@@ -386,6 +423,7 @@ export interface RootRouteChildren {
   OdstoupeniOdSmlouvyRoute: typeof OdstoupeniOdSmlouvyRoute
   ServisRoute: typeof ServisRoute
   SpravaRoute: typeof SpravaRoute
+  ApiZijeRoute: typeof ApiZijeRoute
   KoloSlugRoute: typeof KoloSlugRoute
 }
 
@@ -496,6 +534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/zije': {
+      id: '/api/zije'
+      path: '/api/zije'
+      fullPath: '/api/zije'
+      preLoaderRoute: typeof ApiZijeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/elektrokola/': {
       id: '/elektrokola/'
       path: '/'
@@ -538,6 +583,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/ceny': {
+      id: '/_authenticated/admin/ceny'
+      path: '/ceny'
+      fullPath: '/admin/ceny'
+      preLoaderRoute: typeof AuthenticatedAdminCenyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/feedy': {
       id: '/_authenticated/admin/feedy'
       path: '/feedy'
@@ -564,6 +616,13 @@ declare module '@tanstack/react-router' {
       path: '/objednavky'
       fullPath: '/admin/objednavky'
       preLoaderRoute: typeof AuthenticatedAdminObjednavkyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/prehled': {
+      id: '/_authenticated/admin/prehled'
+      path: '/prehled'
+      fullPath: '/admin/prehled'
+      preLoaderRoute: typeof AuthenticatedAdminPrehledRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/produkty': {
@@ -598,10 +657,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminCenyRoute: typeof AuthenticatedAdminCenyRoute
   AuthenticatedAdminFeedyRoute: typeof AuthenticatedAdminFeedyRoute
   AuthenticatedAdminKategorieRoute: typeof AuthenticatedAdminKategorieRoute
   AuthenticatedAdminNastaveniRoute: typeof AuthenticatedAdminNastaveniRoute
   AuthenticatedAdminObjednavkyRoute: typeof AuthenticatedAdminObjednavkyRoute
+  AuthenticatedAdminPrehledRoute: typeof AuthenticatedAdminPrehledRoute
   AuthenticatedAdminProduktyRoute: typeof AuthenticatedAdminProduktyRoute
   AuthenticatedAdminServisRoute: typeof AuthenticatedAdminServisRoute
   AuthenticatedAdminSpravciRoute: typeof AuthenticatedAdminSpravciRoute
@@ -610,10 +671,12 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminCenyRoute: AuthenticatedAdminCenyRoute,
   AuthenticatedAdminFeedyRoute: AuthenticatedAdminFeedyRoute,
   AuthenticatedAdminKategorieRoute: AuthenticatedAdminKategorieRoute,
   AuthenticatedAdminNastaveniRoute: AuthenticatedAdminNastaveniRoute,
   AuthenticatedAdminObjednavkyRoute: AuthenticatedAdminObjednavkyRoute,
+  AuthenticatedAdminPrehledRoute: AuthenticatedAdminPrehledRoute,
   AuthenticatedAdminProduktyRoute: AuthenticatedAdminProduktyRoute,
   AuthenticatedAdminServisRoute: AuthenticatedAdminServisRoute,
   AuthenticatedAdminSpravciRoute: AuthenticatedAdminSpravciRoute,
@@ -676,6 +739,7 @@ const rootRouteChildren: RootRouteChildren = {
   OdstoupeniOdSmlouvyRoute: OdstoupeniOdSmlouvyRoute,
   ServisRoute: ServisRoute,
   SpravaRoute: SpravaRoute,
+  ApiZijeRoute: ApiZijeRoute,
   KoloSlugRoute: KoloSlugRoute,
 }
 export const routeTree = rootRouteImport
