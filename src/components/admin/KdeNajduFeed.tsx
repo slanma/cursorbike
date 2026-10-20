@@ -26,14 +26,17 @@ const NAVODY: Navod[] = [
   },
   {
     dodavatel: "Crussis",
-    kroky: ["Crussis má odkaz pro prodejce veřejný. Zkopírujte ho a vložte sem."],
+    kroky: [
+      "Tenhle odkaz jsme už pro Cursorbike používali. Zkopírujte ho a vložte sem.",
+      "Kdyby nefungoval, vyžádejte si aktuální odkaz u Crussisu — hotový e-mail je níž.",
+    ],
     odkaz: "https://www.crussis.cz/eshop-export-distributori.xml",
   },
   {
     dodavatel: "Leader Fox",
     kroky: [
-      "Odkaz vám pošle obchodní zástupce Leader Foxu, v nabídce na webu ho nenajdete.",
-      "Vypadá třeba takto: https://e-shop.leaderfox.cz/jmeno-obchodu.xml",
+      "Odkaz si vyžádejte u Leader Foxu — hotový e-mail je níž.",
+      "Cursorbike už svůj odkaz má: https://e-shop.leaderfox.cz/bikecentrum.xml",
     ],
   },
 ];
