@@ -30,6 +30,8 @@ import {
 
 const VYBER = "h-10 w-full rounded-md border bg-background px-3 text-sm";
 
+const KROKY = ["Odkud", "Co brát", "Cena", "Stáhnout"];
+
 const DRUHY = [
   { druh: "elektrokola", nazev: "Elektrokola" },
   { druh: "kola", nazev: "Kola" },
@@ -89,6 +91,8 @@ export function NovyDodavatel({
     zdroj ? (puvodni ?? navrhniProfil(pocatecniNazev ?? "", zdroj)) : null,
   );
   const [nacita, setNacita] = useState(false);
+  /** Průvodce má jen 4 kroky a ukazuje vždy jeden: Odkud → Co brát → Cena → Stáhnout. */
+  const [krok, setKrok] = useState(1);
   const [pokrocile, setPokrocile] = useState(false);
 
   const prijmiText = (t: string, odkaz?: string) => {
@@ -109,6 +113,7 @@ export function NovyDodavatel({
         znamyFormat: true,
         upraveno: new Date().toISOString(),
       });
+      setKrok(2);
       return;
     }
     setZnamy(null);
@@ -118,6 +123,7 @@ export function NovyDodavatel({
     setZdroj(z);
     // U úpravy se nechá to, co už bylo nastavené; jinak program navrhne sám.
     setProfil(puvodni ? { ...puvodni, ...(odkaz ? { url: odkaz } : {}) } : navrhniProfil(nazev, z, odkaz));
+    setKrok(2);
   };
 
   const nactiOdkaz = async () => {
@@ -241,13 +247,33 @@ export function NovyDodavatel({
     <div className="grid gap-5 rounded-lg border-2 border-primary bg-card p-6 shadow-card">
       <div>
         <p className="text-xl font-bold">{puvodni ? `Upravit dodavatele ${puvodni.nazev}` : "Přidat dodavatele"}</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Stačí odkaz na feed nebo soubor. Co je co, navrhneme sami — vy jen zkontrolujete.
-        </p>
       </div>
 
+      {/* POSTUP — kolik už je hotovo */}
+      <ol aria-label="Postup" className="grid grid-cols-4 gap-2">
+        {KROKY.map((nazevKroku, i) => {
+          const c = i + 1;
+          const styl =
+            c === krok
+              ? "bg-primary text-primary-foreground"
+              : c < krok
+                ? "bg-accent text-accent-foreground"
+                : "border bg-card text-muted-foreground";
+          return (
+            <li key={nazevKroku} className={`rounded-lg p-2 text-center sm:p-3 ${styl}`}>
+              <span className="block text-xs font-semibold sm:text-sm">
+                {c < krok ? "✓ hotovo" : `Krok ${c} ze 4`}
+              </span>
+              <span className="block text-sm font-bold leading-tight sm:text-base">{nazevKroku}</span>
+            </li>
+          );
+        })}
+      </ol>
+
       {/* 1. ODKUD */}
+      {krok === 1 && (
       <div className="grid gap-4">
+        <p className="text-2xl font-bold">Odkud zboží stáhneme?</p>
         <div className="grid gap-1.5">
           <Label htmlFor="nazev-dodavatele">Jak se dodavatel jmenuje</Label>
           <Input
@@ -289,18 +315,46 @@ export function NovyDodavatel({
             />
           </label>
         </div>
+        <KdeNajduFeed />
       </div>
+      )}
 
-      <KdeNajduFeed />
-
-      {znamy && (
+      {krok === 2 && znamy && (
         <p className="rounded-md border-2 border-primary bg-accent p-4 text-accent-foreground">
-          Tenhle feed známe — <b>není potřeba nic nastavovat.</b> Jen níž zaškrtněte, co chcete brát.
+          Tenhle feed známe — <b>není potřeba nic nastavovat.</b> Jen zaškrtněte, co chcete brát.
         </p>
       )}
 
+      {/* 4. SHRNUTÍ */}
+      {krok === 4 && nahled && (
+        <div className="grid gap-2 rounded-lg border-2 border-primary p-4 md:p-5">
+          <p className="text-2xl font-bold">Všechno je připravené</p>
+          <ul className="grid gap-1 text-lg">
+            <li>
+              Dodavatel: <b>{nazev || "—"}</b>
+            </li>
+            <li>
+              Stáhne se: <b>{sklonuj(nahled.produkty.length, "produkt", "produkty", "produktů")}</b>
+            </li>
+            <li>
+              Cena:{" "}
+              <b>
+                {procento === null
+                  ? "jak ji má dodavatel, upravíte později"
+                  : procento === 0
+                    ? "za cenu dodavatele"
+                    : procento < 0
+                      ? `o ${-procento} % levněji`
+                      : `o ${procento} % dráž`}
+                {procento !== null && na990 && ", zaokrouhleno na …990"}
+              </b>
+            </li>
+          </ul>
+        </div>
+      )}
+
       {/* CO BRÁT */}
-      {vse && skupiny.length > 0 && (
+      {krok === 2 && vse && skupiny.length > 0 && (
         <div className="grid gap-3 rounded-lg border-2 border-primary p-4 md:p-5">
           <div>
             <p className="text-xl font-bold">Co chcete od dodavatele brát?</p>
@@ -363,7 +417,7 @@ export function NovyDodavatel({
       )}
 
       {/* ZA KOLIK */}
-      {vse && skupiny.length > 0 && (
+      {krok === 3 && vse && skupiny.length > 0 && (
         <div className="grid gap-3 rounded-lg border-2 border-primary p-4 md:p-5">
           <div>
             <p className="text-xl font-bold">Za kolik je chcete prodávat?</p>
@@ -450,8 +504,8 @@ export function NovyDodavatel({
         </div>
       )}
 
-      {/* 2. CO JE CO */}
-      {zdroj && profil && !znamy && (
+      {/* Podrobnosti pro zvědavé — až v posledním kroku a schované */}
+      {krok === 4 && zdroj && profil && !znamy && (
         <>
           <p className="rounded-md bg-surface p-3 text-sm">
             Ve feedu je <span className="font-bold">{zdroj.polozky.length}</span> položek
@@ -587,17 +641,37 @@ export function NovyDodavatel({
         </>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {(zdroj || znamy) && profil && (
+      <div className="flex flex-wrap items-center gap-2 border-t pt-4">
+        {krok > 1 && (
+          <Button variant="outline" size="lg" className="min-h-14 px-6 text-lg" onClick={() => setKrok(krok - 1)}>
+            Zpět
+          </Button>
+        )}
+        {krok > 1 && krok < 4 && (
+          <Button
+            size="lg"
+            className="min-h-14 px-8 text-lg"
+            disabled={krok === 2 && (brat ?? []).length === 0}
+            onClick={() => setKrok(krok + 1)}
+          >
+            Další
+          </Button>
+        )}
+        {krok === 1 && (zdroj || znamy) && (
+          <Button size="lg" className="min-h-14 px-8 text-lg" onClick={() => setKrok(2)}>
+            Další
+          </Button>
+        )}
+        {krok === 4 && (zdroj || znamy) && profil && (
           <Button size="lg" className="min-h-14 px-8 text-lg" disabled={ukladam} onClick={() => void ulozit()}>
             {ukladam ? "Stahuji…" : `Stáhnout ${nahled ? sklonuj(nahled.produkty.length, "produkt", "produkty", "produktů") : "zboží"} na web`}
           </Button>
         )}
-        <Button variant="ghost" size="lg" onClick={onZrusit}>
+        <Button variant="ghost" size="lg" className="ml-auto" onClick={onZrusit}>
           Zrušit
         </Button>
       </div>
-      {(zdroj || znamy) && profil && (
+      {krok === 4 && (zdroj || znamy) && profil && (
         <p className="-mt-2 text-sm text-muted-foreground">
           Zboží se stáhne jako skryté. Na konci ho jedním kliknutím zveřejníte, nebo si ho nejdřív projdete.
         </p>

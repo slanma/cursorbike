@@ -8,6 +8,7 @@ import { NeznamyFormat, nactiFeed, shrnUpozorneni, type FeedVysledek } from "@/l
 import { dekoduj, zpracujProfil, type ProfilDodavatele } from "@/lib/feed-univerzalni";
 import { NovyDodavatel, useNactiZOdkazu } from "@/components/admin/NovyDodavatel";
 import { zaradAutomaticky } from "@/lib/vyber-zbozi";
+import { propojSeStarymi } from "@/lib/propojeni";
 import { sklonuj } from "@/lib/cestina";
 import { nactiPravidla, ulozPravidla, type Zaokrouhleni } from "@/lib/ceny";
 import {
@@ -91,6 +92,7 @@ function ImportFeedu() {
     aktualizovano: number;
     dodavatel?: string | undefined;
     od?: string | undefined;
+    propojeno?: number | undefined;
   } | null>(null);
   const [zverejnuje, setZverejnuje] = useState(false);
   const [rozbaleno, setRozbaleno] = useState(false);
@@ -212,8 +214,9 @@ function ImportFeedu() {
       if (rovnou) {
         const od = new Date(Date.now() - 5000).toISOString();
         await ulozMapovani(vysledneMapovani);
-        const v = await provedImport(novyPlan, produkty, setPrubeh);
-        setHotovo({ ...v, dodavatel: vysledek.dodavatel, od });
+        const { plan: planSPropojenim, pary } = await propojSeStarymi(novyPlan, produkty);
+        const v = await provedImport(planSPropojenim, produkty, setPrubeh);
+        setHotovo({ ...v, dodavatel: vysledek.dodavatel, od, propojeno: pary.length });
         setFeed(null);
         setPlan(null);
         qc.invalidateQueries({ queryKey: ["admin-produkty"] });
@@ -363,7 +366,9 @@ function ImportFeedu() {
     setPrubeh("Spouštím import…");
     try {
       await ulozMapovani(mapovani);
-      const v = await provedImport(plan, existujici, setPrubeh);
+      const { plan: planSPropojenim, pary } = await propojSeStarymi(plan, existujici);
+      const v0 = await provedImport(planSPropojenim, existujici, setPrubeh);
+      const v = { ...v0, propojeno: pary.length };
       setHotovo(v);
       setFeed(null);
       setPlan(null);
@@ -752,6 +757,12 @@ function ImportFeedu() {
             Přibylo {sklonuj(hotovo.novych, "nový produkt", "nové produkty", "nových produktů")}
             {hotovo.aktualizovano > 0 && <>, u {hotovo.aktualizovano} se doplnil sklad</>}.
           </p>
+          {(hotovo.propojeno ?? 0) > 0 && (
+            <p className="mt-2 rounded-lg bg-accent p-3 text-lg text-accent-foreground">
+              {sklonuj(hotovo.propojeno!, "kolo ze starého webu jsme propojili", "kola ze starého webu jsme propojili", "kol ze starého webu jsme propojili")}{" "}
+              s dodavatelem. Vaše fotky, popisy a ceny zůstaly, jen se u nich teď bude hlídat sklad a nabídka.
+            </p>
+          )}
           {hotovo.novych > 0 && (
             <>
               <p className="mt-3 text-lg">

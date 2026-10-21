@@ -107,9 +107,11 @@ function DetailProduktu() {
         </div>
 
         <div>
-          <span className="text-xs font-semibold uppercase tracking-wide text-primary">{produkt.typ}</span>
+          <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+            {produkt.typ.replace(/\s*\|\s*/g, " · ")}
+          </span>
           <h1 className="mt-2 text-3xl font-bold md:text-4xl">{produkt.nazev}</h1>
-          <p className="mt-4 whitespace-pre-line text-muted-foreground">{produkt.popis}</p>
+          {produkt.kratky && <p className="mt-4 text-lg text-muted-foreground">{produkt.kratky}</p>}
 
           <div className="mt-6 flex items-end gap-3">
             {produkt.puvodniCena && (
@@ -168,6 +170,28 @@ function DetailProduktu() {
             </Button>
           </div>
 
+          {/* Když o kole zatím nic nevíme, ať zákazník aspoň ví, na koho se obrátit. */}
+          {!produkt.popis && !produkt.parametry.length && !produkt.proKoho.length && (
+            <div className="mt-8 rounded-lg border bg-accent/40 p-5">
+              <h2 className="section-title text-lg">Chcete o kole vědět víc?</h2>
+              <p className="mt-2 text-muted-foreground">
+                Rádi vám řekneme všechno o výbavě, velikosti i dojezdu. Zavolejte nám nebo se stavte v prodejně — kolo
+                vám ukážeme a můžete se na něm projet.
+              </p>
+              <Button asChild className="mt-4" variant="outline">
+                <Link to="/kontakt">Kontakt na prodejnu</Link>
+              </Button>
+            </div>
+          )}
+
+          {produkt.popis && (
+            <div className="mt-8">
+              <h2 className="section-title text-lg">Popis</h2>
+              <p className="mt-3 whitespace-pre-line leading-relaxed text-muted-foreground">{produkt.popis}</p>
+            </div>
+          )}
+
+          {(produkt.proKoho.length > 0 || produkt.neniProKoho) && (
           <div className="mt-8 rounded-lg border bg-accent/40 p-5">
             <h2 className="section-title text-lg">Pro koho je kolo vhodné</h2>
             <ul className="mt-3 space-y-2 text-sm">
@@ -182,6 +206,7 @@ function DetailProduktu() {
               <p className="mt-3 border-t pt-3 text-sm text-muted-foreground">{produkt.neniProKoho}</p>
             )}
           </div>
+          )}
 
           <div className="mt-8 space-y-6">
             {produkt.parametry.map((skupina: ParametrSkupina) => (

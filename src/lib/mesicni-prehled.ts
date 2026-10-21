@@ -23,6 +23,7 @@ import {
 import { zpracujProfil } from "@/lib/feed-univerzalni";
 import { cenaPodlePravidla, nactiPravidla, pravidloPro } from "@/lib/ceny";
 import { zaradAutomaticky } from "@/lib/vyber-zbozi";
+import { najdiStareKolo } from "@/lib/propojeni";
 import { ulozMapovani } from "@/lib/eshop";
 
 export type NoveKolo = {
@@ -30,8 +31,9 @@ export type NoveKolo = {
   dodavatel: string;
   radek: PlanRadek;
   cenaNaWebu: number;
-  /** Podobné kolo, které už na webu je (třeba převzaté ze starého webu). */
+  /** Stejné kolo převzaté ze starého webu — místo přidání se propojí. */
   uzNaWebu?: string;
+  uzNaWebuId?: string;
 };
 export type ZmizeleKolo = { id: string; nazev: string; dodavatel: string };
 export type NovaCena = { id: string; nazev: string; dodavatel: string; cenaTed: number; cenaNova: number };
@@ -57,35 +59,6 @@ type Existujici = ExistujiciProdukt & {
   cena_feed: number | null;
   ean: string | null;
 };
-
-const slova = (s: string) =>
-  new Set(
-    s
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9,]+/g, " ")
-      .split(" ")
-      .filter((x) => x.length >= 3 && !["bike", "kolo", "elektrokolo"].includes(x)),
-  );
-
-/**
- * Najde kolo, které už na webu je — podle čárového kódu, nebo když se
- * skoro všechna slova z názvu shodují. Chrání před dvojicemi, když stejné
- * kolo přišlo dřív ze starého webu a teď ho posílá i dodavatel.
- */
-function najdiPodobne(produkt: FeedProdukt, existujici: Existujici[]): Existujici | undefined {
-  const eany = new Set(produkt.varianty.map((v) => v.ean).filter(Boolean));
-  const podleEan = existujici.find((e) => e.ean && eany.has(e.ean));
-  if (podleEan) return podleEan;
-  const nove = slova(`${produkt.nazev} ${produkt.barva ?? ""}`);
-  if (nove.size < 2) return undefined;
-  return existujici.find((e) => {
-    const stare = slova(e.nazev);
-    const shoda = [...nove].filter((s) => stare.has(s)).length;
-    return shoda / nove.size >= 0.8;
-  });
-}
 
 export async function pripravPrehled(
   stahni: (url: string) => Promise<string>,
@@ -114,6 +87,7 @@ export async function pripravPrehled(
     bezOdkazu: profily.filter((p) => !p.url).map((p) => p.nazev),
   };
 
+  const pouzitaStara = new Set<string>();
   for (const profil of profily.filter((p) => p.url)) {
     hlaska(`Stahuji nabídku od ${profil.nazev}…`);
     let produkty: FeedProdukt[];
@@ -139,13 +113,14 @@ export async function pripravPrehled(
 
     for (const r of plan.radky) {
       if (r.akce === "novy") {
-        const podobne = najdiPodobne(r.produkt, existujici);
+        const podobne = najdiStareKolo(r.produkt, existujici, pouzitaStara);
+        if (podobne) pouzitaStara.add(podobne.id);
         vysledek.nova.push({
           klic: `${profil.id}|${r.produkt.kod}`,
           dodavatel: profil.nazev,
           radek: r,
           cenaNaWebu: cenaPodlePravidla(r.cena, pravidlo) || r.cena,
-          ...(podobne ? { uzNaWebu: podobne.nazev } : {}),
+          ...(podobne ? { uzNaWebu: podobne.nazev, uzNaWebuId: podobne.id } : {}),
         });
       } else if (r.akce === "preskoceno" && r.duvod?.includes("Kategorie")) {
         vysledek.novaBezKategorie++;
@@ -174,6 +149,8 @@ export async function pripravPrehled(
 export type Odpovedi = {
   /** Klíče nových kol, která se mají přidat. */
   pridat: Set<string>;
+  /** Klíče nových kol, která se mají propojit se stejným kolem ze starého webu. */
+  propojit: Set<string>;
   /** Id kol, která se mají skrýt. */
   skryt: Set<string>;
   /** Id kol, u kterých se má převzít nová cena. */
@@ -185,14 +162,23 @@ export async function ulozPrehled(
   odpovedi: Odpovedi,
   hlaska: (text: string) => void,
 ): Promise<{ pridano: number; skryto: number; cen: number }> {
+  const propojovana = prehled.nova.filter((n) => n.uzNaWebuId && odpovedi.propojit.has(n.klic));
+  for (const n of propojovana) {
+    const { error } = await supabase
+      .from("produkty")
+      .update({ dodavatel: n.radek.produkt.dodavatel, dodavatel_kod: n.radek.produkt.kod })
+      .eq("id", n.uzNaWebuId!);
+    if (error) throw error;
+  }
   const radky = [
     ...prehled.nova.filter((n) => odpovedi.pridat.has(n.klic)).map((n) => n.radek),
+    ...propojovana.map((n) => ({ ...n.radek, akce: "aktualizace" as const, id: n.uzNaWebuId! })),
     ...prehled.aktualizace,
   ];
   const plan: Plan = {
     radky,
     novych: radky.filter((r) => r.akce === "novy").length,
-    aktualizaci: prehled.aktualizace.length,
+    aktualizaci: prehled.aktualizace.length + propojovana.length,
     preskocenych: 0,
     zmenyCen: 0,
   };

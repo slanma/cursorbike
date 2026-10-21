@@ -18,6 +18,11 @@ import {
 } from "@/lib/ceny";
 import { formatCena } from "@/lib/produkty";
 import { sklonuj } from "@/lib/cestina";
+import { dekoduj } from "@/lib/feed-univerzalni";
+import { porovnejCeny, prevezmiCeny, type RozdilCeny, type VysledekPorovnani } from "@/lib/porovnani-cen";
+import { RefreshCw, Upload } from "lucide-react";
+import { useNactiZOdkazu } from "@/components/admin/NovyDodavatel";
+import { porovnejSeStarymWebem, prevezmiCenyStarehoWebu, type RozdilCenyStaryWeb } from "@/lib/stary-web";
 
 export const Route = createFileRoute("/_authenticated/admin/ceny")({
   component: Ceny,
@@ -254,6 +259,8 @@ function Ceny() {
         </section>
       )}
 
+      <KontrolaStarehoWebu />
+
       <JednoKolo />
     </div>
   );
@@ -424,5 +431,254 @@ function KoloCena({
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Sedí ceny se starým webem? Obchodník nahraje export ze staré administrace
+ * a web ukáže jen kola, kde se cena liší. Převzít jde po jednom nebo všechno.
+ */
+function KontrolaStarehoWebu() {
+  const qc = useQueryClient();
+  const stahni = useNactiZOdkazu();
+  const [prubeh, setPrubeh] = useState<string | null>(null);
+  const [vysledek, setVysledek] = useState<{ rozdily: RozdilCenyStaryWeb[]; sedi: number; nenalezena: number } | null>(
+    null,
+  );
+  const [hotove, setHotove] = useState<Set<string>>(new Set());
+
+  const zkontrolovat = async () => {
+    setPrubeh("Čtu starý web…");
+    try {
+      setVysledek(await porovnejSeStarymWebem(stahni, setPrubeh));
+      setHotove(new Set());
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Starý web se nepodařilo přečíst");
+    } finally {
+      setPrubeh(null);
+    }
+  };
+
+  const prevzit = async (r: RozdilCenyStaryWeb[]) => {
+    try {
+      await prevezmiCenyStarehoWebu(r);
+      setHotove((h) => new Set([...h, ...r.map((x) => x.id)]));
+      qc.invalidateQueries({ queryKey: ["admin-produkty"] });
+      toast.success(r.length === 1 ? "Cena převzata." : `Převzato ${r.length} cen.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepodařilo se uložit");
+    }
+  };
+
+  const zbyva = (vysledek?.rozdily ?? []).filter((r) => !hotove.has(r.id));
+  const cena = (c: number, p: number | null) => (p ? `${formatCena(c)} (akce, běžně ${formatCena(p)})` : formatCena(c));
+
+  return (
+    <section className="grid gap-5 rounded-xl border-2 border-primary bg-card p-6 md:p-8">
+      <div>
+        <h3 className="section-title text-3xl">Sedí ceny se starým webem?</h3>
+        <p className="mt-1 text-lg text-muted-foreground">
+          Klikněte a web si sám projde starý web cursorbike.cz — i s akčními cenami — a ukáže jen kola, kde se cena
+          liší. Nic se nezmění samo.
+        </p>
+      </div>
+      <button
+        type="button"
+        disabled={!!prubeh}
+        onClick={() => void zkontrolovat()}
+        className="inline-flex min-h-14 w-fit items-center gap-3 rounded-lg bg-primary px-7 text-xl font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+      >
+        <RefreshCw className={`h-6 w-6 ${prubeh ? "animate-spin" : ""}`} />
+        {prubeh ?? "Zkontrolovat ceny"}
+      </button>
+
+      {vysledek && (
+        <div className="grid gap-3">
+          <p className="rounded-lg bg-accent p-4 text-xl text-accent-foreground">
+            {vysledek.sedi > 0 && <>U {sklonuj(vysledek.sedi, "kola", "kol", "kol")} cena sedí ✓ </>}
+            {zbyva.length > 0 ? <>· U {sklonuj(zbyva.length, "kola", "kol", "kol")} se liší.</> : <>· Všechno sedí.</>}
+          </p>
+          {zbyva.length > 1 && (
+            <button
+              type="button"
+              onClick={() => void prevzit(zbyva)}
+              className="min-h-14 w-fit rounded-lg border-2 border-primary px-6 text-xl font-bold text-primary hover:bg-primary/5"
+            >
+              Převzít všechny ceny ze starého webu ({zbyva.length})
+            </button>
+          )}
+          {zbyva.map((r) => (
+            <div key={r.id} className="flex flex-wrap items-center gap-4 rounded-xl border-2 p-4">
+              <p className="min-w-0 flex-[1_1_260px] text-xl font-bold">{r.nazev}</p>
+              <div className="grid text-lg">
+                <span>
+                  Starý web: <b>{cena(r.staryCena, r.staryPuvodni)}</b>
+                </span>
+                <span className="text-muted-foreground">Nový web: {cena(r.novyCena, r.novyPuvodni)}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => void prevzit([r])}
+                  className="min-h-12 rounded-lg bg-primary px-5 text-lg font-bold text-primary-foreground"
+                >
+                  Převzít ze starého webu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHotove((h) => new Set([...h, r.id]))}
+                  className="min-h-12 rounded-lg border-2 px-5 text-lg font-semibold"
+                >
+                  Nechat novou
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <details className="text-base">
+        <summary className="cursor-pointer text-muted-foreground">Starý web se nedaří přečíst? Nahrát export ručně</summary>
+        <div className="mt-4">
+          <PorovnaniZExportu />
+        </div>
+      </details>
+    </section>
+  );
+}
+
+function PorovnaniZExportu() {
+  const qc = useQueryClient();
+  const [vysledek, setVysledek] = useState<VysledekPorovnani | null>(null);
+  const [pracuje, setPracuje] = useState(false);
+  const [prevzato, setPrevzato] = useState<Set<string>>(new Set());
+
+  const nahrat = async (soubory: File[]) => {
+    if (!soubory.length) return;
+    setPracuje(true);
+    try {
+      const texty = await Promise.all(soubory.map(async (f) => dekoduj(await f.arrayBuffer())));
+      setVysledek(await porovnejCeny(texty));
+      setPrevzato(new Set());
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Soubor se nepodařilo přečíst");
+    } finally {
+      setPracuje(false);
+    }
+  };
+
+  const prevzit = async (rozdily: RozdilCeny[]) => {
+    try {
+      await prevezmiCeny(rozdily);
+      setPrevzato((p) => new Set([...p, ...rozdily.map((r) => r.id)]));
+      qc.invalidateQueries({ queryKey: ["admin-produkty"] });
+      toast.success(rozdily.length === 1 ? "Cena převzata." : `Převzato ${rozdily.length} cen.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepodařilo se uložit");
+    }
+  };
+
+  const zbyva = (vysledek?.rozdily ?? []).filter((r) => !prevzato.has(r.id));
+
+  return (
+    <section className="grid gap-5">
+
+      <ol className="grid gap-2 text-lg">
+        {[
+          "Přihlaste se do administrace starého webu.",
+          "Klikněte na Katalog a potom na Produkty.",
+          "Nahoře u Filtrovat podle kategorií vyberte Jízdní kola (pak zvlášť Elektrokola).",
+          "Nad seznamem produktů klikněte na Export. Uloží se soubor .csv.",
+          "Soubor (nebo víc souborů najednou) nahrajte tlačítkem níž.",
+        ].map((k, i) => (
+          <li key={k} className="flex gap-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary font-bold text-primary-foreground">
+              {i + 1}
+            </span>
+            <span className="pt-0.5">{k}</span>
+          </li>
+        ))}
+      </ol>
+
+      <label className="inline-flex min-h-14 w-fit cursor-pointer items-center gap-3 rounded-lg bg-primary px-7 text-xl font-bold text-primary-foreground hover:bg-primary/90">
+        <Upload className="h-6 w-6" />
+        {pracuje ? "Porovnávám…" : "Nahrát export ze starého webu"}
+        <input
+          type="file"
+          accept=".csv"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            void nahrat(Array.from(e.target.files ?? []));
+            e.target.value = "";
+          }}
+        />
+      </label>
+
+      {vysledek && (
+        <div className="grid gap-3">
+          <p className="rounded-lg bg-accent p-4 text-xl text-accent-foreground">
+            {vysledek.sedi > 0 && <>U {sklonuj(vysledek.sedi, "kola", "kol", "kol")} cena sedí ✓ </>}
+            {zbyva.length > 0
+              ? <>· U {sklonuj(zbyva.length, "kola", "kol", "kol")} se liší.</>
+              : vysledek.rozdily.length > 0
+                ? <>· Všechny rozdíly jsou vyřešené.</>
+                : <>· Všechno sedí.</>}
+          </p>
+
+          {zbyva.length > 1 && (
+            <button
+              type="button"
+              onClick={() => void prevzit(zbyva)}
+              className="min-h-14 w-fit rounded-lg border-2 border-primary px-6 text-xl font-bold text-primary hover:bg-primary/5"
+            >
+              Převzít všechny ceny ze starého webu ({zbyva.length})
+            </button>
+          )}
+
+          {zbyva.map((r) => (
+            <div key={r.id} className="flex flex-wrap items-center gap-4 rounded-xl border-2 p-4">
+              <p className="min-w-0 flex-[1_1_260px] text-xl font-bold">{r.nazev}</p>
+              <div className="grid text-lg">
+                <span>
+                  Starý web: <b>{formatCena(r.naStaremWebu)}</b>
+                </span>
+                <span className="text-muted-foreground">Nový web: {formatCena(r.naNovemWebu)}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => void prevzit([r])}
+                  className="min-h-12 rounded-lg bg-primary px-5 text-lg font-bold text-primary-foreground"
+                >
+                  Převzít ze starého webu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrevzato((p) => new Set([...p, r.id]))}
+                  className="min-h-12 rounded-lg border-2 px-5 text-lg font-semibold"
+                >
+                  Nechat novou
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {vysledek.nenalezena.length > 0 && (
+            <details className="rounded-lg bg-surface p-4">
+              <summary className="cursor-pointer text-lg">
+                {sklonuj(vysledek.nenalezena.length, "kolo ze starého webu", "kola ze starého webu", "kol ze starého webu")} na novém
+                webu nemáme — ukázat
+              </summary>
+              <ul className="mt-2 grid gap-1">
+                {vysledek.nenalezena.map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      )}
+    </section>
   );
 }

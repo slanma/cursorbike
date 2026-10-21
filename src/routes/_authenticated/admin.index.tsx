@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Bike, Camera, CheckCircle2, ClipboardList, Eye, Mail, RefreshCw, Settings, Tag, Wrench } from "lucide-react";
+import { Bike, Camera, CheckCircle2, ClipboardList, Download, Eye, Mail, RefreshCw, Settings, Tag, Wrench } from "lucide-react";
 import type { ComponentType } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { nactiProfily } from "@/lib/eshop";
@@ -57,6 +57,7 @@ function Dnes() {
           nactiProfily().catch(() => []),
           nactiPosledniPrehled().catch(() => null),
         ]);
+      const staryWeb = await supabase.from("nastaveni").select("hodnota").eq("klic", "stary-web-prevzat").maybeSingle();
       return {
         naWebu: naWebu.count ?? 0,
         cekaNaKontrolu: cekaNaKontrolu.count ?? 0,
@@ -67,12 +68,24 @@ function Dnes() {
         objednavekMesic: mesic.count ?? 0,
         dodavateluSOdkazem: profily.filter((p) => p.url).length,
         posledniPrehled: posledni,
+        staryWebPrevzat: !!staryWeb.data,
       };
     },
   });
 
   const ukoly: Ukol[] = [];
   if (data) {
+    if (!data.staryWebPrevzat) {
+      ukoly.push({
+        klic: "stary-web",
+        ikona: Download,
+        titulek: "Převzít starý web",
+        popis: "Než přepneme doménu, vezmeme ze starého webu ceny, akce, popisy a fotky. Web to udělá sám.",
+        tlacitko: "Převzít",
+        to: "/admin/stary-web",
+        hlavni: true,
+      });
+    }
     if (data.noveObjednavky > 0) {
       ukoly.push({
         klic: "objednavky",

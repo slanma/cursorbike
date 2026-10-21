@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/admin/prehled")({
   component: MesicniPrehledStranka,
 });
 
-type Volba = "ano" | "ne";
+type Volba = "ano" | "ne" | "propojit";
 
 const tlacitko = (zapnuto: boolean) =>
   `min-h-14 rounded-lg border-2 px-5 text-xl font-bold transition-colors ${
@@ -56,7 +56,7 @@ function MesicniPrehledStranka() {
   const volba = (klic: string, vychozi: Volba = "ano") => volby[klic] ?? vychozi;
   const nastav = (klic: string, v: Volba) => setVolby((x) => ({ ...x, [klic]: v }));
   /** Kolo, které už na webu máte, se ve výchozím stavu nepřidává — ať nevznikne dvakrát. */
-  const volbaNoveho = (n: { klic: string; uzNaWebu?: string }) => volba(n.klic, n.uzNaWebu ? "ne" : "ano");
+  const volbaNoveho = (n: { klic: string; uzNaWebu?: string }) => volba(n.klic, n.uzNaWebu ? "propojit" : "ano");
 
   const dalsi = () => {
     if (!prehled) return;
@@ -82,6 +82,7 @@ function MesicniPrehledStranka() {
         prehled,
         {
           pridat: new Set(prehled.nova.filter((n) => volbaNoveho(n) === "ano").map((n) => n.klic)),
+          propojit: new Set(prehled.nova.filter((n) => volbaNoveho(n) === "propojit").map((n) => n.klic)),
           skryt: new Set(prehled.zmizela.filter((z) => volba(`z:${z.id}`) === "ano").map((z) => z.id)),
           prevzitCenu: new Set(prehled.ceny.filter((c) => volba(`c:${c.id}`) === "ano").map((c) => c.id)),
         },
@@ -199,14 +200,21 @@ function MesicniPrehledStranka() {
                 </p>
                 {n.uzNaWebu && (
                   <p className="mt-1 rounded bg-amber-50 px-2 py-1 text-base text-amber-950">
-                    Podobný produkt už na webu máte: {n.uzNaWebu}. Proto je nastaveno Nechci, ať ho nemáte dvakrát.
+                    Tohle kolo už máte ze starého webu: {n.uzNaWebu}. Propojíme ho — zůstanou vaše fotky, popis i cena a
+                    od teď se u něj bude hlídat sklad.
                   </p>
                 )}
               </div>
               <div className="flex gap-2">
-                <button type="button" className={tlacitko(volbaNoveho(n) === "ano")} onClick={() => nastav(n.klic, "ano")}>
-                  Přidat
-                </button>
+                {n.uzNaWebu ? (
+                  <button type="button" className={tlacitko(volbaNoveho(n) === "propojit")} onClick={() => nastav(n.klic, "propojit")}>
+                    Propojit
+                  </button>
+                ) : (
+                  <button type="button" className={tlacitko(volbaNoveho(n) === "ano")} onClick={() => nastav(n.klic, "ano")}>
+                    Přidat
+                  </button>
+                )}
                 <button type="button" className={tlacitko(volbaNoveho(n) === "ne")} onClick={() => nastav(n.klic, "ne")}>
                   Nechci
                 </button>

@@ -43,6 +43,7 @@ import { Route as AuthenticatedAdminPrehledRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminProduktyRouteImport } from './routes/_authenticated/admin.produkty'
 import { Route as AuthenticatedAdminServisRouteImport } from './routes/_authenticated/admin.servis'
 import { Route as AuthenticatedAdminSpravciRouteImport } from './routes/_authenticated/admin.spravci'
+import { Route as AuthenticatedAdminStaryWebRouteImport } from './routes/_authenticated/admin.stary-web'
 import { Route as AuthenticatedAdminZpravyRouteImport } from './routes/_authenticated/admin.zpravy'
 
 const IndexRoute = IndexRouteImport.update({
@@ -221,6 +222,12 @@ const AuthenticatedAdminSpravciRoute =
     path: '/spravci',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminStaryWebRoute =
+  AuthenticatedAdminStaryWebRouteImport.update({
+    id: '/stary-web',
+    path: '/stary-web',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminZpravyRoute =
   AuthenticatedAdminZpravyRouteImport.update({
     id: '/zpravy',
@@ -261,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/admin/servis': typeof AuthenticatedAdminServisRoute
   '/admin/spravci': typeof AuthenticatedAdminSpravciRoute
+  '/admin/stary-web': typeof AuthenticatedAdminStaryWebRoute
   '/admin/zpravy': typeof AuthenticatedAdminZpravyRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -293,6 +301,7 @@ export interface FileRoutesByTo {
   '/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/admin/servis': typeof AuthenticatedAdminServisRoute
   '/admin/spravci': typeof AuthenticatedAdminSpravciRoute
+  '/admin/stary-web': typeof AuthenticatedAdminStaryWebRoute
   '/admin/zpravy': typeof AuthenticatedAdminZpravyRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
@@ -331,6 +340,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/produkty': typeof AuthenticatedAdminProduktyRoute
   '/_authenticated/admin/servis': typeof AuthenticatedAdminServisRoute
   '/_authenticated/admin/spravci': typeof AuthenticatedAdminSpravciRoute
+  '/_authenticated/admin/stary-web': typeof AuthenticatedAdminStaryWebRoute
   '/_authenticated/admin/zpravy': typeof AuthenticatedAdminZpravyRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -369,6 +379,7 @@ export interface FileRouteTypes {
     | '/admin/produkty'
     | '/admin/servis'
     | '/admin/spravci'
+    | '/admin/stary-web'
     | '/admin/zpravy'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/admin/produkty'
     | '/admin/servis'
     | '/admin/spravci'
+    | '/admin/stary-web'
     | '/admin/zpravy'
     | '/admin'
   id:
@@ -438,6 +450,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/produkty'
     | '/_authenticated/admin/servis'
     | '/_authenticated/admin/spravci'
+    | '/_authenticated/admin/stary-web'
     | '/_authenticated/admin/zpravy'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
@@ -702,6 +715,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSpravciRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/stary-web': {
+      id: '/_authenticated/admin/stary-web'
+      path: '/stary-web'
+      fullPath: '/admin/stary-web'
+      preLoaderRoute: typeof AuthenticatedAdminStaryWebRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/zpravy': {
       id: '/_authenticated/admin/zpravy'
       path: '/zpravy'
@@ -722,6 +742,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminProduktyRoute: typeof AuthenticatedAdminProduktyRoute
   AuthenticatedAdminServisRoute: typeof AuthenticatedAdminServisRoute
   AuthenticatedAdminSpravciRoute: typeof AuthenticatedAdminSpravciRoute
+  AuthenticatedAdminStaryWebRoute: typeof AuthenticatedAdminStaryWebRoute
   AuthenticatedAdminZpravyRoute: typeof AuthenticatedAdminZpravyRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
@@ -736,6 +757,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminProduktyRoute: AuthenticatedAdminProduktyRoute,
   AuthenticatedAdminServisRoute: AuthenticatedAdminServisRoute,
   AuthenticatedAdminSpravciRoute: AuthenticatedAdminSpravciRoute,
+  AuthenticatedAdminStaryWebRoute: AuthenticatedAdminStaryWebRoute,
   AuthenticatedAdminZpravyRoute: AuthenticatedAdminZpravyRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }

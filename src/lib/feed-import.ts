@@ -288,8 +288,28 @@ export async function provedImport(
     hlaska(`Zakládám nové produkty… ${novych} z ${nove.length}`);
   }
 
+  // Co u stávajících produktů chybí (třeba kola ze starého webu bez popisu),
+  // doplníme z feedu. Co tam obchodník už má, nepřepíšeme.
+  const stavajici = new Map<string, { popis: string; kratky: string; parametry: unknown; obrazek_url: string | null }>();
+  for (let i = 0; i < upravy.length; i += 200) {
+    const ids = upravy.slice(i, i + 200).map((r) => r.id!);
+    const { data } = await supabase.from("produkty").select("id, popis, kratky, parametry, obrazek_url").in("id", ids);
+    for (const d of data ?? []) stavajici.set(d.id, d as never);
+  }
+
   let aktualizovano = 0;
   for (const r of upravy) {
+    const ted = stavajici.get(r.id!);
+    const doplnit: Record<string, unknown> = {};
+    if (ted && !ted.popis?.trim() && r.produkt.popis) doplnit["popis"] = r.produkt.popis;
+    if (ted && !ted.kratky?.trim() && r.produkt.kratky) doplnit["kratky"] = r.produkt.kratky.slice(0, 200);
+    if (ted && !(Array.isArray(ted.parametry) && ted.parametry.length) && r.produkt.parametry?.length) {
+      doplnit["parametry"] = r.produkt.parametry;
+    }
+    if (ted && !ted.obrazek_url && r.produkt.obrazky[0]) {
+      doplnit["obrazek_url"] = r.produkt.obrazky[0];
+      doplnit["obrazky"] = r.produkt.obrazky.slice(1);
+    }
     const p = r.produkt;
     const velikosti = [...new Set(p.varianty.map((v) => v.velikost).filter((v): v is string => !!v))];
     // Cenu, název, popis ani fotky NEPŘEPISUJEME — ty si obchodník doladil sám.
@@ -302,6 +322,7 @@ export async function provedImport(
         varianty: p.varianty,
         ean: p.varianty.find((v) => v.ean)?.ean ?? null,
         importovano_at: new Date().toISOString(),
+        ...doplnit,
       })
       .eq("id", r.id!);
     if (error) throw error;

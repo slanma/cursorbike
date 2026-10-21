@@ -106,7 +106,7 @@ function SpravaProduktu() {
   const [vybrane, setVybrane] = useState<Set<string>>(new Set());
   const [hledani, setHledani] = useState("");
   const [filtrKategorie, setFiltrKategorie] = useState("");
-  const [rychlyFiltr, setRychlyFiltr] = useState<"vse" | "web" | "skryte" | "bezfotky" | "elektrokola" | "kola" | "doplnky">("vse");
+  const [rychlyFiltr, setRychlyFiltr] = useState<"vse" | "web" | "skryte" | "bezfotky" | "bezpopisu" | "elektrokola" | "kola" | "doplnky">("vse");
   const [ukazat, setUkazat] = useState(30);
   const [hromadnaKategorie, setHromadnaKategorie] = useState("");
   const [stahovaniPrubeh, setStahovaniPrubeh] = useState<string | null>(null);
@@ -162,6 +162,7 @@ function SpravaProduktu() {
     (f === "web" && p.aktivni) ||
     (f === "skryte" && !p.aktivni) ||
     (f === "bezfotky" && !p.obrazek_url) ||
+    (f === "bezpopisu" && !p.popis?.trim()) ||
     (f === "elektrokola" && sekceKola(p.kategorie_id) === "elektrokola") ||
     (f === "kola" && sekceKola(p.kategorie_id) === "kola") ||
     (f === "doplnky" && sekceKola(p.kategorie_id) === "doplnky");
@@ -555,6 +556,8 @@ function SpravaProduktu() {
         </form>
       )}
 
+      <DoplnitPopisy pocet={(produkty.data ?? []).filter((p) => !p.popis?.trim()).length} />
+
       {/* HLEDÁNÍ A RYCHLÉ FILTRY */}
       <div className="grid gap-4">
         <label className="relative block">
@@ -578,6 +581,7 @@ function SpravaProduktu() {
               ["web", "Na webu"],
               ["skryte", "Skrytá"],
               ["bezfotky", "Bez fotky"],
+              ["bezpopisu", "Bez popisu"],
               ["elektrokola", "Elektrokola"],
               ["kola", "Kola"],
               ["doplnky", "Doplňky"],
@@ -794,6 +798,22 @@ function SpravaProduktu() {
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Kola bez popisu: odkaz na převzetí starého webu, které popisy doplní. */
+function DoplnitPopisy({ pocet }: { pocet: number }) {
+  if (pocet === 0) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-4 rounded-xl border-2 border-amber-300 bg-amber-50 p-5 text-amber-950">
+      <p className="min-w-0 flex-[1_1_320px] text-lg">
+        <b>{sklonuj(pocet, "produkt nemá", "produkty nemají", "produktů nemá")} popis.</b> Zákazník pak vidí jen cenu.
+        Popisy, ceny i fotky si web vezme ze starého webu sám.
+      </p>
+      <Link to="/admin/stary-web" className="inline-flex min-h-14 items-center rounded-lg bg-primary px-6 text-lg font-bold text-primary-foreground">
+        Převzít starý web
+      </Link>
     </div>
   );
 }
